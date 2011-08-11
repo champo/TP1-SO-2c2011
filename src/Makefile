@@ -1,10 +1,16 @@
+ifndef IPC
+IPC=socket
+endif
+
 SRCDIR=../src
 OBJDIR=../bin
 TARGET=$(OBJDIR)/sim
 FOLDERS=. $(CHILD_FOLDERS)
 CHILD_FOLDERS=$(shell find . -type d -mindepth 1)
-OBJS=$(addprefix $(OBJDIR)/,$(foreach dir,$(FOLDERS),$(patsubst %.c, %.o, $(wildcard $(dir)/*.c)) $(patsubst %.asm, %-asm.o, $(wildcard $(dir)/*.asm))))
+ALL_OBJS=$(addprefix $(OBJDIR)/,$(foreach dir,$(FOLDERS),$(patsubst %.c, %.o, $(wildcard $(dir)/*.c)) $(patsubst %.asm, %-asm.o, $(wildcard $(dir)/*.asm))))
 INCLUDES=$(addprefix $(SRCDIR)/,$(foreach dir,$(FOLDERS), $(wildcard $(dir)/*.h)))
+
+OBJS=$(filter-out $(OBJDIR)/./ipc/%.o, $(ALL_OBJS)) $(OBJDIR)/./ipc/$(IPC).o
 
 CFLAGS=-I$(SRCDIR) -pedantic -std=c99 -fstrict-aliasing -Wall -Wextra -Wshadow -Wcast-qual \
 	-Wwrite-strings -Wpointer-arith -Wcast-align -Wmissing-prototypes \
