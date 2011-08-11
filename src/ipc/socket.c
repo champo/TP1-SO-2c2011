@@ -67,7 +67,6 @@ ipc_t ipc_establish(ipc_t conn, pid_t cpid) {
     struct ipc_t* sock = (struct ipc_t*) conn;
     if (cpid == 0) {
         int res = pthread_cancel(listener);
-        mprintf("Killing the listener %d\n", res);
         listener = NULL;
 
         // This is a child process, so we connect
@@ -138,7 +137,6 @@ void ipc_close(ipc_t conn) {
 void wait_for_connection(int fd) {
     int conn;
 
-    mprintf("Listening on: %d\n", fd);
     pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
     pthread_cleanup_push(connection_listener_cleanup, (void*) fd);
     while (1) {
@@ -158,7 +156,6 @@ void wait_for_connection(int fd) {
 }
 
 void connection_listener_cleanup(void* arg) {
-    mprintf("Listener cleanup\n");
     pthread_mutex_unlock(&lastCreatedMutex);
     close((int) arg);
 }
