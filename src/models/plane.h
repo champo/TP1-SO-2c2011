@@ -6,6 +6,7 @@ typedef struct {
     int     id;
     size_t  stockSize;
     Stock   stock[];   
+    int     cityId;
 } Plane;
 
 #endif
