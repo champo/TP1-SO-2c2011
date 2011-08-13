@@ -2,11 +2,10 @@
 #define __PLANE__
 #include <stddef.h>
 #include "./stock.h"
-
+#include "../utils/vector.h"
 typedef struct {
     int     id;
-    size_t  stockSize;
-    Stock*   stock;   
+    Vector* stocks;
     int     cityId;
 } Plane;
 
