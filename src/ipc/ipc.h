@@ -3,6 +3,7 @@
 
 #include <stddef.h>
 #include <unistd.h>
+#include <sys/types.h>
 
 #define IPC_MAX_PACKET_LEN 512
 #define IPC_MAX_CONNS 64
