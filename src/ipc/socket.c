@@ -35,7 +35,7 @@ int ipc_init(void) {
     addr.sun_family = AF_LOCAL;
     strcpy(addr.sun_path, SOCKET_FILE);
 
-    if (bind(fd, (struct sockaddr*) &addr, SUN_LEN(&addr)) != 0) {
+    if (bind(fd, (struct sockaddr*) &addr, sizeof(struct sockaddr)) != 0) {
         return -1;
     }
 
@@ -80,7 +80,7 @@ ipc_t ipc_establish(ipc_t conn, pid_t cpid) {
         addr.sun_family = AF_LOCAL;
         strcpy(addr.sun_path, SOCKET_FILE);
 
-        if (connect(sock->fd, (struct sockaddr*) &addr, SUN_LEN(&addr)) != 0) {
+        if (connect(sock->fd, (struct sockaddr*) &addr, sizeof(struct sockaddr)) != 0) {
             return NULL;
         }
     } else {
