@@ -1,7 +1,7 @@
 #ifndef __PLANE__
 #define __PLANE__
 #include <stddef.h>
-#include "./stock.h"
+#include "./models/stock.h"
 
 typedef struct {
     int     id;

@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include "./vector.h"
+#include "./utils/vector.h"
 #include <pthread.h>
 
 typedef struct Vector {
