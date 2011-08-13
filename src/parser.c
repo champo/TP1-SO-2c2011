@@ -1,7 +1,10 @@
 #include <stdio.h>
 #include "./models/city.h"
-#include "./models/map.h"
+#include "./models/airline.h"
+#include "./models/plane.h"
+#include <stdlib.h>
 
+/*
 Map* parseMap(const char* path){
     
     FILE* mapfile;
@@ -31,5 +34,25 @@ Map* parseMap(const char* path){
         }
     }
     return map;
+*/
+
+
+Airline* parseAirlines() {
+
+    Airline* airline;
+    if ( (airline= malloc(sizeof(Airline))) == NULL ) {
+        return NULL;
+    }
+    FILE * pFile;
+    if ( (pFile = fopen ("empresa.txt","r")) == NULL) {
+        return NULL;
+    }
+    fscanf(pFile,"%u\n",&(airline->numberOfPlanes));
+    fscanf(pFile,"\n");
+   
+    Plane* planes;
+    if ( (planes = calloc (airline->numberOfPlanes,sizeof(Plane))) == NULL) {
+        return NULL;
+    }
 
 }

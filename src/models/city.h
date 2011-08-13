@@ -1,6 +1,7 @@
 #ifndef __CITY__
 #define __CITY__
-#include<types.h>
+#include <stddef.h>
+#include "./stock.h"
 
 typedef struct {
     char*   name;
