@@ -5,7 +5,7 @@
 #include <unistd.h>
 
 #define IPC_MAX_PACKET_LEN 512
-#define IPC_MAX_CONNS 128
+#define IPC_MAX_CONNS 64
 
 typedef struct ipc_t* ipc_t;
 
