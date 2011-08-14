@@ -6,7 +6,7 @@
 
 static pthread_mutex_t lock;
 
-void init_mprintf(void) {
+void mprintf_init(void) {
     pthread_mutexattr_t attr;
 
     pthread_mutexattr_init(&attr);
@@ -30,5 +30,9 @@ int mprintf(const char* format, ...) {
     pthread_mutex_unlock(&lock);
 
     return res;
+}
+
+void mprintf_end(void) {
+    pthread_mutex_destroy(&lock);
 }
 
