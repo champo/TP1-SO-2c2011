@@ -3,13 +3,13 @@
 
 typedef struct Vector Vector;
 
-Vector* create();
+Vector* createVector();
 
-int add(Vector* vector, void* item);
+int addToVector(Vector* vector, void* item);
 
-void* get(Vector* vector, int index);
+void* getFromVector(Vector* vector, int index);
 
-void destroy(Vector* vector);
+void destroyVector(Vector* vector);
 
 size_t getVectorSize(Vector* vector);
 

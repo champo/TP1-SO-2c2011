@@ -3,28 +3,32 @@
 #include "./models/airline.h"
 #include "./models/plane.h"
 #include <stdlib.h>
+#include "./utils/vector.h"
 
-/*
-Map* parseMap(const char* path){
+
+Vector* parseMap(const char* path){
     
     FILE* mapfile;
-    Map* map;
+    Vector* map;
     int i;
+    int counter;
     City* cities;
+
+    if((map = create()) == NULL){
+        return NULL;
+    }
 
     if ((mapfile = fopen(path, "r")) == NULL){
         return NULL;
     }
 
-    if ((map = malloc(sizeof(Map))) == NULL){
-        return NULL;    
-    fscanf(mapfile, "%d\n", &(map->citycount));
+    fscanf(mapfile, "%d\n", &counter);
     fgetc(mapfile);
     
     if ((cities = malloc(n * sizeof(City))) == NULL){
         return NULL; 
     }
-    for (i = 0; i<map->citycount; i++){
+    for (i = 0; i<counter; i++){
         fscanf(mapfile, "%s\n", cities[i].name);
         cities[i].id = i;
         cities[i].stockSize = 0;
@@ -34,7 +38,7 @@ Map* parseMap(const char* path){
         }
     }
     return map;
-*/
+}
 
 
 Airline* parseAirlines() {
