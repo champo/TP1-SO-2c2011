@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <sys/select.h>
 
 #include "util.h"
 
@@ -23,6 +24,10 @@ static struct ipc_t* lastCreated = NULL;
 static pthread_mutex_t lastCreatedMutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t lastCreatedCond = PTHREAD_COND_INITIALIZER;
 
+static pthread_mutex_t connLock = PTHREAD_MUTEX_INITIALIZER;
+static ipc_t openConnections[IPC_MAX_CONNS];
+static size_t numConnections;
+
 int ipc_init(void) {
     int fd;
     struct sockaddr_un addr;
@@ -38,6 +43,9 @@ int ipc_init(void) {
     if (bind(fd, (struct sockaddr*) &addr, sizeof(struct sockaddr)) != 0) {
         return -1;
     }
+
+    numConnections = 0;
+    memset(openConnections, 0, sizeof(ipc_t) * IPC_MAX_CONNS);
 
     return pthread_create(&listener, NULL, (void*(*)(void*))wait_for_connection, (void*) fd);
 }
@@ -101,6 +109,9 @@ ipc_t ipc_establish(ipc_t conn, pid_t cpid) {
         pthread_mutex_unlock(&lastCreatedMutex);
         // We don't need to return shiet. conn already has the values.
     }
+    pthread_mutex_lock(&connLock);
+    openConnections[numConnections++] = conn;
+    pthread_mutex_unlock(&connLock);
 
     return conn;
 }
@@ -159,5 +170,39 @@ void* wait_for_connection(int fd) {
 void connection_listener_cleanup(void* arg) {
     pthread_mutex_unlock(&lastCreatedMutex);
     close((int) arg);
+}
+
+ipc_t ipc_select(void) {
+    ipc_t conn;
+    fd_set fds;
+    int maxFd = 0;
+
+    pthread_mutex_lock(&connLock);
+
+    for (size_t i = 0; i < numConnections; i++) {
+        conn = openConnections[i];
+        if (conn != NULL) {
+            FD_SET(conn->fd, &fds);
+            if (maxFd < conn->fd) {
+                maxFd = conn->fd;
+            }
+        }
+    }
+
+    if (select(maxFd + 1, &fds, NULL, NULL, NULL) == -1) {
+        conn = NULL;
+    } else {
+        for (size_t i = 0; i < numConnections; i++) {
+            conn = openConnections[i];
+            if (conn && FD_ISSET(conn->fd, &fds)) {
+                break;
+            } else {
+                conn = NULL;
+            }
+        }
+    }
+
+    pthread_mutex_unlock(&connLock);
+    return conn;
 }
 
