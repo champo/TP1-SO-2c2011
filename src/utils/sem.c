@@ -65,7 +65,7 @@ int ipc_sem_value(sem_t sem) {
 
 int ipc_sem_destroy(sem_t sem) {
 
-    if (NULL == sem) {
+    if (-1 == sem) {
         return 0;
     }
 
