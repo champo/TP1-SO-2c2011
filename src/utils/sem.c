@@ -11,8 +11,16 @@
 static key_t key = 0x1337C0DE;
 static pthread_mutex_t keyLock = PTHREAD_MUTEX_INITIALIZER;
 
+#ifndef __APPLE__
+union semun {
+    int val;
+    struct semi_ds* buf;
+    unsigned short *array;
+};
+#endif
+
 sem_t ipc_sem_create(int value) {
-    semun_t opt;
+    union semun opt;
 
     pthread_mutex_lock(&keyLock);
     sem_t sem = semget(key++, 1, O_CREAT | 0666);
@@ -23,6 +31,11 @@ sem_t ipc_sem_create(int value) {
 
     opt.val = value;
     semctl(sem, 0, SETVAL, opt);
+
+#ifdef DEBUG
+    mprintf("Created semaphore %d. Backtrace:\n", sem);
+    print_trace();
+#endif
 
     return sem;
 }
