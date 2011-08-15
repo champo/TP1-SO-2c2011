@@ -14,7 +14,7 @@ Vector* parseMap(const char* path){
     int counter;
     City* cities;
 
-    if((map = create()) == NULL){
+    if((map = createVector()) == NULL){
         return NULL;
     }
 
@@ -25,15 +25,13 @@ Vector* parseMap(const char* path){
     fscanf(mapfile, "%d\n", &counter);
     fgetc(mapfile);
     
-    if ((cities = malloc(n * sizeof(City))) == NULL){
+    if ((cities = malloc(counter * sizeof(City))) == NULL){
         return NULL; 
     }
     for (i = 0; i<counter; i++){
         fscanf(mapfile, "%s\n", cities[i].name);
         cities[i].id = i;
-        cities[i].stockSize = 0;
         while (fgetc(mapfile) != '\n'){
-            cities[i].stockSize++;
             
         }
     }
