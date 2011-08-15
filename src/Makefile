@@ -2,6 +2,10 @@ ifndef IPC
 IPC=socket
 endif
 
+ifeq ($(shell uname), Darwin)
+APPLE=1
+endif
+
 SRCDIR=../src
 OBJDIR=../bin
 TARGET=$(OBJDIR)/sim
@@ -17,7 +21,11 @@ override CFLAGS +=-I$(SRCDIR) -pedantic -std=c99 -fstrict-aliasing -Wall -Wextra
 	-Wmissing-declarations -Wredundant-decls -Wnested-externs -Winline \
 	-Wstrict-prototypes -Wunreachable-code 
 
+
 override LDFLAGS += -pthread
+ifneq ($(APPLE), 1)
+override LDFLAGS += -lrt
+endif
 
 .SUFFIXES:
 .SUFFIXES: .c .o .h
