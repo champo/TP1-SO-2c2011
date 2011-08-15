@@ -1,7 +1,7 @@
 #ifndef __AIRLINE__
 #define __AIRLINE__
 #include <stddef.h>
-#include "./plane.h"
+#include "./models/plane.h"
 
 typedef struct {
     int     id;

@@ -1,8 +1,10 @@
 #ifndef __PLANE__
 #define __PLANE__
-#include <stddef.h>
-#include "./stock.h"
-#include "../utils/vector.h"
+
+
+#include "models/stock.h"
+#include "utils/vector.h"
+
 typedef struct {
     int     id;
     Vector* stocks;

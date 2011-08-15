@@ -1,6 +1,6 @@
 #ifndef __STOCK__
 #define __STOCK__
-#include "./theShit.h"
+#include "./models/theShit.h"
 
 typedef struct {
     int          amount;
