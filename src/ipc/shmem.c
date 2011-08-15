@@ -5,6 +5,7 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "util.h"
 #include "utils/sem.h"
@@ -18,7 +19,7 @@
 
 #define ENTRY_SIZE (IPC_MAX_PACKET_LEN + sizeof(size_t))
 
-#define SHMEM_SIZE (sizeof(int) + (ENTRY_SIZE * ENTRIES_PER_SLOT+ sizeof(struct ipc_t)) * IPC_MAX_CONNS)
+#define SHMEM_SIZE (sizeof(int) + (ENTRY_SIZE * ENTRIES_PER_SLOT + sizeof(struct ipc_t)) * IPC_MAX_CONNS)
 
 static int sharedFd;
 static int assignedSlots;
@@ -48,8 +49,8 @@ struct ipc_t {
 };
 
 enum Mode {
-    ModeWrite,
-    ModeRead
+    ModeWrite = 0,
+    ModeRead = 1
 };
 
 static char* getQueueSlot(ipc_t conn, enum Mode mode);
@@ -65,6 +66,7 @@ static void addMessage(void);
 static void readMessage(void);
 
 static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+
 void fuckItUpYo(ipc_t conn) {
     struct Queue* queue;
     size_t* entry;
@@ -103,12 +105,14 @@ void fuckItUpYo(ipc_t conn) {
 int ipc_init(void) {
     sprintf(shmemName, "/arqvenger%d", getpid());
 
-    sharedFd = shm_open(shmemName, O_CREAT | O_RDWR | 0666);
+    sharedFd = shm_open(shmemName, O_CREAT | O_RDWR, 0666);
     if (sharedFd == -1) {
+        perror("shm_open failed");
         return -1;
     }
 
     if (ftruncate(sharedFd, SHMEM_SIZE) == -1) {
+        shm_unlink(shmemName);
         return -1;
     }
 
@@ -124,6 +128,10 @@ int ipc_init(void) {
     slotLock = ipc_sem_create(1);
     selectLock = ipc_sem_create(1);
     selectWait = ipc_sem_create(0);
+    if (slotLock == -1 || selectLock == -1 || selectWait == -1) {
+        ipc_end();
+        return -1;
+    }
     availableReads = (int*)(slots - sizeof(int));
     assignedSlots = 0;
 
@@ -186,7 +194,7 @@ void ipc_close(ipc_t conn) {
 }
 
 int ipc_read(ipc_t conn, void* buff, size_t len) {
-    int foundSlot = -1, res;
+    int foundSlot = -1;
     size_t* entry;
     size_t size;
     struct Queue* queue;

@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <stdio.h>
 #include <sys/select.h>
 
 #include "util.h"
@@ -34,6 +35,7 @@ int ipc_init(void) {
 
     fd = socket(PF_LOCAL, SOCK_STREAM, 0);
     if (fd == -1) {
+        perror("Couldn't open listener socket");
         return -1;
     }
 
@@ -41,13 +43,21 @@ int ipc_init(void) {
     strcpy(addr.sun_path, SOCKET_FILE);
 
     if (bind(fd, (struct sockaddr*) &addr, sizeof(struct sockaddr)) != 0) {
+        perror("Listener socket bind failed");
+        close(fd);
         return -1;
     }
 
     numConnections = 0;
     memset(openConnections, 0, sizeof(ipc_t) * IPC_MAX_CONNS);
 
-    return pthread_create(&listener, NULL, (void*(*)(void*))wait_for_connection, (void*) fd);
+    if (pthread_create(&listener, NULL, (void*(*)(void*))wait_for_connection, (void*) fd)) {
+        return 0;
+    } else {
+        perror("Failed creating socket listener thread");
+        close(fd);
+        return -1;
+    }
 }
 
 void ipc_end(void) {
@@ -191,7 +201,7 @@ void connection_listener_cleanup(void* arg) {
 }
 
 ipc_t ipc_select(void) {
-    ipc_t conn;
+    ipc_t conn = NULL;
     fd_set readSet;
     int maxFd = 0;
 
