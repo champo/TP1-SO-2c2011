@@ -2,149 +2,282 @@
 
 #include <sys/types.h>
 #include <sys/mman.h>
-#include <semaphore.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <string.h>
 
-#define MAX_QUEUE_SIZE 10
+#include "util.h"
+#include "utils/sem.h"
+#include <errno.h>
 
-#define ENTRY_SIZE (IPC_MAX_PACKET_LEN + 2*sizeof(size_t))
+#include <pthread.h>
 
-#define QUEUE_SIZE (ENTRY_SIZE * MAX_QUEUE_SIZE + sizeof(struct ipc_t)) * IPC_MAX_CONNS
+#define ENTRIES_PER_QUEUE 8
+#define ENTRIES_PER_SLOT (2 * ENTRIES_PER_QUEUE)
 
-int sharedFd;
-int assignedSlots;
+#define ENTRY_SIZE (IPC_MAX_PACKET_LEN + sizeof(size_t))
 
-char* queue;
-char* slots;
-char shmemName[255];
+#define SHMEM_SIZE (ENTRY_SIZE * ENTRIES_PER_SLOT+ sizeof(struct ipc_t)) * IPC_MAX_CONNS
 
-struct ipc_t {
-    int slot;
-    sem_t lock;
+static int sharedFd;
+static int assignedSlots;
+
+static char* shmem;
+static char* slots;
+static char shmemName[255];
+
+static sem_t slotLock;
+
+struct Queue {
+    int entryMap[ENTRIES_PER_QUEUE];
     sem_t readWait;
 };
 
-char* getQueueSlot(int slot);
+struct ipc_t {
+    int slot;
+    pid_t creator;
+    sem_t lock;
+    struct Queue firstQueue;
+    struct Queue secondQueue;
+};
 
-ipc_t getHead(int slot);
+enum Mode {
+    ModeWrite,
+    ModeRead
+};
 
-char* getQueueEntry(int slot, int entry);
+static char* getQueueSlot(ipc_t conn, enum Mode mode);
+
+static ipc_t getHead(int slot);
+
+static struct Queue* getQueue(ipc_t conn, enum Mode mode);
+
+static size_t* getQueueEntry(ipc_t conn, int entry, enum Mode mode);
+
+static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+void fuckItUpYo(ipc_t conn) {
+    struct Queue* queue;
+    size_t* entry;
+    pthread_mutex_lock(&lock);
+    mprintf("First queue:\n");
+    queue = &conn->firstQueue;
+    for (int i = 0; i < ENTRIES_PER_QUEUE; i++) {
+        mprintf("\t%d: %d\n", i, queue->entryMap[i]);
+    }
+    mprintf("On slots...\n");
+    entry = (size_t*)(slots + conn->slot * ENTRIES_PER_SLOT * ENTRY_SIZE);
+    for (int i = 0; i < ENTRIES_PER_QUEUE; i++) {
+        mprintf("\t(%u) %d: %c\n", entry, i, *((char*)(entry + 1)));
+        if (*entry) {
+            mprintf("\t%d: %u bytes - %s\n", i, *entry, (char*)(entry + 1));
+        }
+        entry = (size_t*) (((char*) entry) + ENTRY_SIZE);
+    }
+
+    mprintf("Second queue:\n");
+    queue = &conn->secondQueue;
+    for (int i = 0; i < ENTRIES_PER_QUEUE; i++) {
+        mprintf("\t%d: %d\n", i, queue->entryMap[i]);
+    }
+    mprintf("On slots...\n");
+    for (int i = 0; i < ENTRIES_PER_QUEUE; i++) {
+        if (*entry) {
+            mprintf("\t%d: %u bytes - %s\n", i, *entry, (char*)(entry + 1));
+        }
+        entry += ENTRY_SIZE;
+    }
+
+    pthread_mutex_unlock(&lock);
+}
 
 int ipc_init(void) {
     sprintf(shmemName, "/arqvenger%d", getpid());
 
-    sharedFd = shm_open(shmemName, O_RDWR, 0);
+    sharedFd = shm_open(shmemName, O_CREAT | O_RDWR | 0666);
     if (sharedFd == -1) {
         return -1;
     }
 
-    if (ftruncate(sharedFd, QUEUE_SIZE) == -1) {
+    if (ftruncate(sharedFd, SHMEM_SIZE) == -1) {
         return -1;
     }
 
-    queue = mmap(NULL, QUEUE_SIZE, PROT_READ | PROT_WRITE, 0, 0);
-    if (queue == (void*) -1) {
+    shmem = mmap(NULL, SHMEM_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, sharedFd, 0);
+    if (shmem == (void*) -1) {
         shm_unlink(shmemName);
         return -1;
     }
 
+    slots = shmem + sizeof(struct ipc_t) * IPC_MAX_CONNS;
+
+    slotLock = ipc_sem_create(1);
     assignedSlots = 0;
 
     return 0;
 }
 
 void ipc_end(void) {
-    munmap(queue, QUEUE_SIZE);
+    ipc_sem_destroy(slotLock);
+    munmap(shmem, SHMEM_SIZE);
     shm_unlink(shmemName);
 }
 
 ipc_t ipc_create(void) {
 
     ipc_t ipc;
-    int* slot;
 
+    ipc_sem_wait(slotLock);
     if (assignedSlots == IPC_MAX_CONNS) {
         return NULL;
     }
 
     ipc = getHead(assignedSlots);
     ipc->slot = assignedSlots++;
-    sem_init(&ipc->lock, 1, 1);
-    sem_init(&ipc->readWait, 1, 0);
+    ipc_sem_post(slotLock);
 
-    for (int i = 0; i < MAX_QUEUE_SIZE; i++) {
-        *((int*) getQueueSlot(ipc->slot, i)) = 0;
+    ipc->lock = ipc_sem_create(1);
+    ipc->firstQueue.readWait = ipc_sem_create(0);
+    ipc->secondQueue.readWait = ipc_sem_create(0);
+
+    for (int i = 0; i < ENTRIES_PER_QUEUE; i++) {
+        ipc->firstQueue.entryMap[i] = -1;
+        ipc->secondQueue.entryMap[i] = -1;
     }
+
+    ipc->creator = getpid();
 
     return ipc;
 }
 
 ipc_t ipc_establish(ipc_t conn, pid_t cpid) {
+
+    for (int i = 0; i < ENTRIES_PER_QUEUE; i++) {
+        *((size_t*) getQueueEntry(conn, i, ModeWrite)) = 0;
+    }
+
     return conn;
 }
 
 void ipc_close(ipc_t conn) {
-    sem_destroy(&conn->lock);
-    sem_destroy(&conn->readWait);
+    ipc_sem_destroy(conn->lock);
+    ipc_sem_destroy(conn->firstQueue.readWait);
+    ipc_sem_destroy(conn->secondQueue.readWait);
+    // We actually leak this slot, we dont plan on ever reusing it
 }
 
 int ipc_read(ipc_t conn, void* buff, size_t len) {
-    int foundSlot = 0;
-    int* entry;
-    int size;
+    int foundSlot = -1, res;
+    size_t* entry;
+    size_t size;
+    struct Queue* queue;
 
-    sem_wait(&conn->lock);
-    while (!foundSlot) {
-        entry = getQueueEntry(conn->slot, 0);
-        foundSlot = entry[0] != 0;
-        if (!foundSlot) {
-            sem_post(&conn->lock);
-            sem_wait(&conn->readWait);
-            sem_wait(&conn->lock);
+    ipc_sem_wait(conn->lock);
+    queue = getQueue(conn, ModeRead);
+    while (foundSlot == -1) {
+        foundSlot = queue->entryMap[0];
+        if (foundSlot == -1) {
+            res = ipc_sem_post(conn->lock);
+            res = ipc_sem_wait(queue->readWait);
+            ipc_sem_wait(conn->lock);
         }
     }
 
-    size = entry[0];
-    memcpy(buff, (void*)(entry + 1), size);
+    entry = getQueueEntry(conn, foundSlot, ModeRead);
+    size = *entry;
 
-    sem_post(&conn->lock);
-    return size;
+    if (len > size) {
+        len = size;
+    }
+    memcpy(buff, (void*)(entry + 1), len);
+    *entry = 0;
+
+    for (int i = 1; i < ENTRIES_PER_QUEUE; i++) {
+        queue->entryMap[i - 1] = queue->entryMap[i];
+    }
+    queue->entryMap[ENTRIES_PER_QUEUE - 1] = -1;
+
+    ipc_sem_post(conn->lock);
+    return len;
 }
 
-int ipc_write(ipc_t conn, void* buff, size_t len) {
-    int slot;
-    int* entry;
+int ipc_write(ipc_t conn, const void* buff, size_t len) {
+    int slot, mapSlot, res;
+    size_t* entry;
+    struct Queue* queue;
 
-    sem_wait(&conn->lock);
-    for (slot = 0; slot < MAX_QUEUE_SIZE; slot++) {
-        entry = getQueueEntry(conn->slot, slot);
-        if (entry[0] == 0) {
+    res = ipc_sem_wait(conn->lock);
+
+    queue = getQueue(conn, ModeWrite);
+
+    for (mapSlot = 0; mapSlot < ENTRIES_PER_QUEUE; mapSlot++) {
+        if (queue->entryMap[mapSlot] == -1) {
             break;
         }
     }
 
-    if (slot == MAX_QUEUE_SIZE) {
-        sem_post(&conn->lock);
+    //FIXME: Make me block till we can write
+    if (mapSlot == ENTRIES_PER_QUEUE) {
+        ipc_sem_post(conn->lock);
         return -1;
     }
 
-    entry[0] = len;
+    for (slot = 0; slot < ENTRIES_PER_QUEUE; slot++) {
+        if (*(entry = getQueueEntry(conn, slot, ModeWrite)) == 0) {
+            break;
+        }
+    }
+
+    if (len > IPC_MAX_PACKET_LEN) {
+        len = IPC_MAX_PACKET_LEN;
+    }
+
+    queue->entryMap[mapSlot] = slot;
+    *entry = len;
     memcpy((void*)(entry + 1), buff, len);
 
-    sem_post(&conn->readWait);
-    sem_post(&conn->lock);
+    ipc_sem_post(queue->readWait);
+    ipc_sem_post(conn->lock);
 
     return len;
 }
 
-char* getQueueSlot(int slot) {
-    return (int*) &slots[ENTRY_SIZE * MAX_QUEUE_SIZE * slot];
+char* getQueueSlot(ipc_t conn, enum Mode mode) {
+    size_t slotOffset = 0;
+    if (conn->creator == getpid()) {
+        if (mode == ModeRead) {
+            slotOffset = ENTRIES_PER_QUEUE * ENTRY_SIZE;
+        }
+    } else {
+        if (mode == ModeWrite) {
+            slotOffset = ENTRIES_PER_QUEUE * ENTRY_SIZE;
+        }
+    }
+
+    return &slots[ENTRY_SIZE * ENTRIES_PER_SLOT * conn->slot + slotOffset];
 }
 
 ipc_t getHead(int slot) {
-    return (ipc_t) &queue[sizeof(struct ipc_t) * assignedSlots];
+    return (ipc_t) &shmem[sizeof(struct ipc_t) * slot];
 }
 
-char* getQueueEntry(int slot, int entry) {
-    return getQueueSlot(slot) + entry * ENTRY_SIZE;
+size_t* getQueueEntry(ipc_t conn, int entry, enum Mode mode) {
+    return (size_t*)(getQueueSlot(conn, mode) + entry * ENTRY_SIZE);
+}
+
+struct Queue* getQueue(ipc_t conn, enum Mode mode) {
+
+    if (mode == ModeRead) {
+        if (conn->creator == getpid()) {
+            return &conn->secondQueue;
+        } else {
+            return &conn->firstQueue;
+        }
+    } else {
+        if (conn->creator == getpid()) {
+            return &conn->firstQueue;
+        } else {
+            return &conn->secondQueue;
+        }
+    }
 }
 

@@ -22,6 +22,6 @@ void ipc_close(ipc_t conn);
 
 int ipc_read(ipc_t conn, void* buff, size_t len);
 
-int ipc_write(ipc_t conn, void* buff, size_t len);
+int ipc_write(ipc_t conn, const void* buff, size_t len);
 
 #endif
