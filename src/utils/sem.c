@@ -26,16 +26,15 @@ sem_t ipc_sem_create(int value) {
     sem_t sem = semget(key++, 1, O_CREAT | 0666);
     pthread_mutex_unlock(&keyLock);
     if (sem == -1) {
+#ifdef DEBUG
+        perror("Semaphore creation failed");
+        print_trace();
+#endif
         return -1;
     }
 
     opt.val = value;
     semctl(sem, 0, SETVAL, opt);
-
-#ifdef DEBUG
-    mprintf("Created semaphore %d. Backtrace:\n", sem);
-    print_trace();
-#endif
 
     return sem;
 }
@@ -65,6 +64,11 @@ int ipc_sem_value(sem_t sem) {
 }
 
 int ipc_sem_destroy(sem_t sem) {
+
+    if (NULL == sem) {
+        return 0;
+    }
+
     return semctl(sem, 0, IPC_RMID);
 }
 

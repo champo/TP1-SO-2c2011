@@ -9,8 +9,9 @@
 
 static sem_t lock;
 
-void mprintf_init(void) {
+int mprintf_init(void) {
     lock = ipc_sem_create(1);
+    return lock != -1;
 }
 
 int mprintf(const char* format, ...) {
