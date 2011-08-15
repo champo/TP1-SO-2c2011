@@ -18,7 +18,7 @@
 
 #define ENTRY_SIZE (IPC_MAX_PACKET_LEN + sizeof(size_t))
 
-#define SHMEM_SIZE (ENTRY_SIZE * ENTRIES_PER_SLOT+ sizeof(struct ipc_t)) * IPC_MAX_CONNS
+#define SHMEM_SIZE (sizeof(int) + (ENTRY_SIZE * ENTRIES_PER_SLOT+ sizeof(struct ipc_t)) * IPC_MAX_CONNS)
 
 static int sharedFd;
 static int assignedSlots;
@@ -29,7 +29,7 @@ static char shmemName[255];
 
 static sem_t slotLock;
 
-static int availableReads;
+static int* availableReads;
 static sem_t selectLock;
 static sem_t selectWait;
 
@@ -118,18 +118,20 @@ int ipc_init(void) {
         return -1;
     }
 
-    slots = shmem + sizeof(struct ipc_t) * IPC_MAX_CONNS;
+    // We reserve the last sizeof(int) for availableReads
+    slots = shmem + sizeof(struct ipc_t) * IPC_MAX_CONNS + sizeof(int);
 
     slotLock = ipc_sem_create(1);
     selectLock = ipc_sem_create(1);
     selectWait = ipc_sem_create(0);
-    availableReads = 0;
+    availableReads = (int*)(slots - sizeof(int));
     assignedSlots = 0;
 
     return 0;
 }
 
 void ipc_end(void) {
+    ipc_sem_destroy(selectLock);
     ipc_sem_destroy(selectWait);
     ipc_sem_destroy(slotLock);
     munmap(shmem, SHMEM_SIZE);
@@ -308,7 +310,7 @@ ipc_t ipc_select(void) {
     ipc_t conn;
     pid_t myPid = getpid();
     ipc_sem_wait(selectLock);
-    while (availableReads == 0) {
+    while (*availableReads == 0) {
         ipc_sem_post(selectLock);
         ipc_sem_wait(selectWait);
         ipc_sem_wait(selectLock);
@@ -333,15 +335,15 @@ ipc_t ipc_select(void) {
 
 void addMessage(void) {
     ipc_sem_wait(selectLock);
-    availableReads++;
+    (*availableReads)++;
     ipc_sem_post(selectWait);
     ipc_sem_post(selectLock);
 }
 
 void readMessage(void) {
     ipc_sem_wait(selectLock);
-    availableReads--;
-    if (availableReads < 0) {
+    (*availableReads)--;
+    if (*availableReads < 0) {
         mprintf("More messages were read than were written, that cant happen. Abort!\n");
         abort();
     }
