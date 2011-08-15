@@ -2,6 +2,8 @@
 
 #include <stdio.h>
 #include <unistd.h>
+#include <execinfo.h>
+#include <stdlib.h>
 
 #include "utils/sem.h"
 
@@ -29,5 +31,22 @@ int mprintf(const char* format, ...) {
 void mprintf_end(void) {
     ipc_sem_destroy(lock);
     lock = 0;
+}
+
+void print_trace(void) {
+
+    void *array[10];
+    size_t size;
+    char **strings;
+    size_t i;
+
+    size = backtrace(array, 10);
+    strings = backtrace_symbols(array, size);
+
+    for (i = 0; i < size; i++) {
+        printf ("%s\n", strings[i]);
+    }
+
+    free (strings);
 }
 

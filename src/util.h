@@ -9,4 +9,6 @@ void mprintf_init(void);
 
 void mprintf_end(void);
 
+void print_trace(void);
+
 #endif
