@@ -140,8 +140,26 @@ int ipc_write(ipc_t conn, const void* buff, size_t len) {
 
 void ipc_close(ipc_t conn) {
     struct ipc_t* sock = conn;
+    size_t i;
+
+    pthread_mutex_lock(&connLock);
+    for (i = 0; i < numConnections; i++) {
+        if (openConnections[i] == conn) {
+            openConnections[i] = NULL;
+            break;
+        }
+    }
+
+    if (i == numConnections) {
+        // This socket was closed already, so let's ignore it
+        pthread_mutex_unlock(&connLock);
+        return;
+    }
+    pthread_mutex_unlock(&connLock);
+
     close(sock->fd);
     pthread_mutex_destroy(&sock->mutex);
+
     free(sock);
 }
 
@@ -174,27 +192,28 @@ void connection_listener_cleanup(void* arg) {
 
 ipc_t ipc_select(void) {
     ipc_t conn;
-    fd_set fds;
+    fd_set readSet;
     int maxFd = 0;
 
     pthread_mutex_lock(&connLock);
 
+    FD_ZERO(&readSet);
     for (size_t i = 0; i < numConnections; i++) {
         conn = openConnections[i];
         if (conn != NULL) {
-            FD_SET(conn->fd, &fds);
+            FD_SET(conn->fd, &readSet);
             if (maxFd < conn->fd) {
                 maxFd = conn->fd;
             }
         }
     }
 
-    if (select(maxFd + 1, &fds, NULL, NULL, NULL) == -1) {
+    if (select(maxFd + 1, &readSet, NULL, NULL, NULL) == -1) {
         conn = NULL;
     } else {
         for (size_t i = 0; i < numConnections; i++) {
             conn = openConnections[i];
-            if (conn && FD_ISSET(conn->fd, &fds)) {
+            if (conn && FD_ISSET(conn->fd, &readSet)) {
                 break;
             } else {
                 conn = NULL;
