@@ -9,6 +9,7 @@
 #include "util.h"
 #include "utils/sem.h"
 #include <errno.h>
+#include <stdlib.h>
 
 #include <pthread.h>
 
@@ -28,6 +29,10 @@ static char shmemName[255];
 
 static sem_t slotLock;
 
+static int availableReads;
+static sem_t selectLock;
+static sem_t selectWait;
+
 struct Queue {
     int entryMap[ENTRIES_PER_QUEUE];
     sem_t readWait;
@@ -36,6 +41,7 @@ struct Queue {
 struct ipc_t {
     int slot;
     pid_t creator;
+    pid_t second;
     sem_t lock;
     struct Queue firstQueue;
     struct Queue secondQueue;
@@ -53,6 +59,10 @@ static ipc_t getHead(int slot);
 static struct Queue* getQueue(ipc_t conn, enum Mode mode);
 
 static size_t* getQueueEntry(ipc_t conn, int entry, enum Mode mode);
+
+static void addMessage(void);
+
+static void readMessage(void);
 
 static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 void fuckItUpYo(ipc_t conn) {
@@ -111,12 +121,16 @@ int ipc_init(void) {
     slots = shmem + sizeof(struct ipc_t) * IPC_MAX_CONNS;
 
     slotLock = ipc_sem_create(1);
+    selectLock = ipc_sem_create(1);
+    selectWait = ipc_sem_create(0);
+    availableReads = 0;
     assignedSlots = 0;
 
     return 0;
 }
 
 void ipc_end(void) {
+    ipc_sem_destroy(selectWait);
     ipc_sem_destroy(slotLock);
     munmap(shmem, SHMEM_SIZE);
     shm_unlink(shmemName);
@@ -151,6 +165,10 @@ ipc_t ipc_create(void) {
 
 ipc_t ipc_establish(ipc_t conn, pid_t cpid) {
 
+    if (cpid == 0) {
+        conn->second = getpid();
+    }
+
     for (int i = 0; i < ENTRIES_PER_QUEUE; i++) {
         *((size_t*) getQueueEntry(conn, i, ModeWrite)) = 0;
     }
@@ -176,11 +194,13 @@ int ipc_read(ipc_t conn, void* buff, size_t len) {
     while (foundSlot == -1) {
         foundSlot = queue->entryMap[0];
         if (foundSlot == -1) {
-            res = ipc_sem_post(conn->lock);
-            res = ipc_sem_wait(queue->readWait);
+            ipc_sem_post(conn->lock);
+            ipc_sem_wait(queue->readWait);
             ipc_sem_wait(conn->lock);
         }
     }
+
+    readMessage();
 
     entry = getQueueEntry(conn, foundSlot, ModeRead);
     size = *entry;
@@ -195,6 +215,7 @@ int ipc_read(ipc_t conn, void* buff, size_t len) {
         queue->entryMap[i - 1] = queue->entryMap[i];
     }
     queue->entryMap[ENTRIES_PER_QUEUE - 1] = -1;
+
 
     ipc_sem_post(conn->lock);
     return len;
@@ -236,6 +257,7 @@ int ipc_write(ipc_t conn, const void* buff, size_t len) {
     memcpy((void*)(entry + 1), buff, len);
 
     ipc_sem_post(queue->readWait);
+    addMessage();
     ipc_sem_post(conn->lock);
 
     return len;
@@ -279,5 +301,50 @@ struct Queue* getQueue(ipc_t conn, enum Mode mode) {
             return &conn->secondQueue;
         }
     }
+}
+
+ipc_t ipc_select(void) {
+    struct Queue* queue;
+    ipc_t conn;
+    pid_t myPid = getpid();
+    ipc_sem_wait(selectLock);
+    while (availableReads == 0) {
+        ipc_sem_post(selectLock);
+        ipc_sem_wait(selectWait);
+        ipc_sem_wait(selectLock);
+    }
+
+    ipc_sem_wait(slotLock);
+    for (int i = 0; i < assignedSlots; i++) {
+        conn = getHead(i);
+        if (conn && (conn->creator == myPid || conn->second == myPid)) {
+            queue = getQueue(conn, ModeRead);
+            if (queue->entryMap[0] != -1) {
+                break;
+            }
+        }
+        conn = NULL;
+    }
+    ipc_sem_post(slotLock);
+
+    ipc_sem_post(selectLock);
+    return conn;
+}
+
+void addMessage(void) {
+    ipc_sem_wait(selectLock);
+    availableReads++;
+    ipc_sem_post(selectWait);
+    ipc_sem_post(selectLock);
+}
+
+void readMessage(void) {
+    ipc_sem_wait(selectLock);
+    availableReads--;
+    if (availableReads < 0) {
+        mprintf("More messages were read than were written, that cant happen. Abort!\n");
+        abort();
+    }
+    ipc_sem_post(selectLock);
 }
 
