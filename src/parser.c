@@ -3,6 +3,7 @@
 #include "models/airline.h"
 #include "models/plane.h"
 #include "utils/vector.h"
+#include "parser.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -10,9 +11,17 @@
 #define NAME_MAX_LENGTH         30
 #define FIRST                   1
 
-Airline* parseAirlines(FILE* pFile); 
 
+
+//Muchas funcs, como las de free o init  deberian ir a otro arch?
 Stock* initStock(); 
+int getCityId(char* cityName);
+int getTheShitId(char* theShitName); 
+void freeTheShit(TheShit* theShit);
+void freeStock(Vector* stock);
+void freePlane(Plane* plane);
+void freeAirline(Airline* airline);
+
 
 //TODO SON SOLO DEFS DSP HAY Q IMPLEMENTARLAS Y  MOVERLAS!!!!
 int getCityId(char* cityName) {
@@ -62,12 +71,12 @@ Vector* parseMap(const char* path){
 
 
 Airline* parseAirlines(FILE* pFile) {
-    Airline* airline;
+    Airline* airline = NULL;
     unsigned int i;
     int aux,state,flag = FIRST;
     char cityName[NAME_MAX_LENGTH] ;          
     char buffer[NAME_MAX_LENGTH];
-    Vector* vec; 
+    Vector* vec = NULL; 
     
     if ( (airline = malloc(sizeof(Airline))) == NULL ) {
         return NULL;
@@ -76,25 +85,27 @@ Airline* parseAirlines(FILE* pFile) {
     fscanf(pFile,"%u",&(airline->numberOfPlanes));
 
     if ( (airline->planes = calloc (airline->numberOfPlanes,sizeof(Plane))) == NULL) {
+        freeAirline(airline);
         return NULL;
     }
-    for (i = 0; i < airline->numberOfPlanes; i++) {
+    for ( i = 0; i < airline->numberOfPlanes; i++) {
         if(flag == FIRST) {
             fscanf(pFile,"%s\n",cityName); 
         }
         airline->planes[i].cityId = getCityId(cityName); //TODO
         
-        vec = create();
+        vec = createVector();
         while ( ( state = fscanf(pFile,"%s %d\n",buffer,&aux)) == 2 ) { 
            
             Stock* stock = initStock(); 
             if ( (stock->theShit->name = malloc(strlen(buffer)*sizeof(char))) == NULL ) {
+                freeAirline(airline);
                 return NULL;
             }
             strcpy(stock->theShit->name,buffer);
             stock->amount = aux;
             stock->theShit->id = getTheShitId(stock->theShit->name);  //TODO
-            add(vec,stock);
+            addToVector(vec,stock);
         }
         if (state == 1) {
             flag = !FIRST;
@@ -105,7 +116,6 @@ Airline* parseAirlines(FILE* pFile) {
     } 
     return airline;
 } 
-
 
 Stock* initStock() {
 
@@ -121,3 +131,43 @@ Stock* initStock() {
     return stock;
 }
 
+
+
+
+
+void freeAirline(Airline* airline) {
+    unsigned int i;
+    if ( airline != NULL) {
+        for ( i = 0; i < airline->numberOfPlanes; i++) {
+            freePlane(&airline->planes[i]);
+        }
+        free(airline);
+    }
+}
+
+
+
+void freePlane(Plane* plane) {
+    if ( plane != NULL) {
+        freeStock(plane->stocks);
+        free(plane);
+    }
+}
+
+
+void freeStock(Vector* stocks) {
+    unsigned int i;
+    if ( stocks != NULL) {
+        for ( i = 0; i < getVectorSize(stocks); i++) {
+            freeTheShit(    ((Stock*) getFromVector(stocks,i))->theShit);
+        }
+        destroyVector(stocks);
+    }
+}
+
+void freeTheShit(TheShit* theShit) {
+    if ( theShit != NULL) {
+        free(theShit->name);
+        free(theShit);
+    }
+}
