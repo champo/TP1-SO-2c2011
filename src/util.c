@@ -1,38 +1,52 @@
 #include "util.h"
 
 #include <stdio.h>
-#include <pthread.h>
 #include <unistd.h>
+#include <execinfo.h>
+#include <stdlib.h>
 
-static pthread_mutex_t lock;
+#include "utils/sem.h"
+
+static sem_t lock;
 
 void mprintf_init(void) {
-    pthread_mutexattr_t attr;
-
-    pthread_mutexattr_init(&attr);
-    pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED);
-
-    pthread_mutex_init(&lock, &attr);
-
-    pthread_mutexattr_destroy(&attr);
+    lock = ipc_sem_create(1);
 }
 
 int mprintf(const char* format, ...) {
     va_list ap;
     int res;
 
-    pthread_mutex_lock(&lock);
+    ipc_sem_wait(lock);
     va_start(ap, format);
     printf("(%d) ", getpid());
     res = vprintf(format, ap);
     fflush(stdout);
     va_end(ap);
-    pthread_mutex_unlock(&lock);
+    ipc_sem_post(lock);
 
     return res;
 }
 
 void mprintf_end(void) {
-    pthread_mutex_destroy(&lock);
+    ipc_sem_destroy(lock);
+    lock = 0;
+}
+
+void print_trace(void) {
+
+    void *array[10];
+    size_t size;
+    char **strings;
+    size_t i;
+
+    size = backtrace(array, 10);
+    strings = backtrace_symbols(array, size);
+
+    for (i = 0; i < size; i++) {
+        printf ("%s\n", strings[i]);
+    }
+
+    free (strings);
 }
 

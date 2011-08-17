@@ -4,6 +4,7 @@
 #include "models/plane.h"
 #include "utils/vector.h"
 #include "parser.h"
+#include "models/map.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -34,38 +35,106 @@ int getTheShitId(char* theShitName) {
 }
 
 
-Vector* parseMap(const char* path){
+Map* parseMap(const char* path){
     
     FILE* mapfile;
+    Map* ans;
     Vector* map;
+    Vector* vec;
     int i;
+    int aux, state, flag = FIRST;
     int counter;
+    char buffer[NAME_MAX_LENGTH];
+    char buffer2[NAME_MAX_LENGTH];
     City* cities;
 
-    if((map = create()) == NULL){
+    if ( (ans = malloc(sizeof(Map))) == NULL){
+        return NULL;
+    }
+
+    if ((map = createVector()) == NULL){
+        free(ans);
         return NULL;
     }
 
     if ((mapfile = fopen(path, "r")) == NULL){
+        free(ans);
+        destroyVector(map);
         return NULL;
     }
 
-    fscanf(mapfile, "%d\n", &counter);
-    fgetc(mapfile);
+    if( (ans->vec = createVector()) == NULL){
+        free(ans);
+        destroyVector(map);
+        fclose(mapfile);
+    }
+
+    fscanf(mapfile, "%d", &counter);
     
-    if ((cities = malloc(n * sizeof(City))) == NULL){
+    //init matrix
+    if ( (ans->matrix = malloc(counter * sizeof(int *))) == NULL){
+        //TODO hacer frees
+        return NULL;
+    }
+    for (i=0; i<counter; i++){
+        if( (ans->matrix[i] = calloc(counter, sizeof(int))) == NULL){
+            //TODO hacer frees
+            return NULL;
+        }
+    }
+
+    if ((cities = malloc(counter * sizeof(City))) == NULL){
+        destroyVector(ans->vec);
+        free(ans);
+        destroyVector(map);
+        fclose(mapfile);
         return NULL; 
     }
     for (i = 0; i<counter; i++){
-        fscanf(mapfile, "%s\n", cities[i].name);
+        if (flag == FIRST){
+            fscanf(mapfile, "%s\n", cities[i].name);
+        }
         cities[i].id = i;
-        cities[i].stockSize = 0;
-        while (fgetc(mapfile) != '\n'){
-            cities[i].stockSize++;
-            
+        vec = createVector();
+        while ( ( state = fscanf(mapfile, "%s %d\n", buffer, aux)) == 2){
+            Stock* stock = initStock();
+
+            if ( (stock->theShit->name = malloc(strlen(buffer)*sizeof(char))) == NULL ){
+                //TODO FREE EVERYTHING
+                return NULL;
+            }
+            strcpy(stock->theShit->name,buffer);
+            stock->amount = aux;
+            stock->theShit->id = getTheShitId(stock->theShit->name);
+            addToVector(vec,stock);
+        }
+        if (state == 1){
+            flag = !FIRST;
+            if ( (i+1) != counter){
+                strcpy(cities[i+1].name,buffer);
+                buffer[0] = "\0";
+            } 
+        }
+        cities[i].stock = vec;
+        if ( addToVector(ans->vec, &(cities[i])) == -1 ){
+            //TODO Frees
+            return NULL;
         }
     }
-    return map;
+
+    
+    if (strcmp(buffer, "") == 0){
+        fscanf(mapfile, "%s %d", buffer2, &aux);
+        ans->matrix[getCityId(buffer)][getCityId(buffer2)] = aux;
+        ans->matrix[getCityId(buffer2)][getCityId(buffer)] = aux;
+        while ( fscanf(mapfile, "%s %s %d", buffer, buffer2, &aux) == 2){
+            ans->matrix[getCityId(buffer)][getCityId(buffer2)] = aux;
+            ans->matrix[getCityId(buffer2)][getCityId(buffer)] = aux;
+        }
+        
+    }
+
+    return ans;
 }
 
 

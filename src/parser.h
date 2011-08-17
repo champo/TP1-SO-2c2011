@@ -1,8 +1,10 @@
 #ifndef __PARSER__
 #define __PARSER__
 
+#include "models/map.h"
+#include "models/airline.h"
 
-Vector* parseMap(const char* path);
+Map* parseMap(const char* path);
 Airline* parseAirlines(FILE* pFile); 
 
 #endif
