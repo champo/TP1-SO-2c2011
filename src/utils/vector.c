@@ -55,4 +55,4 @@ void destroyVector(Vector *vector){
 
 size_t getVectorSize(Vector* vector){
     return vector->size;
-} 
+}
