@@ -358,3 +358,6 @@ void readMessage(void) {
     ipc_sem_post(selectLock);
 }
 
+void ipc_discard(ipc_t conn) {
+}
+

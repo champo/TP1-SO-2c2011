@@ -235,3 +235,7 @@ ipc_t ipc_select(void) {
     return conn;
 }
 
+void ipc_discard(ipc_t conn) {
+    ipc_close(conn);
+}
+

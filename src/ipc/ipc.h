@@ -10,6 +10,14 @@
 
 typedef struct ipc_t* ipc_t;
 
+/**
+ * A set of functions to use for IPC between a parent and several child processes.
+ *
+ * This is not meant to be used with more than one level of parent-child.
+ * That is, if your parent is using this, it's quite likely everything will break
+ * if you try to use this functions to comunicate with your child.
+ */
+
 int ipc_init(void);
 
 void ipc_end(void);
@@ -19,6 +27,11 @@ ipc_t ipc_create(void);
 ipc_t ipc_establish(ipc_t conn, pid_t cpid);
 
 void ipc_close(ipc_t conn);
+
+/**
+ * Closes the connection to this process, without destroying it for any other that might be sharing it.
+ */
+void ipc_discard(ipc_t conn);
 
 int ipc_read(ipc_t conn, void* buff, size_t len);
 
