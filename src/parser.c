@@ -187,9 +187,3 @@ Airline* parseAirlines(FILE* pFile) {
 } 
 
 
-extern int testAirlineParser(void);
-
-int main(void) {
-   testAirlineParser();
-
-}
