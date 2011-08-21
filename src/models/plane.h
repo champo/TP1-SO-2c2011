@@ -1,9 +1,9 @@
 #ifndef __PLANE__
 #define __PLANE__
 
-
 #include "models/stock.h"
 #include "utils/vector.h"
+
 
 typedef struct {
     int     id;
@@ -11,4 +11,9 @@ typedef struct {
     int     cityId;
 } Plane;
 
+
+void freePlane(Plane* plane);
+
 #endif
+
+

@@ -3,11 +3,11 @@
 
 typedef struct Vector Vector;
 
-Vector* createVector();
+Vector* createVector(void);
 
 int addToVector(Vector* vector, void* item);
 
-void* getFromVector(Vector* vector, int index);
+void* getFromVector(Vector* vector, unsigned int index);
 
 void destroyVector(Vector* vector);
 
