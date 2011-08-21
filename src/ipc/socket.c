@@ -1,241 +1,124 @@
 #include "ipc/ipc.h"
+
 #include <sys/socket.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <sys/un.h>
 #include <pthread.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 #include <stdio.h>
-#include <sys/select.h>
+#include <unistd.h>
 
 #include "util.h"
 
-#define SOCKET_FILE "sim.sock"
-
 struct ipc_t {
-    int fd;
+    struct sockaddr_un addr;
     pthread_mutex_t mutex;
 };
 
-static void connection_listener_cleanup(void* arg);
-static void* wait_for_connection(int fd);
+pthread_mutex_t readLock = PTHREAD_MUTEX_INITIALIZER;
+int readSocket = -1;
+int writeSocket = -1;
+char path[512];
 
-static pthread_t listener = NULL;
-static struct ipc_t* lastCreated = NULL;
-static pthread_mutex_t lastCreatedMutex = PTHREAD_MUTEX_INITIALIZER;
-static pthread_cond_t lastCreatedCond = PTHREAD_COND_INITIALIZER;
-
-static pthread_mutex_t connLock = PTHREAD_MUTEX_INITIALIZER;
-static ipc_t openConnections[IPC_MAX_CONNS];
-static size_t numConnections;
+void set_path(struct sockaddr_un* addr, const char* name);
 
 int ipc_init(void) {
-    int fd;
+    writeSocket = socket(AF_UNIX, SOCK_DGRAM, 0);
+    return writeSocket != -1;
+}
+
+int ipc_listen(const char* name) {
+
     struct sockaddr_un addr;
 
-    fd = socket(PF_LOCAL, SOCK_STREAM, 0);
-    if (fd == -1) {
-        perror("Couldn't open listener socket");
+    pthread_mutex_lock(&readLock);
+    readSocket = socket(AF_UNIX, SOCK_DGRAM, 0);
+    if (readSocket == -1) {
+        pthread_mutex_unlock(&readLock);
+        perror("Failed creating read socket");
         return -1;
     }
 
-    addr.sun_family = AF_LOCAL;
-    strcpy(addr.sun_path, SOCKET_FILE);
+    addr.sun_family = AF_UNIX;
+    set_path(&addr, name);
+    strcpy(path, addr.sun_path);
 
-    if (bind(fd, (struct sockaddr*) &addr, sizeof(struct sockaddr)) != 0) {
-        perror("Listener socket bind failed");
-        close(fd);
+    if (bind(readSocket, (struct sockaddr*) &addr, sizeof(struct sockaddr_un))) {
+        perror("Couldnt bind the read socket");
+        pthread_mutex_unlock(&readLock);
+        close(readSocket);
         return -1;
     }
 
-    numConnections = 0;
-    memset(openConnections, 0, sizeof(ipc_t) * IPC_MAX_CONNS);
-
-    if (pthread_create(&listener, NULL, (void*(*)(void*))wait_for_connection, (void*) fd)) {
-        return 0;
-    } else {
-        perror("Failed creating socket listener thread");
-        close(fd);
-        return -1;
-    }
+    pthread_mutex_unlock(&readLock);
+    return 0;
 }
 
-void ipc_end(void) {
-    if (listener) {
-        pthread_cancel(listener);
-        unlink(SOCKET_FILE);
+ipc_t ipc_establish(const char* name) {
+    ipc_t conn = malloc(sizeof(struct ipc_t));
+    if (conn == NULL) {
+        return NULL;
     }
-    pthread_mutex_destroy(&lastCreatedMutex);
-    pthread_cond_destroy(&lastCreatedCond);
-}
 
-ipc_t ipc_create(void) {
-    struct ipc_t* ipc = malloc(sizeof(struct ipc_t));
-    ipc->fd = 0;
-    pthread_mutex_init(&ipc->mutex, NULL);
+    if (pthread_mutex_init(&conn->mutex, NULL) != 0) {
+        free(conn);
 
-    pthread_mutex_lock(&lastCreatedMutex);
-    lastCreated = ipc;
-    pthread_mutex_unlock(&lastCreatedMutex);
-
-    return ipc;
-}
-
-ipc_t ipc_establish(ipc_t conn, pid_t cpid) {
-    struct ipc_t* sock = (struct ipc_t*) conn;
-    if (cpid == 0) {
-        pthread_cancel(listener);
-        listener = NULL;
-
-        // This is a child process, so we connect
-        struct sockaddr_un addr;
-
-        sock->fd = socket(PF_LOCAL, SOCK_STREAM, 0);
-        if (sock->fd == -1) {
-            return NULL;
-        }
-
-        addr.sun_family = AF_LOCAL;
-        strcpy(addr.sun_path, SOCKET_FILE);
-
-        if (connect(sock->fd, (struct sockaddr*) &addr, sizeof(struct sockaddr)) != 0) {
-            return NULL;
-        }
-    } else {
-
-        pthread_mutex_lock(&lastCreatedMutex);
-        if (lastCreated->fd == 0) {
-            //If we don't have a fd already, we wait for one
-            pthread_cond_wait(&lastCreatedCond, &lastCreatedMutex);
-        }
-
-        lastCreated = NULL;
-
-        // This means the accept failed
-        if (conn->fd == 0) {
-            return NULL;
-        }
-
-        pthread_mutex_unlock(&lastCreatedMutex);
-        // We don't need to return shiet. conn already has the values.
+        return NULL;
     }
-    pthread_mutex_lock(&connLock);
-    openConnections[numConnections++] = conn;
-    pthread_mutex_unlock(&connLock);
+
+    conn->addr.sun_family = AF_UNIX;
+    set_path(&conn->addr, name);
+
+    while (stat(conn->addr.sun_path, NULL) == -1 && errno == ENOENT) {
+        usleep(1000);
+    }
 
     return conn;
-}
-
-int ipc_read(ipc_t conn, void* buff, size_t len) {
-    size_t size = 0;
-
-    pthread_mutex_lock(&conn->mutex);
-    read(conn->fd, &size, sizeof(size_t));
-    read(conn->fd, buff, (size > len) ? len : size);
-    pthread_mutex_unlock(&conn->mutex);
-
-    return size;
 }
 
 int ipc_write(ipc_t conn, const void* buff, size_t len) {
-    size_t size;
+    int res;
 
     pthread_mutex_lock(&conn->mutex);
-    write(conn->fd, &len, sizeof(size_t));
-    size = write(conn->fd, buff, len);
+    res = sendto(writeSocket, buff, len, 0, (struct sockaddr*) &conn->addr, sizeof(struct sockaddr_un));
+    if (res == -1) {
+        perror("ipc_write");
+    }
     pthread_mutex_unlock(&conn->mutex);
 
-    return size;
+    return res;
+}
+
+int ipc_read(void* buff, size_t len) {
+    int res;
+
+    pthread_mutex_lock(&readLock);
+    while ((res = read(readSocket, buff, len)) == -1 && errno == EINTR);
+    if (res == -1) {
+        perror("ipc_read");
+    }
+    pthread_mutex_unlock(&readLock);
+
+    return res;
 }
 
 void ipc_close(ipc_t conn) {
-    struct ipc_t* sock = conn;
-    size_t i;
-
-    pthread_mutex_lock(&connLock);
-    for (i = 0; i < numConnections; i++) {
-        if (openConnections[i] == conn) {
-            openConnections[i] = NULL;
-            break;
-        }
-    }
-
-    if (i == numConnections) {
-        // This socket was closed already, so let's ignore it
-        pthread_mutex_unlock(&connLock);
-        return;
-    }
-    pthread_mutex_unlock(&connLock);
-
-    close(sock->fd);
-    pthread_mutex_destroy(&sock->mutex);
-
-    free(sock);
+    pthread_mutex_destroy(&conn->mutex);
+    free(conn);
 }
 
-void* wait_for_connection(int fd) {
-    int conn;
-
-    pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
-    pthread_cleanup_push(connection_listener_cleanup, (void*) fd);
-    while (1) {
-        if (listen(fd, 1) == 0) {
-            conn = accept(fd, NULL, NULL);
-            pthread_mutex_lock(&lastCreatedMutex);
-            if (lastCreated != NULL) {
-                lastCreated->fd = conn;
-            } else {
-                close(conn);
-            }
-            pthread_cond_signal(&lastCreatedCond);
-            pthread_mutex_unlock(&lastCreatedMutex);
-        }
+void ipc_end(void) {
+    if (readSocket != -1) {
+        close(readSocket);
     }
-    pthread_cleanup_pop(0);
-    return NULL;
+    close(writeSocket);
+    unlink(path);
 }
 
-void connection_listener_cleanup(void* arg) {
-    pthread_mutex_unlock(&lastCreatedMutex);
-    close((int) arg);
-}
-
-ipc_t ipc_select(void) {
-    ipc_t conn = NULL;
-    fd_set readSet;
-    int maxFd = 0;
-
-    pthread_mutex_lock(&connLock);
-
-    FD_ZERO(&readSet);
-    for (size_t i = 0; i < numConnections; i++) {
-        conn = openConnections[i];
-        if (conn != NULL) {
-            FD_SET(conn->fd, &readSet);
-            if (maxFd < conn->fd) {
-                maxFd = conn->fd;
-            }
-        }
-    }
-
-    if (select(maxFd + 1, &readSet, NULL, NULL, NULL) == -1) {
-        conn = NULL;
-    } else {
-        for (size_t i = 0; i < numConnections; i++) {
-            conn = openConnections[i];
-            if (conn && FD_ISSET(conn->fd, &readSet)) {
-                break;
-            } else {
-                conn = NULL;
-            }
-        }
-    }
-
-    pthread_mutex_unlock(&connLock);
-    return conn;
-}
-
-void ipc_discard(ipc_t conn) {
-    ipc_close(conn);
+void set_path(struct sockaddr_un* addr, const char* name) {
+    sprintf(addr->sun_path, "/tmp/ipc_sock_%s", name);
 }
 
