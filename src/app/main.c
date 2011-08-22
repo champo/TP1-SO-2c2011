@@ -36,10 +36,11 @@ int main(int argc, char *argv[]) {
 
     //TODO: Parse everything, and get the proper data structures
     //TODO: Position the planes on their initial places on the map
+    register_exit_function(cleanup);
     register_signal_handlers();
     //TODO: Register an exit handler
     Vector* airlines = NULL;
-    run_airlines(airlines);
+    //run_airlines(airlines);
     ipc_listen(PARENT_NAME);
 
     cleanup();
