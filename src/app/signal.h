@@ -3,6 +3,6 @@
 
 void register_exit_function(void (*onExit)(void));
 
-void register_signal_handler(void);
+void register_signal_handlers(void);
 
 #endif
