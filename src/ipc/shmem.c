@@ -143,7 +143,18 @@ ipc_t ipc_create(const char* name, int owner) {
 
 void ipc_destroy(ipc_t conn, int owner) {
 
+    if (conn == NULL) {
+        return;
+    }
+
+    // It goes without saying that the order of these calls is important
     sem_close(conn->lock);
+
+    if (owner) {
+        ipc_sem_destroy(conn->queue->readWait);
+        ipc_sem_destroy(conn->queue->writeSem);
+    }
+
     munmap(conn->queue, SHMEM_SIZE);
 
     if (owner) {
