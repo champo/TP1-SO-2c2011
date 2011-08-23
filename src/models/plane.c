@@ -3,7 +3,7 @@
 
 
 void freePlane(Plane* plane) {
-    if ( plane != NULL) {
+    if (plane != NULL) {
         freeStocks(plane->stocks);
         free(plane);
     }

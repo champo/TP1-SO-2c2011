@@ -5,8 +5,8 @@
 
 void freeAirline(Airline* airline) {
     unsigned int i;
-    if ( airline != NULL) {
-        for ( i = 0; i < airline->numberOfPlanes; i++) {
+    if (airline != NULL) {
+        for (i = 0; i < airline->numberOfPlanes; i++) {
             freePlane(&(airline->planes[i]));
         }
         free(airline);

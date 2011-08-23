@@ -8,7 +8,7 @@
 TheShit* getTheShit(char* name) {
 
     TheShit* theShit;
-    if ( (theShit = malloc(sizeof(TheShit))) == NULL ) {
+    if ((theShit = malloc(sizeof(TheShit))) == NULL ) {
         return NULL;
     }
     theShit->name = name;
@@ -18,7 +18,7 @@ TheShit* getTheShit(char* name) {
 
 
 void freeTheShit(TheShit* theShit) {
-    if ( theShit != NULL) {
+    if (theShit != NULL) {
         free(theShit->name);
         free(theShit);
     }
