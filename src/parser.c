@@ -145,13 +145,13 @@ Airline* parseAirlines(FILE* pFile) {
     Vector* vec = NULL; 
 	Stock* stock;
     
-    if ( (airline = malloc(sizeof(Airline))) == NULL ) {
+    if ((airline = malloc(sizeof(Airline))) == NULL) {
         return NULL;
     }
     
     fscanf(pFile, "%u", &(airline->numberOfPlanes));
 
-    if ( (airline->planes = calloc(airline->numberOfPlanes, sizeof(Plane))) == NULL) {
+    if ((airline->planes = calloc(airline->numberOfPlanes, sizeof(Plane))) == NULL) {
         freeAirline(airline);
         return NULL;
     }
@@ -164,16 +164,16 @@ Airline* parseAirlines(FILE* pFile) {
         airline->planes[i].cityId = getCityId(cityName); //TODO
         
         vec = createVector();
-        while ( (state = fscanf(pFile, "%s %d\n", buffer, &stockAmount)) == 2 ) { 
+        while ((state = fscanf(pFile, "%s %d\n", buffer, &stockAmount)) == 2) { 
 			
             char* theShitName;
-			if ( (theShitName = malloc(strlen(buffer) * sizeof(char))) == NULL ) {
+			if ((theShitName = malloc(strlen(buffer) * sizeof(char))) == NULL) {
 				freeAirline(airline); //TODO check if this frees everything well
 				return NULL;
 			}
 			strcpy(theShitName,buffer);
 			
-            if ((stock = initStock(theShitName, stockAmount)) == NULL ) {
+            if ((stock = initStock(theShitName, stockAmount)) == NULL) {
 				freeAirline(airline); //TODO check if this frees everything well
 				return NULL;
 			}
