@@ -140,46 +140,50 @@ Map* parseMap(const char* path){
 Airline* parseAirlines(FILE* pFile) {
     Airline* airline = NULL;
     unsigned int i;
-    int amount,state,flag = FIRST;
-    char cityName[NAME_MAX_LENGTH] ;          
-    char buffer[NAME_MAX_LENGTH];
+    int stockAmount,state,flag = FIRST;
+    char cityName[NAME_MAX_LENGTH],buffer[NAME_MAX_LENGTH];
     Vector* vec = NULL; 
+	Stock* stock;
     
     if ( (airline = malloc(sizeof(Airline))) == NULL ) {
         return NULL;
     }
     
-    fscanf(pFile,"%u",&(airline->numberOfPlanes));
+    fscanf(pFile, "%u", &(airline->numberOfPlanes));
 
-    if ( (airline->planes = calloc (airline->numberOfPlanes,sizeof(Plane))) == NULL) {
+    if ( (airline->planes = calloc(airline->numberOfPlanes, sizeof(Plane))) == NULL) {
         freeAirline(airline);
         return NULL;
     }
-    for ( i = 0; i < airline->numberOfPlanes; i++) {
+    for (i = 0; i < airline->numberOfPlanes; i++) {
+
         if(flag == FIRST) {
-            fscanf(pFile,"%s\n",cityName); 
+            fscanf(pFile, "%s\n", cityName); 
         }
+        
         airline->planes[i].cityId = getCityId(cityName); //TODO
         
         vec = createVector();
-        while ( ( state = fscanf(pFile,"%s %d\n",buffer,&amount)) == 2 ) { 
-			char* name;
-			if ( (name = malloc(strlen(buffer)*sizeof(char))) == NULL ) {
+        while ( (state = fscanf(pFile, "%s %d\n", buffer, &stockAmount)) == 2 ) { 
+			
+            char* theShitName;
+			if ( (theShitName = malloc(strlen(buffer) * sizeof(char))) == NULL ) {
 				freeAirline(airline); //TODO check if this frees everything well
 				return NULL;
 			}
-			strcpy(name,buffer);
-			Stock* stock;
-			if ((stock = initStock(name,amount)) == NULL ) {
+			strcpy(theShitName,buffer);
+			
+            if ((stock = initStock(theShitName, stockAmount)) == NULL ) {
 				freeAirline(airline); //TODO check if this frees everything well
 				return NULL;
 			}
-			addToVector(vec,stock);
+			addToVector(vec, stock);
         }
         if (state == 1) {
             flag = !FIRST;
-            strcpy(cityName,buffer);
+            strcpy(cityName, buffer);
         }
+
         airline->planes[i].stocks = vec;
         //TODO ASIGN PLANE ID
     } 
