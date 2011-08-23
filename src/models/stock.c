@@ -5,30 +5,23 @@
 
 
 
-
-
 Stock* initStock(char* name, int amount) {
 
     Stock* stock;
-    TheShit* theShit;
     if ( (stock = malloc(sizeof(Stock))) == NULL ) {
         return NULL;
     }
     stock->amount = amount;
-	if ((theShit = initTheShit(name)) == NULL) {
-		free(stock);
-		return NULL;
-	}
-	
-    stock->theShit = theShit;
+    stock->theShit = getTheShit(name); //TODO get a reference of theShit.
     return stock;
 }
 
-void freeStock(Vector* stocks) {
+void freeStocks(Vector* stocks) {
     unsigned int i;
+    unsigned int size =  getVectorSize(stocks);
     if ( stocks != NULL) {
-        for ( i = 0; i < getVectorSize(stocks); i++) {
-            freeTheShit(((Stock*) getFromVector(stocks,i))->theShit);
+        for ( i = 0; i < size; i++) {
+            //freeTheShit(((Stock*) getFromVector(stocks,i))->theShit); //TODO do nothing?
 			free(getFromVector(stocks,i));
 		}
         destroyVector(stocks);

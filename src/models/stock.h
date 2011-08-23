@@ -12,5 +12,5 @@ typedef struct {
 } Stock;
 
 Stock* initStock(char* name, int amount); 
-void freeStock(Vector* stocks);
+void freeStocks(Vector* stocks);
 #endif
