@@ -26,7 +26,6 @@ void register_signal_handlers(void) {
     HANDLE(SIGILL);
     HANDLE(SIGTRAP);
     HANDLE(SIGABRT);
-    HANDLE(SIGEMT);
     HANDLE(SIGFPE);
     HANDLE(SIGBUS);
     HANDLE(SIGSEGV);
@@ -59,9 +58,6 @@ void signal_handler(int sig) {
             break;
         case SIGABRT:
             mprintf("Caught signal SIGABRT\n");
-            break;
-        case SIGEMT:
-            mprintf("Caught signal SIGEMT\n");
             break;
         case SIGFPE:
             mprintf("Caught signal SIGFPE\n");
