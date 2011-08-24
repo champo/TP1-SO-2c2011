@@ -6,12 +6,11 @@
 #include "parser.h"
 #include <stdlib.h>
 
-int testAirlineParser(void);
 
 int testAirlineParser(void) {
     FILE* pFile;
     unsigned int i,j;
-    if ( (pFile = fopen ("./src/configFiles/empresa2.txt","r")) == NULL) {
+    if ( (pFile = fopen ("./configFiles/sim1/empresa2.txt","r")) == NULL) {
         printf("Could not open file\n");
         return NULL;
     }

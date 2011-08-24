@@ -3,11 +3,12 @@
 
 
 
-
-TheShit* initTheShit(char* name) {
+//TODO THIS IS WRONG! JUST HARD-CODING! THIS SHOULD RETURN A REFERENCE TO AN
+//ALREADY CREATED STRUCTURE. 
+TheShit* getTheShit(char* name) {
 
     TheShit* theShit;
-	if ( (theShit = malloc(sizeof(TheShit))) == NULL ) {
+    if ((theShit = malloc(sizeof(TheShit))) == NULL ) {
         return NULL;
     }
     theShit->name = name;
@@ -17,7 +18,7 @@ TheShit* initTheShit(char* name) {
 
 
 void freeTheShit(TheShit* theShit) {
-    if ( theShit != NULL) {
+    if (theShit != NULL) {
         free(theShit->name);
         free(theShit);
     }
