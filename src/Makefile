@@ -39,7 +39,6 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.c
 %.c:
 
 $(TARGET): prepare $(OBJS) $(INCLUDES)
-# The wire, and filter-out is a hack to make sure the loader is at the start of the endfile, so it can load!
 	$(CC) $(LDFLAGS) -o $@ $(OBJS)
 
 all: release
