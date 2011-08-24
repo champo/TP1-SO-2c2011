@@ -1,5 +1,7 @@
-#ifndef __vector__
-#define __vector__
+#ifndef __VECTOR__
+#define __VECTOR__
+
+#include <stddef.h>
 
 typedef struct Vector Vector;
 

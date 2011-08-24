@@ -15,19 +15,33 @@
 
 
 
-int getCityId(char* cityName);
-int getTheShitId(char* theShitName); 
+int getCityId(char* cityName, Vector* cities);
+int getTheShitId(char* theShitName, Vector* theShit); 
 
 
 
 //TODO SON SOLO DEFS DSP HAY Q IMPLEMENTARLAS Y  MOVERLAS!!!!
-int getCityId(char* cityName) {
-    return strlen(cityName);
+int getCityId(char* cityName, Vector* cities) {
+    int i;
+
+    for ( i = 0; i<getVectorSize(cities); i++ ){
+        if ( strcmp(cityName, ((City*)getFromVector(cities,i))->name) == 0 ){
+            return ((City*)getFromVector(cities,i))->id;
+        }
+    }
+    return -1;
 }
 
 //TODO IDEM
-int getTheShitId(char* theShitName) {
-    return strlen(theShitName);
+int getTheShitId(char* theShitName, Vector* theShit) {
+    int i;
+
+    for (i =0; i<getVectorSize(theShit); i++){
+        if ( strcmp(theShitName, ((TheShit*)getFromVector(theShit,i))->name) ==0){
+            return ((TheShit*)getFromVector(theShit,i))->id;
+        }
+    }
+    return -1;
 }
 
 
@@ -35,7 +49,6 @@ Map* parseMap(const char* path){
     
     FILE* mapfile;
     Map* ans;
-    Vector* map;
     Vector* vec;
     int i;
     int aux, state, flag = FIRST;
@@ -43,35 +56,39 @@ Map* parseMap(const char* path){
     char buffer[NAME_MAX_LENGTH];
     char buffer2[NAME_MAX_LENGTH];
     City* cities;
+    
 
     if ( (ans = malloc(sizeof(Map))) == NULL){
         return NULL;
     }
 
-    if ((map = createVector()) == NULL){
-        free(ans);
-        return NULL;
-    }
 
     if ((mapfile = fopen(path, "r")) == NULL){
         free(ans);
-        destroyVector(map);
         return NULL;
     }
 
-    if( (ans->vec = createVector()) == NULL){
+
+    if( (ans->cities = createVector()) == NULL){
         free(ans);
-        destroyVector(map);
         fclose(mapfile);
     }
-
-    fscanf(mapfile, "%d", &counter);
-    
+    if ((cities = malloc(counter * sizeof(City))) == NULL){
+        destroyVector(ans->cities);
+        free(ans);
+        fclose(mapfile);
+        return NULL; 
+    }
+    fscanf(mapfile, "%d\n\n", &counter);
     //init matrix
     if ( (ans->matrix = malloc(counter * sizeof(int *))) == NULL){
-        //TODO hacer frees
+        free(ans);
+        fclose(mapfile);
+        destroyVector(ans->cities);
+        free(cities);
         return NULL;
     }
+    
     for (i=0; i<counter; i++){
         if( (ans->matrix[i] = calloc(counter, sizeof(int))) == NULL){
             //TODO hacer frees
@@ -79,20 +96,24 @@ Map* parseMap(const char* path){
         }
     }
 
-    if ((cities = malloc(counter * sizeof(City))) == NULL){
-        destroyVector(ans->vec);
-        free(ans);
-        destroyVector(map);
-        fclose(mapfile);
-        return NULL; 
+    if ( (ans->theShit = createVector()) == NULL ){
+        //TODO FALTAN FREES
+        return NULL;
     }
+   
+    //Let's read each city!   
     for (i = 0; i<counter; i++){
         if (flag == FIRST){
+            if ( (cities[i].name = malloc(NAME_MAX_LENGTH * sizeof(char))) == NULL ){
+                return NULL;
+                //TODO FREE EVERYTHING
+            }
             fscanf(mapfile, "%s\n", cities[i].name);
         }
         cities[i].id = i;
         vec = createVector();
-        while ( ( state = fscanf(mapfile, "%s %d\n", buffer, aux)) == 2){			
+        //Let's read the stock for the city!
+        while ( ( state = fscanf(mapfile, "%s %d\n", buffer, &aux)) == 2){			
 			char* name;
 			if ( (name = malloc(strlen(buffer)*sizeof(char))) == NULL ) {
 				//TODO check if this frees everything well
@@ -100,34 +121,38 @@ Map* parseMap(const char* path){
 			}
 			strcpy(name,buffer);
 			Stock* stock;
-			if ((stock = initStock(name,aux)) == NULL ) {
+			if ((stock = initStock(name,aux, ans->theShit)) == NULL ) {
 				//TODO check if this frees everything well
 				return NULL;
 			}
 			addToVector(vec,stock);
         }
+        //Let's leave everything cool for the next city...
         if (state == 1){
             flag = !FIRST;
             if ( (i+1) != counter){
+                if ( (cities[i+1].name = malloc(NAME_MAX_LENGTH * sizeof(char))) == NULL){
+                    //TODO FREE EVERYTHING
+                    return NULL;
+                }
                 strcpy(cities[i+1].name,buffer);
                 buffer[0] = "\0";
             } 
         }
         cities[i].stock = vec;
-        if ( addToVector(ans->vec, &(cities[i])) == -1 ){
-            //TODO Frees
+        if ( addToVector(ans->cities, &(cities[i])) == -1 ){
+            //TODO Frees1
             return NULL;
         }
     }
-
-    
-    if (strcmp(buffer, "") == 0){
-        fscanf(mapfile, "%s %d", buffer2, &aux);
-        ans->matrix[getCityId(buffer)][getCityId(buffer2)] = aux;
-        ans->matrix[getCityId(buffer2)][getCityId(buffer)] = aux;
-        while ( fscanf(mapfile, "%s %s %d", buffer, buffer2, &aux) == 2){
-            ans->matrix[getCityId(buffer)][getCityId(buffer2)] = aux;
-            ans->matrix[getCityId(buffer2)][getCityId(buffer)] = aux;
+    //Now let's read the connections between the cities...
+    if (strcmp(buffer, "") != 0){
+        fscanf(mapfile, "%s %d\n", buffer2, &aux);
+        ans->matrix[getCityId(buffer, ans->cities)][getCityId(buffer2, ans->cities)] = aux;
+        ans->matrix[getCityId(buffer2, ans->cities)][getCityId(buffer, ans->cities)] = aux;
+        while ( fscanf(mapfile, "%s %s %d\n", buffer, buffer2, &aux) == 3){
+            ans->matrix[getCityId(buffer, ans->cities)][getCityId(buffer2, ans->cities)] = aux;
+            ans->matrix[getCityId(buffer2, ans->cities)][getCityId(buffer, ans->cities)] = aux;
         }
         
     }
@@ -137,49 +162,53 @@ Map* parseMap(const char* path){
 
 
 
-Airline* parseAirlines(FILE* pFile) {
+Airline* parseAirlines(FILE* pFile, Map* map) {
     Airline* airline = NULL;
     unsigned int i;
-    int aux,state,flag = FIRST;
-    char cityName[NAME_MAX_LENGTH] ;          
-    char buffer[NAME_MAX_LENGTH];
+    int stockAmount,state,flag = FIRST;
+    char cityName[NAME_MAX_LENGTH],buffer[NAME_MAX_LENGTH];
     Vector* vec = NULL; 
+	Stock* stock;
     
-    if ( (airline = malloc(sizeof(Airline))) == NULL ) {
+    if ((airline = malloc(sizeof(Airline))) == NULL) {
         return NULL;
     }
     
-    fscanf(pFile,"%u",&(airline->numberOfPlanes));
+    fscanf(pFile, "%u", &(airline->numberOfPlanes));
 
-    if ( (airline->planes = calloc (airline->numberOfPlanes,sizeof(Plane))) == NULL) {
+    if ((airline->planes = calloc(airline->numberOfPlanes, sizeof(Plane))) == NULL) {
         freeAirline(airline);
         return NULL;
     }
-    for ( i = 0; i < airline->numberOfPlanes; i++) {
+    for (i = 0; i < airline->numberOfPlanes; i++) {
+
         if(flag == FIRST) {
-            fscanf(pFile,"%s\n",cityName); 
+            fscanf(pFile, "%s\n", cityName); 
         }
-        airline->planes[i].cityId = getCityId(cityName); //TODO
+        
+        airline->planes[i].cityId = getCityId(cityName, map->cities); //TODO
         
         vec = createVector();
-        while ( ( state = fscanf(pFile,"%s %d\n",buffer,&aux)) == 2 ) { 
-			char* name;
-			if ( (name = malloc(strlen(buffer)*sizeof(char))) == NULL ) {
+        while ((state = fscanf(pFile, "%s %d\n", buffer, &stockAmount)) == 2) { 
+			
+            char* theShitName;
+			if ((theShitName = malloc(strlen(buffer) * sizeof(char))) == NULL) {
 				freeAirline(airline); //TODO check if this frees everything well
 				return NULL;
 			}
-			strcpy(name,buffer);
-			Stock* stock;
-			if ((stock = initStock(name,aux)) == NULL ) {
-				freeAirline(airline); //TODO check if this frees everything well
+			strcpy(theShitName,buffer);
+			
+            if ((stock = initStock(theShitName, stockAmount, map->theShit)) == NULL) {
+				freeAirline(airline); //TODO check if this frees1 everything well
 				return NULL;
 			}
-			addToVector(vec,stock);
+			addToVector(vec, stock);
         }
         if (state == 1) {
             flag = !FIRST;
-            strcpy(cityName,buffer);
+            strcpy(cityName, buffer);
         }
+
         airline->planes[i].stocks = vec;
         //TODO ASIGN PLANE ID
     } 

@@ -1,6 +1,7 @@
 #ifndef __THESHIT__
 #define __THESHIT__
 
+#include "utils/vector.h"
 
 typedef struct {
     int     id;
@@ -8,7 +9,7 @@ typedef struct {
 } TheShit;
 
 
-TheShit* initTheShit(char* name);
+TheShit* getTheShit(char* name, Vector* theShit);
 void freeTheShit(TheShit* theShit);
 
 #endif
