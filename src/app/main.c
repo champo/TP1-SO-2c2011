@@ -9,13 +9,16 @@
 #include "models/airline.h"
 #include "app/signal.h"
 #include "utils/vector.h"
+#include "parser.h"
+#include "models/map.h"
+#include "models/city.h"
 
 Vector* run_airlines(Vector* airlines);
 
 void cleanup(void);
 
 int main(int argc, char *argv[]) {
-
+   
     if (argc != 2) {
         printf("Usage: %s configFolder\n", argv[0]);
         exit(0);
@@ -40,6 +43,7 @@ int main(int argc, char *argv[]) {
     Vector* connections = run_airlines(airlines);
 
     cleanup();
+
 }
 
 void cleanup(void) {
