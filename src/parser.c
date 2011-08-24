@@ -35,7 +35,6 @@ Map* parseMap(const char* path){
     
     FILE* mapfile;
     Map* ans;
-    Vector* map;
     Vector* vec;
     int i;
     int aux, state, flag = FIRST;
@@ -50,35 +49,34 @@ Map* parseMap(const char* path){
     }
 
 
-    if ((map = createVector()) == NULL){
-        free(ans);
-        return NULL;
-    }
-
-
     if ((mapfile = fopen(path, "r")) == NULL){
         free(ans);
-        destroyVector(map);
         return NULL;
     }
 
 
     if( (ans->vec = createVector()) == NULL){
         free(ans);
-        destroyVector(map);
         fclose(mapfile);
     }
 
+    if ((cities = malloc(counter * sizeof(City))) == NULL){
+        destroyVector(ans->vec);
+        free(ans);
+        fclose(mapfile);
+        return NULL; 
+    }
 
-    fscanf(mapfile, "%d\n\n", &counter);
-    
-    
-
+ 
     //init matrix
     if ( (ans->matrix = malloc(counter * sizeof(int *))) == NULL){
-        //TODO hacer frees
+        free(ans);
+        fclose(mapfile);
+        destroyVector(ans->vec);
+        free(cities);
         return NULL;
     }
+
     for (i=0; i<counter; i++){
         if( (ans->matrix[i] = calloc(counter, sizeof(int))) == NULL){
             //TODO hacer frees
@@ -86,16 +84,9 @@ Map* parseMap(const char* path){
         }
     }
 
-
-    if ((cities = malloc(counter * sizeof(City))) == NULL){
-        destroyVector(ans->vec);
-        free(ans);
-        destroyVector(map);
-        fclose(mapfile);
-        return NULL; 
-    }
+    fscanf(mapfile, "%d\n\n", &counter);
     
-
+    //Let's read each city!   
     for (i = 0; i<counter; i++){
         if (flag == FIRST){
             if ( (cities[i].name = malloc(NAME_MAX_LENGTH * sizeof(char))) == NULL ){
@@ -106,6 +97,7 @@ Map* parseMap(const char* path){
         }
         cities[i].id = i;
         vec = createVector();
+        //Let's read the stock for the city!
         while ( ( state = fscanf(mapfile, "%s %d\n", buffer, aux)) == 2){			
 			char* name;
 			if ( (name = malloc(strlen(buffer)*sizeof(char))) == NULL ) {
@@ -120,7 +112,7 @@ Map* parseMap(const char* path){
 			}
 			addToVector(vec,stock);
         }
-        printf("finished stock: %d\n",i);
+        //Let's leave everything cool for the next city...
         if (state == 1){
             flag = !FIRST;
             if ( (i+1) != counter){
@@ -139,7 +131,7 @@ Map* parseMap(const char* path){
         }
     }
 
-   
+    //Now let's read the connections between the cities...
     if (strcmp(buffer, "") != 0){
         fscanf(mapfile, "%s %d", buffer2, &aux);
         ans->matrix[getCityId(buffer)][getCityId(buffer2)] = aux;
