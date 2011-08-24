@@ -12,6 +12,7 @@
 #include "parser.h"
 #include "models/map.h"
 #include "models/city.h"
+#include "models/theShit.h"
 
 #define PARENT_NAME "map_ipc"
 
@@ -20,7 +21,7 @@ void run_airlines(Vector* airlines);
 void cleanup(void);
 
 int main(int argc, char *argv[]) {
-   
+
     if (argc != 2) {
         printf("Usage: %s configFolder\n", argv[0]);
         exit(0);
@@ -47,7 +48,6 @@ int main(int argc, char *argv[]) {
     ipc_listen(PARENT_NAME);
 
     cleanup();
-
 }
 
 void cleanup(void) {
