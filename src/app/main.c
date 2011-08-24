@@ -10,9 +10,6 @@
 #include "app/signal.h"
 #include "utils/vector.h"
 #include "parser.h"
-#include "models/map.h"
-#include "models/city.h"
-#include "models/theShit.h"
 
 #define PARENT_NAME "map_ipc"
 
