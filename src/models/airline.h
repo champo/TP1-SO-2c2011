@@ -1,8 +1,9 @@
-#ifndef __AIRLINE__
-#define __AIRLINE__
+#ifndef __MODELS_AIRLINE__
+#define __MODELS_AIRLINE__
 
 #include <stddef.h>
 #include "models/plane.h"
+
 
 typedef struct {
     int     id;
@@ -10,4 +11,9 @@ typedef struct {
     Plane*  planes;
 } Airline;
 
+void freeAirline(Airline* airline);
+
+
 #endif
+
+

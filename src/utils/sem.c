@@ -36,6 +36,11 @@ sem_t ipc_sem_create(int value) {
     opt.val = value;
     semctl(sem, 0, SETVAL, opt);
 
+#ifdef VERBOSE
+    mprintf("Creating sem with id %d\n", sem);
+    print_trace();
+#endif
+
     return sem;
 }
 

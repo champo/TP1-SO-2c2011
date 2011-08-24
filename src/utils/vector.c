@@ -2,13 +2,13 @@
 #include "./utils/vector.h"
 #include <pthread.h>
 
-typedef struct Vector {
+struct Vector {
     void** pointer;
     size_t size;
     pthread_mutex_t lock;
 }; 
 
-Vector* createVector(){
+Vector* createVector(void){
     Vector* vector;
    if ((vector = malloc(sizeof(Vector))) == NULL){    
        return NULL;
@@ -35,11 +35,11 @@ int addToVector(Vector* vector, void* item){
     return ans;
 }
 
-void* getFromVector(Vector* vector, int index){
+void* getFromVector(Vector* vector, unsigned int index){
     void* ans;
     
     pthread_mutex_lock(&vector->lock);
-    if (index < 0 || index >= vector->size){
+    if (index >= vector->size){
         return NULL;
     }
     ans = (vector->pointer)[index];

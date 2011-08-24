@@ -13,7 +13,9 @@
 #include "models/map.h"
 #include "models/city.h"
 
-Vector* run_airlines(Vector* airlines);
+#define PARENT_NAME "map_ipc"
+
+void run_airlines(Vector* airlines);
 
 void cleanup(void);
 
@@ -37,10 +39,12 @@ int main(int argc, char *argv[]) {
 
     //TODO: Parse everything, and get the proper data structures
     //TODO: Position the planes on their initial places on the map
+    register_exit_function(cleanup);
     register_signal_handlers();
     //TODO: Register an exit handler
     Vector* airlines = NULL;
-    Vector* connections = run_airlines(airlines);
+    //run_airlines(airlines);
+    ipc_listen(PARENT_NAME);
 
     cleanup();
 
@@ -51,29 +55,23 @@ void cleanup(void) {
     mprintf_end();
 }
 
-Vector* run_airlines(Vector* airlines) {
+void run_airlines(Vector* airlines) {
 
     size_t count = getVectorSize(airlines);
-    Vector* conns = createVector();
-
-    pid_t pid;
+    char name[512];
     ipc_t conn;
 
     for (size_t i = 0; i < count; i++) {
 
-        conn = ipc_create();
-        if ((pid = fork())) {
+        Airline* self = getFromVector(airlines, i);
+        sprintf(name, "airline_%d", self->id);
+        if (fork()) {
+
             // This is the creator process
-            ipc_establish(conn, pid);
-            addToVector(conns, conn);
+            conn = ipc_establish(name);
+            // TODO: Store this somewhere
         } else {
-            // We don't need the vector, so we scrap it
-            Airline* self = getFromVector(airlines, i);
-            size_t connCount = getVectorSize(conns);
-            for (size_t j = 0; j < connCount; j++) {
-                ipc_discard((ipc_t) getFromVector(conns, j));
-            }
-            destroyVector(conns);
+
             //FIXME: I'm gonna leak the map! Yay! Good for me! :D
 
             for (size_t j = 0; j < count; j++) {
@@ -83,7 +81,8 @@ Vector* run_airlines(Vector* airlines) {
             }
             destroyVector(airlines);
 
-            ipc_establish(conn, pid);
+            ipc_listen(name);
+            conn = ipc_establish(PARENT_NAME);
             run_airline(self, conn, cleanup);
             ipc_close(conn);
 
