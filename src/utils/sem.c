@@ -23,15 +23,16 @@ sem_t ipc_sem_create(int value) {
     union semun opt;
 
     pthread_mutex_lock(&keyLock);
-    sem_t sem = semget(key++, 1, O_CREAT | 0666);
-    pthread_mutex_unlock(&keyLock);
+    sem_t sem = semget(key++, 1, IPC_CREAT | 0666);
     if (sem == -1) {
 #ifdef DEBUG
         perror("Semaphore creation failed");
         print_trace();
 #endif
+        pthread_mutex_unlock(&keyLock);
         return -1;
     }
+    pthread_mutex_unlock(&keyLock);
 
     opt.val = value;
     semctl(sem, 0, SETVAL, opt);
