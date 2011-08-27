@@ -6,17 +6,9 @@
 #include "app/signal.h"
 #include "utils/msgqueue.h"
 #include "utils/vector.h"
-
-struct PlaneThread {
-    pthread_t thread;
-    struct MessageQueue* queue;
-    ipc_t conn;
-    Plane* plane;
-};
+#include "app/plane.h"
 
 static void signal_handler(void);
-
-static void* run_plane(struct PlaneThread* self);
 
 static void listen(Vector* conns);
 
@@ -70,6 +62,7 @@ Vector* bootstrap_planes(Airline* self, ipc_t conn) {
         t->queue = message_queue_create();
         t->plane = &self->planes[i];
         t->conn = conn;
+        t->done = 0;
         pthread_create(&t->thread, &attr, (void*(*)(void*))run_plane, t);
         addToVector(threads, t);
     }
@@ -85,10 +78,6 @@ void listen(Vector* threads) {
     while (ipc_read(buff, IPC_MAX_PACKET_LEN) > 0) {
         //TODO: Process this
     }
-}
-
-void* run_plane(struct PlaneThread* self) {
-    return NULL;
 }
 
 void signal_handler(void) {
