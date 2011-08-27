@@ -8,6 +8,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdio.h>
 
 struct ipc_t{
     int fd;
@@ -24,8 +25,8 @@ int ipc_init(void) {
 }
 
 int ipc_listen(const char* name) {
-
-    strcpy(path, name);
+    
+    sprintf(path, "/tmp/%s", name);
     if (mkfifo(path, O_CREAT | 0666)) {
         return -1;
     }
@@ -43,12 +44,14 @@ int ipc_listen(const char* name) {
 ipc_t ipc_establish(const char* name) {
 
     ipc_t conn;
-    
+    char dest[512];
+
+    sprintf(dest, "/tmp/%s", name);
     if ((conn = malloc(sizeof(struct ipc_t))) == NULL) {
         return NULL;
     }
 
-    if (mkfifo(name, O_CREAT | 0666)) {
+    if (mkfifo(dest, O_CREAT | 0666)) {
         free(conn);
         return NULL;
     }
