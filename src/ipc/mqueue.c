@@ -8,8 +8,7 @@
 #include <string.h>
 #include <pthread.h>
 
-#define MSG_SIZE    512
-#define MAX_MSG     10
+#define MAX_MSG    10 
 
 char qname[512];
 mqd_t qid;
@@ -22,7 +21,7 @@ struct ipc_t {
 
 typedef struct msg_t {
     long type;
-    char mtext[MSG_SIZE+1];
+    char mtext[IPC_MAX_PACKET_LEN+1];
 } msg_t;
 
 int ipc_init(void) {
@@ -39,15 +38,15 @@ int ipc_listen(const char* name) {
     attr.mq_msgsize = sizeof(msg_t);
     
     pthread_mutex_init(&rd_mutex, NULL);
-   
-    strcpy(qname, name);
-    
-    mq_id  = mq_open(name, O_RDWR | O_CREAT | O_EXCL, 0666, &attr); //TODO O_EXCL ???
+     
+    sprintf(qname, "/%s", name);
+    mq_id  = mq_open(qname, O_RDWR | O_CREAT, 0666, &attr); 
     
     if (mq_id == -1) {  
-        perror("mq_open O_CREAT failed ");
+        perror("mq_open failed ");
         return -1;
     }
+
     qid = mq_id;
     return 0;
 }
@@ -62,10 +61,17 @@ void ipc_end(void) {
 
 ipc_t ipc_establish(const char* name) {
 
+    char posix_name[512];
     ipc_t conn = malloc(sizeof(struct ipc_t));
-    pthread_mutex_init(&conn->wrt_mutex, NULL);
 
-    if ((conn->mq_id = mq_open(name, O_WRONLY)) == -1) {
+    struct mq_attr attr;
+    attr.mq_maxmsg = MAX_MSG;
+    attr.mq_msgsize = sizeof(msg_t);
+   
+    pthread_mutex_init(&conn->wrt_mutex, NULL);
+    
+    sprintf(posix_name, "/%s", name);
+    if ((conn->mq_id = mq_open(posix_name, O_WRONLY | O_CREAT, 0666, &attr)) == -1) {
         perror("mq_open failed");
         return NULL;
     }

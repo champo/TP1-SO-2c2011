@@ -4,4 +4,5 @@
 
 int testAirlineParser(void);
 
+int testIPC(void);
 #endif

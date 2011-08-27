@@ -10,19 +10,18 @@
 
 void buzz(void);
 void woody(void);
-int testIPC(void); 
-
+int closeQueue(const char* name); 
 
 void buzz(void) {
     
     char buff[MAXSIZE];
     
     printf("Process Buzz, id: %d, listening...\n",getpid());
-    
-    ipc_listen("/myIPC1");
+    ipc_init();
+    ipc_listen("myIPC1");
     
     printf("Process Buzz id: %d, establishing connection...\n",getpid());
-    ipc_t qout = ipc_establish("/myIPC2");
+    ipc_t qout = ipc_establish("myIPC2");
 
     char answers[3][70] = {"Are you talking to me???","Cause i don't see nobody else here."
                       "ARE YOU TO TALKING TO ME???", "ARE YOU FUCKING TALKING TO ME?!?!?!"};
@@ -46,9 +45,9 @@ void woody(void) {
     char buff[MAXSIZE];
     int n; 
     printf("Process Woody, id: %d, listening...\n",getpid());
-    ipc_listen("/myIPC2");
+    ipc_listen("myIPC2");
     printf("Process Woody, id: %d, establishing connection...\n",getpid());
-    ipc_t qout = ipc_establish("/myIPC1");
+    ipc_t qout = ipc_establish("myIPC1");
     if (qout == NULL) {
         return;
     }
@@ -81,8 +80,8 @@ void woody(void) {
 
 int testIPC(void) {
 
-    closeQueue("/myIPC1");
-    closeQueue("/myIPC2");
+    closeQueue("myIPC1");
+    closeQueue("myIPC2");
     printf("Staring conversation....\n");
     sleep(1);
 
@@ -96,14 +95,18 @@ int testIPC(void) {
             break;
         default:
             //PARENT - Buzz
-            buzz();  }
+            buzz(); 
+    }
+    exit(1);
     return 1;
 }
 
 
 int closeQueue(const char* name) {
+    char posix_name[512];
     
-    if ( mq_unlink(name) == -1 ) {
+    sprintf(posix_name, "/%s", name);
+    if ( mq_unlink(posix_name) == -1 ) {
         if(errno == ENOENT) { 
             printf("No queue with name %s exists\n",name);
             return -1;

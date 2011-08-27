@@ -19,11 +19,11 @@ union semun {
 };
 #endif
 
-sem_t ipc_sem_create(int value) {
+semv_t ipc_sem_create(int value) {
     union semun opt;
 
     pthread_mutex_lock(&keyLock);
-    sem_t sem = semget(key++, 1, IPC_CREAT | 0666);
+    semv_t sem = semget(key++, 1, IPC_CREAT | 0666);
     if (sem == -1) {
 #ifdef DEBUG
         perror("Semaphore creation failed");
@@ -45,7 +45,7 @@ sem_t ipc_sem_create(int value) {
     return sem;
 }
 
-int ipc_sem_wait(sem_t sem) {
+int ipc_sem_wait(semv_t sem) {
     struct sembuf op;
 
     op.sem_num = 0;
@@ -55,7 +55,7 @@ int ipc_sem_wait(sem_t sem) {
     return semop(sem, &op, 1);
 }
 
-int ipc_sem_post(sem_t sem) {
+int ipc_sem_post(semv_t sem) {
     struct sembuf op;
 
     op.sem_num = 0;
@@ -65,11 +65,11 @@ int ipc_sem_post(sem_t sem) {
     return semop(sem, &op, 1);
 }
 
-int ipc_sem_value(sem_t sem) {
+int ipc_sem_value(semv_t sem) {
     return semctl(sem, 0, GETVAL);
 }
 
-int ipc_sem_destroy(sem_t sem) {
+int ipc_sem_destroy(semv_t sem) {
 
     if (-1 == sem) {
         return 0;

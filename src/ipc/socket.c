@@ -46,7 +46,7 @@ int ipc_listen(const char* name) {
     set_path(&addr, name);
     strcpy(path, addr.sun_path);
 
-    if (bind(readSocket, (struct sockaddr*) &addr, sizeof(struct sockaddr_un))) {
+    if (bind(readSocket, (struct sockaddr*) &addr, sizeof(addr.sun_family) + strlen(addr.sun_path)) == -1) {
         perror("Couldnt bind the read socket");
         pthread_mutex_unlock(&readLock);
         close(readSocket);
@@ -59,6 +59,7 @@ int ipc_listen(const char* name) {
 
 ipc_t ipc_establish(const char* name) {
     ipc_t conn = malloc(sizeof(struct ipc_t));
+    struct stat statBuf;
     if (conn == NULL) {
         return NULL;
     }
@@ -72,7 +73,7 @@ ipc_t ipc_establish(const char* name) {
     conn->addr.sun_family = AF_UNIX;
     set_path(&conn->addr, name);
 
-    while (stat(conn->addr.sun_path, NULL) == -1 && errno == ENOENT) {
+    while (stat(conn->addr.sun_path, &statBuf) == -1 && errno == ENOENT) {
         usleep(1000);
     }
 
