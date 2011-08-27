@@ -94,7 +94,6 @@ void signal_handler(int sig) {
     if (exitFunction) {
         exitFunction();
     }
-    exit(1);
 }
 
 void signal_ignore(int sig) {

@@ -3,13 +3,13 @@
 
 struct MessageQueue;
 
-union MessagePaylod;
-
-enum MessageType;
+//union MessagePaylod;
+//
+//enum MessageType;
 
 struct Message {
-    enum MessageType type;
-    union MessagePayload payload;
+//    enum MessageType type;
+//    union MessagePayload payload;
 };
 
 struct MessageQueue* message_queue_create(void);

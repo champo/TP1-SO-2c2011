@@ -42,7 +42,7 @@ int main(int argc, char *argv[]) {
     //TODO: Register an exit handler
     Vector* airlines = NULL;
     //run_airlines(airlines);
-    ipc_listen(PARENT_NAME);
+    //ipc_listen(PARENT_NAME);
 
     cleanup();
 }
@@ -50,6 +50,8 @@ int main(int argc, char *argv[]) {
 void cleanup(void) {
     ipc_end();
     mprintf_end();
+
+    exit(0);
 }
 
 void run_airlines(Vector* airlines) {
@@ -80,11 +82,10 @@ void run_airlines(Vector* airlines) {
 
             ipc_listen(name);
             conn = ipc_establish(PARENT_NAME);
-            run_airline(self, conn, cleanup);
+            run_airline(self, conn);
             ipc_close(conn);
 
             cleanup();
-            exit(0);
         }
     }
 }
