@@ -145,7 +145,7 @@ Airline* parseAirlines(FILE* pFile) {
     Vector* vec = NULL; 
 	Stock* stock;
     
-    if ((airline = malloc(sizeof(Airline))) == NULL) {
+    if ((airline = calloc(1, sizeof(Airline))) == NULL) {
         return NULL;
     }
     
