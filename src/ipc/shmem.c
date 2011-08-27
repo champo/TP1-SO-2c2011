@@ -28,8 +28,8 @@ struct Entry {
 
 struct Queue {
     int index[ENTRIES_PER_QUEUE];
-    sem_t readWait;
-    sem_t writeSem;
+    semv_t readWait;
+    semv_t writeSem;
     struct Entry slots[ENTRIES_PER_QUEUE];
 };
 

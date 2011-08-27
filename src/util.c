@@ -7,7 +7,7 @@
 
 #include "utils/sem.h"
 
-static sem_t lock;
+static semv_t lock;
 
 int mprintf_init(void) {
     lock = ipc_sem_create(1);
