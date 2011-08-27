@@ -5,13 +5,16 @@
 #include <sys/stat.h>
 #include <stdlib.h>
 #include <stddef.h>
+#include <fcntl.h>
+#include <string.h>
+#include <unistd.h>
 
 struct ipc_t{
     int fd;
     pthread_mutex_t mutex;
 };
 
-int readfdi = -1;
+int readfd = -1;
 char path[512];
 
 int ipc_init(void) {
@@ -23,7 +26,7 @@ int ipc_init(void) {
 int ipc_listen(const char* name) {
 
     strcpy(path, name);
-    if (mkfifo(path, O_CREAT | O666)) {
+    if (mkfifo(path, O_CREAT | 0666)) {
         return -1;
     }
 
@@ -39,18 +42,18 @@ int ipc_listen(const char* name) {
 
 ipc_t ipc_establish(const char* name) {
 
-    struct ipc_t conn;
+    ipc_t conn;
     
     if ((conn = malloc(sizeof(struct ipc_t))) == NULL) {
         return NULL;
     }
 
-    if (mkfifo(path, O_CREAT | O666)) {
+    if (mkfifo(name, O_CREAT | 0666)) {
         free(conn);
         return NULL;
     }
     
-    &conn->fd = open(path, O_WRONLY);
+    conn->fd = open(path, O_WRONLY);
 
     if (conn->fd == -1) {
         free(conn);
@@ -91,7 +94,8 @@ int ipc_read(void* buff, size_t len) {
     count = atoi(tempbuf);
     count = read(readfd,tempbuf,count);
     memcpy(buff, tempbuf, len);
-    return (len < count? len : count);
+    return ((int)len < count? (int) len : count);
+
 }
 
 void ipc_close(ipc_t conn) {
