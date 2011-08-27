@@ -9,4 +9,6 @@ typedef struct {
     int** matrix;
 } Map;
 
+void freeMap(Map* map);
+
 #endif
