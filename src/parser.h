@@ -5,6 +5,6 @@
 #include "models/airline.h"
 
 Map* parseMap(const char* path);
-Airline* parseAirlines(FILE* pFile); 
+Airline* parseAirlines(FILE* pFile, Map* map); 
 
 #endif

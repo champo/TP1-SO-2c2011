@@ -5,14 +5,14 @@
 
 
 
-Stock* initStock(char* name, int amount) {
+Stock* initStock(char* name, int amount, Vector* theShit) {
 
     Stock* stock;
     if ((stock = malloc(sizeof(Stock))) == NULL) {
         return NULL;
     }
     stock->amount = amount;
-    stock->theShit = getTheShit(name); //TODO get a reference of theShit.
+    stock->theShit = getTheShit(name, theShit); //TODO get a reference of theShit.
     return stock;
 }
 

@@ -9,6 +9,7 @@
 #include "models/airline.h"
 #include "app/signal.h"
 #include "utils/vector.h"
+#include "parser.h"
 
 #define PARENT_NAME "map_ipc"
 

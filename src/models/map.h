@@ -1,10 +1,11 @@
 #ifndef __MAP__
 #define __MAP__
 
-#import "./utils/vector.h"
+#include "utils/vector.h"
 
 typedef struct {
-    Vector* vec;
+    Vector* cities;
+    Vector* theShit;
     int** matrix;
 } Map;
 
