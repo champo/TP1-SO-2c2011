@@ -14,7 +14,7 @@ int testAirlineParser(void) {
         printf("Could not open file\n");
         return NULL;
     }
-    Airline* airline = parseAirlines(pFile);
+    Airline* airline = parseAirlines(pFile,NULL);
     printf("Numero de  aviones :%d\n",airline->numberOfPlanes);
     for( i = 0; i < airline->numberOfPlanes; i++) {
         printf("Id ciudad origen: %d\n",airline->planes[i].cityId);

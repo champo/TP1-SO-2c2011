@@ -9,4 +9,6 @@ typedef struct {
     Vector* stock;
 } City;
 
+void freeCity(City* city);
+
 #endif
