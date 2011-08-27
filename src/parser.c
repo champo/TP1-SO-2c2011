@@ -170,7 +170,7 @@ Airline* parseAirlines(FILE* pFile, Map* map) {
     Vector* vec = NULL; 
 	Stock* stock;
     
-    if ((airline = malloc(sizeof(Airline))) == NULL) {
+    if ((airline = calloc(1, sizeof(Airline))) == NULL) {
         return NULL;
     }
     

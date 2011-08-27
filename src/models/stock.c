@@ -19,9 +19,9 @@ Stock* initStock(char* name, int amount, Vector* theShit) {
 void freeStocks(Vector* stocks) {
     unsigned int i;
     unsigned int size =  getVectorSize(stocks);
+
     if (stocks != NULL) {
         for (i = 0; i < size; i++) {
-            //freeTheShit(((Stock*) getFromVector(stocks,i))->theShit); //TODO do nothing?
 			free(getFromVector(stocks,i));
 		}
         destroyVector(stocks);
