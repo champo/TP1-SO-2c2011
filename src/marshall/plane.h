@@ -2,6 +2,14 @@
 #define __MARSHALL_PLANE__
 
 #include "global.h"
+#include <stddef.h>
+#include "utils/vector.h"
+
+struct StockMessagePart {
+    size_t count;
+    int stockId[MAX_STOCKS];
+    int quantities[MAX_STOCKS];
+};
 
 struct SetDestinationMessage {
     int id;
@@ -10,14 +18,13 @@ struct SetDestinationMessage {
 
 struct CheckDestinationsMessage {
     int id;
-    int destinations[MAX_DESTINATIONS];
+    size_t maxDestinations;
+    struct StockMessagePart stocks;
 };
 
 struct UnloadStockMessage {
     int id;
-    size_t count;
-    int stockId[MAX_STOCKS];
-    int quantities[MAX_STOCKS];
+    struct StockMessagePart stocks;
 };
 
 struct SetDestinationMessage marshall_set_destination(int id, int target);
