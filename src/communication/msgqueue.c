@@ -9,7 +9,7 @@ struct MessageQueue {
     pthread_mutex_t mutex;
     pthread_cond_t write;
     pthread_cond_t read;
-    struct Message* messages[QUEUE_SIZE];
+    struct Message messages[QUEUE_SIZE];
     int first;
     int last;
 };
@@ -30,9 +30,9 @@ struct MessageQueue* message_queue_create(void) {
     return queue;
 }
 
-struct Message* message_queue_pop(struct MessageQueue* queue) {
+struct Message message_queue_pop(struct MessageQueue* queue) {
 
-    struct Message* msg;
+    struct Message msg;
 
     pthread_mutex_lock(&queue->mutex);
     while (queue->first == queue->last) {
@@ -46,7 +46,7 @@ struct Message* message_queue_pop(struct MessageQueue* queue) {
     return msg;
 }
 
-void message_queue_push(struct MessageQueue* queue, struct Message* msg) {
+void message_queue_push(struct MessageQueue* queue, struct Message msg) {
 
     pthread_mutex_lock(&queue->mutex);
     while ((queue->last + 1) % QUEUE_SIZE == queue->first) {

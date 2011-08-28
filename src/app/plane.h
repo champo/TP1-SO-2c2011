@@ -2,7 +2,7 @@
 #define __APP_PLANE__
 
 #include <pthread.h>
-#include "utils/msgqueue.h"
+#include "communication/msgqueue.h"
 #include "ipc/ipc.h"
 #include "models/plane.h"
 

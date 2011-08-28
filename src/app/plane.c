@@ -1,4 +1,5 @@
 #include "app/plane.h"
+#include "communication/plane.h"
 
 #define CHECK_EXIT(r) {if((r) == -1) {pthread_exit(0);}}
 
