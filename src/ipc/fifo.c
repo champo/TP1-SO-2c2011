@@ -5,13 +5,18 @@
 #include <sys/stat.h>
 #include <stdlib.h>
 #include <stddef.h>
+#include <fcntl.h>
+#include <string.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <errno.h>
 
 struct ipc_t{
     int fd;
     pthread_mutex_t mutex;
 };
 
-int readfdi = -1;
+int readfd = -1;
 char path[512];
 
 int ipc_init(void) {
@@ -21,15 +26,20 @@ int ipc_init(void) {
 }
 
 int ipc_listen(const char* name) {
-
-    strcpy(path, name);
-    if (mkfifo(path, O_CREAT | O666)) {
-        return -1;
+     
+    sprintf(path, "/tmp/%s", name);
+    if (mkfifo(path, 0666)) {
+        // If the fifo already exists, fine other may have created it.
+        if ( errno != EEXIST) { 
+            perror("mkfifo failed");
+            return -1;
+        }
     }
-
-    readfd = open(path, O_RDONLY);
+    
+    readfd = open(path, O_RDWR);
 
     if (readfd == -1) {
+        perror("open failed");
         return -1;
     }
 
@@ -39,21 +49,28 @@ int ipc_listen(const char* name) {
 
 ipc_t ipc_establish(const char* name) {
 
-    struct ipc_t conn;
-    
+    ipc_t conn;
+    char dest[512];
+
+    sprintf(dest, "/tmp/%s", name);
     if ((conn = malloc(sizeof(struct ipc_t))) == NULL) {
         return NULL;
     }
 
-    if (mkfifo(path, O_CREAT | O666)) {
-        free(conn);
-        return NULL;
+    if (mkfifo(dest, 0666)) {
+        // If the fifo already exists, fine other may have created it.
+        if ( errno != EEXIST) { 
+            free(conn);
+            perror("mkfifo failed");
+            return NULL;
+        }
     }
     
-    &conn->fd = open(path, O_WRONLY);
+    conn->fd = open(dest, O_RDWR);
 
     if (conn->fd == -1) {
         free(conn);
+        perror("open failed");
         return NULL;
     }
 
@@ -71,7 +88,7 @@ int ipc_write(ipc_t conn, const void* buff, size_t len) {
     int res;
     
     char tempbuf[IPC_MAX_PACKET_LEN + sizeof(size_t)];
-    *((int*)tempbuf) = len;
+    *((size_t*)tempbuf) = len;
     memcpy(tempbuf + sizeof(size_t), buff, (len <= IPC_MAX_PACKET_LEN ? len : IPC_MAX_PACKET_LEN));
     pthread_mutex_lock(&conn->mutex);
     res = write(conn->fd, tempbuf, (len <= IPC_MAX_PACKET_LEN ? len + sizeof(size_t): 
@@ -84,14 +101,13 @@ int ipc_write(ipc_t conn, const void* buff, size_t len) {
 
 int ipc_read(void* buff, size_t len) {
     
-    int count;
+    size_t count;
     char tempbuf[IPC_MAX_PACKET_LEN];
-    read(readfd,tempbuf,sizeof(size_t));
-    
-    count = atoi(tempbuf);
+    read(readfd, &count, sizeof(size_t));
     count = read(readfd,tempbuf,count);
     memcpy(buff, tempbuf, len);
-    return (len < count? len : count);
+    return (len < count? (int) len : count);
+
 }
 
 void ipc_close(ipc_t conn) {
