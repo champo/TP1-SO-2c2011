@@ -11,4 +11,6 @@ int comm_continue(struct PlaneThread* plane);
 
 int comm_step(struct PlaneThread* plane);
 
+int comm_unload_stock(struct PlaneThread* plane, int* stockDelta);
+
 #endif

@@ -1,4 +1,4 @@
-#include "utils/msgqueue.h"
+#include "communication/msgqueue.h"
 
 #include <pthread.h>
 #include <stdlib.h>

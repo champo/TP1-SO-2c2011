@@ -8,6 +8,7 @@
 #include "ipc/ipc.h"
 #include "models/airline.h"
 #include "app/signal.h"
+#include "app/airline.h"
 #include "utils/vector.h"
 #include "parser.h"
 

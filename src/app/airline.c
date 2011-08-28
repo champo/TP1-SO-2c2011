@@ -14,8 +14,6 @@ static void listen(Vector* conns);
 
 static Vector* bootstrap_planes(Airline* self, ipc_t conn);
 
-static void (*parent_cleanup)(void) = NULL;
-
 static pthread_cond_t exitWait = PTHREAD_COND_INITIALIZER;
 
 static pthread_mutex_t resourcesLock = PTHREAD_MUTEX_INITIALIZER;

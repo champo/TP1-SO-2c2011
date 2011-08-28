@@ -1,13 +1,28 @@
 #ifndef __COMM_MSGQUEUE__
 #define __COMM_MSGQUEUE__
 
+#include <stddef.h>
+#include "global.h"
+
 struct MessageQueue;
 
-union MessagePaylod {
+union MessagePayload {
+    struct {
+        size_t count;
+        int destinations[MAX_DESTINATIONS];
+    } destinations;
+    struct {
+        size_t count;
+        int delta[MAX_STOCKS];
+    } stock;
 };
 
 enum MessageType {
-    MessageTypeNone = 0
+    MessageTypeNone = 0,
+    MessageTypeContinue,
+    MessageTypeDestinations,
+    MessageTypeStep,
+    MessageTypeStock
 };
 
 struct Message {
