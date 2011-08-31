@@ -62,7 +62,7 @@ int needDrugs(Map* map){
 void updateMap(Map* map, Plane plane){
     return;
 }
-void sendPlaneInfo(Plane* plane, ipc_t conn){
+void sendPlaneInfo(Plane plane, ipc_t conn){
     return;
 }
 void giveDirections(Map* map, Plane plane, ipc_t conn){
