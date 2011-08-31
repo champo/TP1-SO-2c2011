@@ -1,16 +1,10 @@
 #include <stdlib.h>
-#include "models/map.h"
-#include "models/airline.h"
 #include "ipc/ipc.h"
 #include "models/plane.h"
 #include "models/city.h"
-
-int getMessageForMap(Plane* plane, int* airlineID);
-int needDrugs(Map* map);
-void updateMap(Map* map, Plane plane);
-void sendPlaneInfo(Plane* plane, ipc_t conn);
-void giveDirections(Map* map, Plane plane, ipc_t conn);
-void startPhaseTwo(Vector* conns);
+#include "models/map.h"
+#include "models/airline.h"
+#include "app/map.h"
 
 void runMap(Map* map, Vector* airlines, Vector* conns){
     
@@ -68,7 +62,11 @@ int needDrugs(Map* map){
 void updateMap(Map* map, Plane plane){
     return;
 }
+<<<<<<< HEAD
 void sendPlaneInfo(Plane* plane, ipc_t conn){
+=======
+void sendPlaneInfo(Plane* plane, ipc_t* conn){
+>>>>>>> 234601aa268aad678a21b7b51ccd733ecefc8b92
     return;
 }
 void giveDirections(Map* map, Plane plane, ipc_t conn){
