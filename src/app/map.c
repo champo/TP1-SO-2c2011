@@ -25,7 +25,7 @@ void runMap(Map* map, Vector* airlines, Vector* conns){
                     i++;
                 }
                 if (temp == 0) {
-                    updateMap(map, curplane);
+                    updateMap(map, &curplane);
                     sendPlaneInfo(curplane, (ipc_t)getFromVector(conns,airlineID));
                 }
             }
@@ -59,7 +59,7 @@ int getMessageForMap(Plane* plane, int* airlineID){
 int needDrugs(Map* map){
     return 1;
 }
-void updateMap(Map* map, Plane plane){
+void updateMap(Map* map, Plane* plane){
     return;
 }
 void sendPlaneInfo(Plane plane, ipc_t conn){
