@@ -12,7 +12,7 @@ Stock* initStock(char* name, int amount, Vector* theShit) {
         return NULL;
     }
     stock->amount = amount;
-    stock->theShit = getTheShit(name, theShit); //TODO get a reference of theShit.
+    stock->theShit = getTheShit(name, theShit); 
     return stock;
 }
 

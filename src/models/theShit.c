@@ -4,8 +4,6 @@
 
 
 
-//TODO THIS IS WRONG! JUST HARD-CODING! THIS SHOULD RETURN A REFERENCE TO AN
-//ALREADY CREATED STRUCTURE. 
 TheShit* getTheShit(char* name, Vector* theShit) {
     int i;
 
