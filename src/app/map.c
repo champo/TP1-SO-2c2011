@@ -59,9 +59,43 @@ int getMessageForMap(Plane* plane, int* airlineID){
 int needDrugs(Map* map){
     return 1;
 }
+
 void updateMap(Map* map, Plane* plane){
+
+    City* city = getFromVector(map->cities, plane->cityId);
+    unsigned int i;
+    unsigned int plane_stock_size = getVectorSize(plane->stocks);
+
+    for (i = 0; i < plane_stock_size; i++) {
+
+        Stock* plane_stock = getFromVector(plane->stocks,i);
+        Stock* city_stock;
+        unsigned int j;
+        unsigned int city_stock_size = getVectorSize(city->stock);
+        for(j = 0; j < city_stock_size; j++) {
+            
+            city_stock = getFromVector(city->stock,j);
+            if ( plane_stock->theShit->id == city_stock->theShit->id) {
+                break;
+            }
+        }
+        
+        if (city_stock->amount >= plane_stock->amount ) {
+            
+            // Then discharge everything
+            city_stock->amount -= plane_stock->amount;
+            plane_stock->amount = 0;
+        } else {
+
+            // Satisfy all the city needs
+            plane_stock->amount -= city_stock->amount;
+            city_stock->amount = 0;
+        }
+    }
+
     return;
 }
+
 void sendPlaneInfo(Plane plane, ipc_t conn){
     return;
 }
