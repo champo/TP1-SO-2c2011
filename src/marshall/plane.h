@@ -22,7 +22,7 @@ struct CheckDestinationsMessage {
     struct StockMessagePart stocks;
 };
 
-struct UnloadStockMessage {
+struct StockStateMessage {
     int id;
     struct StockMessagePart stocks;
 };
@@ -31,6 +31,6 @@ struct SetDestinationMessage marshall_set_destination(int id, int target);
 
 struct CheckDestinationsMessage marshall_check_destinations(int id, Vector* stocks, size_t len);
 
-struct UnloadStockMessage marshall_unload_stock(int id, Vector* stocks);
+struct StockStateMessage marshall_change_stock(int id, Vector* stocks);
 
 #endif

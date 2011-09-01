@@ -5,12 +5,12 @@
 #include "models/map.h"
 #include "models/airline.h"
 #include "app/map.h"
+#include "communication/map.h"
 
 static int getMessageForMap(Plane* plane, int* airlineID);
 static int endSimulation(Map* map);
 static int cityIsSatisfied(City* city);
 static void updateMap(Map* map, Plane* plane);
-static void sendPlaneInfo(Plane plane, ipc_t conn);
 static void giveDirections(Map* map, Plane plane, ipc_t conn);
 static void startPhaseTwo(Vector* conns);
 
@@ -34,7 +34,7 @@ void runMap(Map* map, Vector* airlines, Vector* conns){
                 }
                 if (temp == 0) {
                     updateMap(map, &curplane);
-                    sendPlaneInfo(curplane, (ipc_t)getFromVector(conns,airlineID));
+                    comm_unloaded_stock(&curplane, (ipc_t)getFromVector(conns,airlineID));
                 }
             }
 
@@ -128,12 +128,11 @@ void updateMap(Map* map, Plane* plane){
     return;
 }
 
-void sendPlaneInfo(Plane plane, ipc_t conn){
-    return;
-}
+
 void giveDirections(Map* map, Plane plane, ipc_t conn){
     return;
 }
+
 void startPhaseTwo(Vector* conns){
     return;
 }

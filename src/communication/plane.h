@@ -3,6 +3,10 @@
 
 #include "app/plane.h"
 
+#define transmit(conn, msg) if (sizeof(msg) != ipc_write(conn, &(msg), sizeof(msg))) { \
+        return -1; \
+        }
+
 int comm_check_destinations(struct PlaneThread* plane, int* destinations, size_t* len);
 
 int comm_set_destination(struct PlaneThread* plane, int target);

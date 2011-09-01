@@ -21,8 +21,8 @@ struct CheckDestinationsMessage marshall_check_destinations(int id, Vector* stoc
     return msg;
 }
 
-struct UnloadStockMessage marshall_unload_stock(int id, Vector* stocks) {
-    struct UnloadStockMessage msg;
+struct StockStateMessage marshall_change_stock(int id, Vector* stocks) {
+    struct StockStateMessage msg;
     size_t count = getVectorSize(stocks);
     msg.id = id;
     msg.stocks.count = count;
