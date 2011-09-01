@@ -61,6 +61,7 @@ Vector* bootstrap_planes(Airline* self, ipc_t conn) {
         t->plane = &self->planes[i];
         t->conn = conn;
         t->done = 0;
+        t->airline = self->id;
         pthread_create(&t->thread, &attr, (void*(*)(void*))run_plane, t);
         addToVector(threads, t);
     }

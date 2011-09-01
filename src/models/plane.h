@@ -9,6 +9,7 @@ typedef struct {
     int     id;
     Vector* stocks;
     int     cityId;
+    int distance;
 } Plane;
 
 

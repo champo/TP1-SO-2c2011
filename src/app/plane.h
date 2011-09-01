@@ -11,6 +11,7 @@ struct PlaneThread {
     struct MessageQueue* queue;
     ipc_t conn;
     Plane* plane;
+    int airline;
     int done;
 };
 

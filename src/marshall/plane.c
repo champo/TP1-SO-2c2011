@@ -1,14 +1,27 @@
 #include "marshall/plane.h"
 #include "models/stock.h"
 
-struct SetDestinationMessage marshall_set_destination(int id, int target) {
-    return (struct SetDestinationMessage) {.id = id, .target = target};
+static struct PlaneMessageHeader prepare_header(int airline, int plane, enum PlaneMessageType type);
+
+struct PlaneMessageHeader prepare_header(int airline, int plane, enum PlaneMessageType type) {
+    return (struct PlaneMessageHeader) {
+        .type = type,
+        .id = plane,
+        .airline = airline
+    };
 }
 
-struct CheckDestinationsMessage marshall_check_destinations(int id, Vector* stocks, size_t len) {
+struct SetDestinationMessage marshall_set_destination(int airline, int id, int target) {
+    return (struct SetDestinationMessage) {
+        .header = prepare_header(airline, id, SetDestinationType),
+        .target = target
+    };
+}
+
+struct CheckDestinationsMessage marshall_check_destinations(int airline, int id, Vector* stocks, size_t len) {
     struct CheckDestinationsMessage msg;
     size_t count = getVectorSize(stocks);
-    msg.id = id;
+    msg.header = prepare_header(airline, id, CheckDestinationsType);
     msg.maxDestinations = len;
     msg.stocks.count = count;
 
@@ -21,10 +34,10 @@ struct CheckDestinationsMessage marshall_check_destinations(int id, Vector* stoc
     return msg;
 }
 
-struct UnloadStockMessage marshall_unload_stock(int id, Vector* stocks) {
+struct UnloadStockMessage marshall_unload_stock(int airline, int id, Vector* stocks) {
     struct UnloadStockMessage msg;
     size_t count = getVectorSize(stocks);
-    msg.id = id;
+    msg.header = prepare_header(airline, id, UnloadStockType);
     msg.stocks.count = count;
 
     for (size_t i = 0; i < count; i++) {
@@ -34,5 +47,11 @@ struct UnloadStockMessage marshall_unload_stock(int id, Vector* stocks) {
     }
 
     return msg;
+}
+
+struct InTransitMessage marshall_intransit(int airline, int id) {
+    return (struct InTransitMessage) {
+        .header = prepare_header(airline, id, InTransitType)
+    };
 }
 

@@ -16,7 +16,7 @@ int comm_check_destinations(struct PlaneThread* plane, int* destinations, size_t
     struct Message res;
     union MessagePayload* payload;
 
-    msg = marshall_check_destinations(model->id, model->stocks, *len);
+    msg = marshall_check_destinations(plane->airline, model->id, model->stocks, *len);
     send(plane, msg);
 
     res = message_queue_pop(plane->queue);
@@ -34,7 +34,9 @@ int comm_check_destinations(struct PlaneThread* plane, int* destinations, size_t
 }
 
 int comm_set_destination(struct PlaneThread* plane, int target) {
-    struct SetDestinationMessage msg = marshall_set_destination(plane->plane->id, target);
+    struct SetDestinationMessage msg = marshall_set_destination(
+        plane->airline, plane->plane->id, target
+    );
     send(plane, msg);
     return 0;
 }
@@ -55,7 +57,7 @@ int comm_unload_stock(struct PlaneThread* plane, int* stockDelta) {
     struct Message res;
     struct UnloadStockMessage msg;
 
-    msg = marshall_unload_stock(model->id, model->stocks);
+    msg = marshall_unload_stock(plane->airline, model->id, model->stocks);
     send(plane, msg);
 
     res = message_queue_pop(plane->queue);
@@ -65,5 +67,10 @@ int comm_unload_stock(struct PlaneThread* plane, int* stockDelta) {
 
     memcpy(stockDelta, res.payload.stock.delta, sizeof(int) * res.payload.stock.count);
     return 0;
+}
+
+int comm_intransit(struct PlaneThread* plane) {
+    struct InTransitMessage msg = marshall_intransit(plane->airline, plane->plane->id);
+    send(plane, msg);
 }
 

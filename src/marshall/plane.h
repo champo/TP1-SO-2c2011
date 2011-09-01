@@ -5,6 +5,20 @@
 #include <stddef.h>
 #include "utils/vector.h"
 
+enum PlaneMessageType {
+    SetDestinationType,
+    CheckDestinationsType,
+    UnloadStockType,
+    InTransitType,
+    OutOfTransitType
+};
+
+struct PlaneMessageHeader {
+    enum PlaneMessageType type;
+    int airline;
+    int id;
+};
+
 struct StockMessagePart {
     size_t count;
     int stockId[MAX_STOCKS];
@@ -12,25 +26,31 @@ struct StockMessagePart {
 };
 
 struct SetDestinationMessage {
-    int id;
+    struct PlaneMessageHeader header;
     int target;
 };
 
 struct CheckDestinationsMessage {
-    int id;
+    struct PlaneMessageHeader header;
     size_t maxDestinations;
     struct StockMessagePart stocks;
 };
 
 struct UnloadStockMessage {
-    int id;
+    struct PlaneMessageHeader header;
     struct StockMessagePart stocks;
 };
 
-struct SetDestinationMessage marshall_set_destination(int id, int target);
+struct InTransitMessage {
+    struct PlaneMessageHeader header;
+};
 
-struct CheckDestinationsMessage marshall_check_destinations(int id, Vector* stocks, size_t len);
+struct SetDestinationMessage marshall_set_destination(int airline, int id, int target);
 
-struct UnloadStockMessage marshall_unload_stock(int id, Vector* stocks);
+struct CheckDestinationsMessage marshall_check_destinations(int airline, int id, Vector* stocks, size_t len);
+
+struct UnloadStockMessage marshall_unload_stock(int airline, int id, Vector* stocks);
+
+struct InTransitMessage marshall_intransit(int airline, int id);
 
 #endif

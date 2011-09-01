@@ -13,4 +13,6 @@ int comm_step(struct PlaneThread* plane);
 
 int comm_unload_stock(struct PlaneThread* plane, int* stockDelta);
 
+int comm_intransit(struct PlaneThread* plane);
+
 #endif
