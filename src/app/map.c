@@ -6,6 +6,14 @@
 #include "models/airline.h"
 #include "app/map.h"
 
+static int getMessageForMap(Plane* plane, int* airlineID);
+static int endSimulation(Map* map);
+static int cityIsSatisfied(City* city);
+static void updateMap(Map* map, Plane* plane);
+static void sendPlaneInfo(Plane plane, ipc_t conn);
+static void giveDirections(Map* map, Plane plane, ipc_t conn);
+static void startPhaseTwo(Vector* conns);
+
 void runMap(Map* map, Vector* airlines, Vector* conns){
     
     int i,temp,airlinesize,airlineID;
@@ -14,7 +22,7 @@ void runMap(Map* map, Vector* airlines, Vector* conns){
     airlinesize = getVectorSize(airlines);
     i = 0;
     
-    while (needDrugs(map)) {
+    while (endSimulation(map)) {
             while (i != airlinesize) {
                 temp = getMessageForMap(&curplane, &airlineID); 
                                                    //returns 0 if it has read a plane which wants to discharge,
@@ -56,9 +64,33 @@ void runMap(Map* map, Vector* airlines, Vector* conns){
 int getMessageForMap(Plane* plane, int* airlineID){
     return 1;
 }
-int needDrugs(Map* map){
+int endSimulation(Map* map){
+    
+    City* city;
+    unsigned int i;
+    unsigned int cities = getVectorSize(map->cities);
+    for (i = 0; i < cities; i++) {
+        if ( !cityIsSatisfied(getFromVector(map->cities, i))) {
+            return CONTINUE_SIM;
+        }
+    }
+    return END_SIM;
+}
+
+int cityIsSatisfied(City* city) {
+   
+    Stock* stock;
+    unsigned int i;
+    unsigned int stock_size = getVectorSize(city->stock);
+    for (i = 0; i < stock_size; i++) {
+        Stock* stock = getFromVector(city->stock, i);
+        if (stock->amount != 0) {
+            return 0;
+        }
+    }
     return 1;
 }
+
 
 void updateMap(Map* map, Plane* plane){
 
