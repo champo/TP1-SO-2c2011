@@ -9,11 +9,13 @@
 #include "utils/vector.h"
 #include "app/plane.h"
 
-static void signal_handler(void);
+static void exit_handler(void);
 
 static void listen(Vector* conns);
 
 static Vector* bootstrap_planes(Airline* self, ipc_t conn);
+
+static void broadcast(Vector* threads, struct Message msg);
 
 static pthread_cond_t exitWait = PTHREAD_COND_INITIALIZER;
 
@@ -24,7 +26,7 @@ static int exitState = 0;
 void run_airline(Airline* self, ipc_t conn) {
 
     pthread_mutex_lock(&resourcesLock);
-    register_exit_function(signal_handler);
+    register_exit_function(exit_handler);
 
     pthread_t listenerThread;
     Vector* threads = bootstrap_planes(self, conn);
@@ -75,15 +77,39 @@ Vector* bootstrap_planes(Airline* self, ipc_t conn) {
 void listen(Vector* threads) {
 
     struct MapMessage msg;
+    struct Message outMsg;
     while (comm_airline_recieve(&msg) == 0) {
-        //TODO: Process this
+        switch (msg.type) {
+            case StepMessageType:
+                outMsg.type = MessageTypeStep;
+                broadcast(threads, outMsg);
+                break;
+            case ContinueMessageType:
+                outMsg.type = MessageTypeContinue;
+                broadcast(threads, outMsg);
+                break;
+            case DestinationMessageType:
+                //TODO: Implement me :D
+                break;
+            default:
+                exit_handler();
+                return;
+        }
     }
 }
 
-void signal_handler(void) {
+void exit_handler(void) {
     pthread_mutex_lock(&resourcesLock);
     exitState = 1;
     pthread_cond_signal(&exitWait);
     pthread_mutex_unlock(&resourcesLock);
+}
+
+void broadcast(Vector* threads, struct Message msg) {
+    size_t len = getVectorSize(threads);
+    for (size_t i = 0; i < len; i++) {
+        struct PlaneThread* plane = (struct PlaneThread*) getFromVector(threads, i);
+        message_queue_push(plane->queue, msg);
+    }
 }
 
