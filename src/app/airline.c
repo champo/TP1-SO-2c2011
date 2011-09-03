@@ -5,6 +5,7 @@
 
 #include "app/signal.h"
 #include "communication/plane.h"
+#include "communication/airline.h"
 #include "utils/vector.h"
 #include "app/plane.h"
 
@@ -72,9 +73,9 @@ Vector* bootstrap_planes(Airline* self, ipc_t conn) {
 }
 
 void listen(Vector* threads) {
-    char buff[IPC_MAX_PACKET_LEN];
-    //FIXME: Add a transport layer
-    while (ipc_read(buff, IPC_MAX_PACKET_LEN) > 0) {
+
+    struct MapMessage msg;
+    while (comm_airline_recieve(&msg) == 0) {
         //TODO: Process this
     }
 }

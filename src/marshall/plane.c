@@ -11,13 +11,6 @@ struct PlaneMessageHeader prepare_header(int airline, int plane, enum PlaneMessa
     };
 }
 
-struct SetDestinationMessage marshall_set_destination(int airline, int id, int target) {
-    return (struct SetDestinationMessage) {
-        .header = prepare_header(airline, id, SetDestinationType),
-        .target = target
-    };
-}
-
 struct CheckDestinationsMessage marshall_check_destinations(int airline, int id, Vector* stocks, size_t len) {
     struct CheckDestinationsMessage msg;
     size_t count = getVectorSize(stocks);

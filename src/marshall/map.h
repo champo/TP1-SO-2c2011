@@ -7,7 +7,7 @@
 enum MapMessageType {
     StepMessageType,
     ContinueMessageType,
-    DestinationMessageType 
+    DestinationMessageType
 };
 
 struct DestinationsMessage {
@@ -18,7 +18,6 @@ struct DestinationsMessage {
     int distance[MAX_DESTINATIONS];
 };
 
-struct DestinationsMessage marshall_give_destinations(int planeId, int count, City* cities, int* distances); 
+struct DestinationsMessage marshall_give_destinations(int planeId, int count, City* cities, int* distances);
 
 #endif
-
