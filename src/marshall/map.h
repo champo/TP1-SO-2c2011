@@ -17,5 +17,6 @@ struct DestinationsMessage {
 };
 
 struct DestinationsMessage marshall_give_destinations(int planeId, int count, City* cities, int* distances); 
+
 #endif
 

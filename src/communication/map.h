@@ -12,6 +12,7 @@ struct MapMessage {
     } planeInfo;
 };
 
+int comm_start_phase_one(Vector* conns);
 int comm_start_phase_two(Vector* conns);
 int comm_unloaded_stock(int airlineID, Plane* plane, ipc_t conn);
 
