@@ -10,6 +10,7 @@ union MessagePayload {
     struct {
         size_t count;
         int destinations[MAX_DESTINATIONS];
+        int distances[MAX_DESTINATIONS];
     } destinations;
     struct {
         size_t count;

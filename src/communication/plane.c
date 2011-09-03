@@ -7,7 +7,7 @@
 
 #define send(plane, msg) transmit((plane->conn), (msg))
 
-int comm_check_destinations(struct PlaneThread* plane, int* destinations, size_t* len) {
+int comm_check_destinations(struct PlaneThread* plane, int* destinations, int* distances, size_t* len) {
 
     Plane* model = plane->plane;
     struct CheckDestinationsMessage msg;
@@ -27,21 +27,14 @@ int comm_check_destinations(struct PlaneThread* plane, int* destinations, size_t
         *len = payload->destinations.count;
     }
     memcpy(destinations, payload->destinations.destinations, (*len) * sizeof(int));
+    memcpy(distances, payload->destinations.distances, (*len) * sizeof(int));
 
-    return 0;
-}
-
-int comm_set_destination(struct PlaneThread* plane, int target) {
-    struct SetDestinationMessage msg = marshall_set_destination(
-        plane->airline, plane->plane->id, target
-    );
-    send(plane, msg);
     return 0;
 }
 
 int comm_continue(struct PlaneThread* plane) {
     struct Message msg = message_queue_pop(plane->queue);
-    return msg.type != MessageTypeContinue ? 0 : -1;
+    return msg.type != MessageTypeContinue ? -1 : 0;
 }
 
 int comm_step(struct PlaneThread* plane) {

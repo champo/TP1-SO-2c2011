@@ -9,7 +9,7 @@ static int unload_stock(struct PlaneThread* self);
 
 void run_plane(struct PlaneThread* self) {
     int finished = 0;
-    int destinations[5];
+    int destinations[5], distances[5];
     int target;
     size_t len;
 
@@ -25,9 +25,9 @@ void run_plane(struct PlaneThread* self) {
 
         if (self->plane->distance == 0) {
             len = 5;
-            CHECK_EXIT(comm_check_destinations(self, destinations, &len));
-            target = *destinations;
-            CHECK_EXIT(comm_set_destination(self, target));
+            CHECK_EXIT(comm_check_destinations(self, destinations, distances, &len));
+            self->plane->cityId = *destinations;
+            self->plane->distance = *distances;
         } else {
             self->plane->distance--;
         }
