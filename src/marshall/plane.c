@@ -34,8 +34,8 @@ struct CheckDestinationsMessage marshall_check_destinations(int airline, int id,
     return msg;
 }
 
-struct ChangeStockMessage marshall_change_stock(int airline, int id, Vector* stocks) {
-    struct ChangeStockMessage msg;
+struct StockStateMessage marshall_change_stock(int airline, int id, Vector* stocks) {
+    struct StockStateMessage msg;
     size_t count = getVectorSize(stocks);
     msg.header = prepare_header(airline, id, UnloadStockType);
     msg.stocks.count = count;

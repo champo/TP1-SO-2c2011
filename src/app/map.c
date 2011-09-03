@@ -11,8 +11,8 @@ static int getMessageForMap(Plane* plane, int* airlineID);
 static int endSimulation(Map* map);
 static int cityIsSatisfied(City* city);
 static void updateMap(Map* map, Plane* plane);
-static void giveDirections(Map* map, Plane plane, ipc_t conn);
 static void startPhaseTwo(Vector* conns);
+static int app_give_destinations(Map* map, Plane* plane, ipc_t conn);
 
 void runMap(Map* map, Vector* airlines, Vector* conns){
     
@@ -34,7 +34,7 @@ void runMap(Map* map, Vector* airlines, Vector* conns){
                 }
                 if (temp == 0) {
                     updateMap(map, &curplane);
-                    comm_unloaded_stock(&curplane, (ipc_t)getFromVector(conns,airlineID));
+                    comm_unloaded_stock(airlineID , &curplane, (ipc_t)getFromVector(conns,airlineID));
                 }
             }
 
@@ -52,7 +52,7 @@ void runMap(Map* map, Vector* airlines, Vector* conns){
                     i++;
                 }
                 if (temp == 0) {
-                    giveDirections(map, curplane, (ipc_t)getFromVector(conns,airlineID));
+                    app_give_destinations(map, &curplane, (ipc_t)getFromVector(conns,airlineID));
                 }
             }
             
@@ -128,11 +128,10 @@ void updateMap(Map* map, Plane* plane){
     return;
 }
 
+int app_give_destinations(Map* map, Plane* plane, ipc_t conn) {
 
-void giveDirections(Map* map, Plane plane, ipc_t conn){
-    return;
+    return 0;
 }
-
 void startPhaseTwo(Vector* conns){
     return;
 }
