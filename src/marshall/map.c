@@ -8,7 +8,7 @@ struct DestinationsMessage marshall_give_destinations(int planeId, int count, Ci
     
     struct DestinationsMessage msg;
     
-    msg.type = Destination;
+    msg.type = DestinationMessageType;
     msg.planeId = planeId;
     msg.count = count;
 
