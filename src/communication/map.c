@@ -4,15 +4,24 @@
 #include "models/map.h"
 #include "communication/map.h"
 #include "communication/plane.h"
-#include "marshall/plane.h"
 #include "marshall/map.h"
+#include "marshall/plane.h"
 #include "communication/msgqueue.h"
 
 
-int comm_unloaded_stock(Plane* plane, ipc_t conn){
+int comm_unloaded_stock(int airlineID, Plane* plane, ipc_t conn){
     
     struct StockStateMessage msg;
-    msg = marshall_change_stock(plane->id, plane->stocks);
+    msg = marshall_change_stock(airlineID, plane->id, plane->stocks);
+    transmit(conn, msg);
+
+    return 0;
+}
+
+int comm_give_destinations(Plane* plane, ipc_t conn, int cityNumber, City* cities, int* distances){
+
+    struct DestinationsMessage msg;
+    msg = marshall_give_destinations(plane->id, cityNumber, cities, distances);
     transmit(conn, msg);
 
     return 0;

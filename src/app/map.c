@@ -9,18 +9,25 @@
 #include "marshall/map.h"
 #include "marshall/plane.h"
 
+
+#define AIRLINEFINISHED 1 //TODO Que este el posta
+
+#define AIRLINEFINISHED 1 //TODO Que este el posta
+
+
 static struct MapMessage getMessageForMap();
+#define AIRLINEFINISHED 1 //TODO Que este el posta
+
 static int endSimulation(Map* map);
 static int cityIsSatisfied(City* city);
 static void updateMap(Map* map, Plane* plane);
-static void giveDirections(Map* map, Plane plane, ipc_t conn);
 static void startPhaseTwo(Vector* conns);
+static int app_give_destinations(Map* map, Plane* plane, ipc_t conn);
 
 void runMap(Map* map, Vector* airlines, Vector* conns){
     
-    int i,temp,airlinesize,airlineID;
+    int i,airlinesize;
     struct MapMessage msg;
-    Plane curplane;
 
     airlinesize = getVectorSize(airlines);
     i = 0;
@@ -29,12 +36,12 @@ void runMap(Map* map, Vector* airlines, Vector* conns){
             while (i != airlinesize) {
                 msg = getMessageForMap(); 
                 
-                if (msg->type == AIRLINEFINISHED) /*Airline finished not set yet*/ {
+                if (msg.type == AIRLINEFINISHED) /*Airline finished not set yet*/ {
                     i++;
                 }
-                if (msg->type == UnloadStockType) {
-                    updateMap(map, &curplane);
-                    comm_unloaded_stock(&curplane, (ipc_t)getFromVector(conns,airlineID));
+                if (msg.type == UnloadStockType) {
+                    updateMap(map, &(msg.planeInfo.plane));
+                    comm_unloaded_stock(msg.planeInfo.airlineID , &(msg.planeInfo.plane), (ipc_t)getFromVector(conns,msg.planeInfo.airlineID));
                 }
             }
 
@@ -44,11 +51,11 @@ void runMap(Map* map, Vector* airlines, Vector* conns){
 
             while (i != airlinesize) {
                 msg = getMessageForMap(); 
-                if (msg->type == AIRLINEFINISHED) /*Airline finished not set yet*/ {
+                if (msg.type == AIRLINEFINISHED) /*Airline finished not set yet*/ {
                     i++;
                 }
-                if (msg->type == CheckDestinationsType) {
-                    giveDirections(map, curplane, (ipc_t)getFromVector(conns,airlineID));
+                if (msg.type == CheckDestinationsType) {
+                    app_give_destinations(map, &(msg.planeInfo.plane), (ipc_t)getFromVector(conns,msg.planeInfo.airlineID));
                 }
             }
             
@@ -58,7 +65,8 @@ void runMap(Map* map, Vector* airlines, Vector* conns){
 }
     
 struct MapMessage getMessageForMap(){
-    return 1;
+    struct MapMessage msg;
+    return msg;
 }
 int endSimulation(Map* map){
     
@@ -124,11 +132,10 @@ void updateMap(Map* map, Plane* plane){
     return;
 }
 
+int app_give_destinations(Map* map, Plane* plane, ipc_t conn) {
 
-void giveDirections(Map* map, Plane plane, ipc_t conn){
-    return;
+    return 0;
 }
-
 void startPhaseTwo(Vector* conns){
     comm_start_phase_two(conns);
     return;
