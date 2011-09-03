@@ -5,9 +5,7 @@
 
 #include <string.h>
 
-#define send(plane, msg) if (sizeof(msg) != ipc_write((plane->conn), &(msg), sizeof(msg))) { \
-        return -1; \
-        }
+#define send(plane, msg) transmit((plane->conn), (msg))
 
 int comm_check_destinations(struct PlaneThread* plane, int* destinations, size_t* len) {
 
@@ -55,9 +53,9 @@ int comm_unload_stock(struct PlaneThread* plane, int* stockDelta) {
 
     Plane* model = plane->plane;
     struct Message res;
-    struct UnloadStockMessage msg;
+    struct StockStateMessage msg;
 
-    msg = marshall_unload_stock(plane->airline, model->id, model->stocks);
+    msg = marshall_change_stock(plane->airline, model->id, model->stocks);
     send(plane, msg);
 
     res = message_queue_pop(plane->queue);

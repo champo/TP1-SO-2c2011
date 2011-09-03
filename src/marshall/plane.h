@@ -36,7 +36,7 @@ struct CheckDestinationsMessage {
     struct StockMessagePart stocks;
 };
 
-struct UnloadStockMessage {
+struct StockStateMessage {
     struct PlaneMessageHeader header;
     struct StockMessagePart stocks;
 };
@@ -49,8 +49,8 @@ struct SetDestinationMessage marshall_set_destination(int airline, int id, int t
 
 struct CheckDestinationsMessage marshall_check_destinations(int airline, int id, Vector* stocks, size_t len);
 
-struct UnloadStockMessage marshall_unload_stock(int airline, int id, Vector* stocks);
-
 struct InTransitMessage marshall_intransit(int airline, int id);
+
+struct StockStateMessage marshall_change_stock(int airline, int id, Vector* stocks);
 
 #endif
