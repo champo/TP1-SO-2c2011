@@ -2,6 +2,7 @@
 #define __MARSHALL_MAP__
 
 #include "global.h"
+#include "models/city.h"
 
 enum MapMessageType {
         StartPhaseOne,
