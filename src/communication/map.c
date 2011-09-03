@@ -18,10 +18,10 @@ int comm_unloaded_stock(int airlineID, Plane* plane, ipc_t conn){
     return 0;
 }
 
-int comm_give_destinations(Plane* plane, ipc_t conn, int cityNumber, City* cities, int* distances){
+int comm_give_destinations(Plane* plane, ipc_t conn, int count, int* citiesIds, int* distances){
 
     struct DestinationsMessage msg;
-    msg = marshall_give_destinations(plane->id, cityNumber, cities, distances);
+    msg = marshall_give_destinations(plane->id, count, citiesIds, distances);
     transmit(conn, msg);
 
     return 0;
