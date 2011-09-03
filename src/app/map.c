@@ -11,12 +11,15 @@
 #include <stdlib.h>
 #include <stddef.h>
 
+
+#define AIRLINEFINISHED 1
+
 static struct MapMessage getMessageForMap();
 
 static int endSimulation(Map* map);
 static int cityIsSatisfied(City* city);
 static void updateMap(Map* map, Plane* plane);
-static void startPhaseOne(Vector*conns);
+static void startPhaseOne(Vector* conns);
 static void startPhaseTwo(Vector* conns);
 static int app_give_destinations(Map* map, Plane* plane, ipc_t conn);
 
@@ -144,16 +147,12 @@ int app_give_destinations(Map* map, Plane* plane, ipc_t conn) {
     return 0;
 }
 
-<<<<<<< HEAD
-void startPhaseTwo(Vector* conns){
-=======
 void startPhaseOne(Vector* conns) {
     comm_start_phase_one(conns);
     return;
 }
 
 void startPhaseTwo(Vector* conns) {
->>>>>>> 1cb7cf64534488bf2289543d65c092b7fbdb37dd
     comm_start_phase_two(conns);
     return;
 }

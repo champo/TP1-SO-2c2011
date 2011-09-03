@@ -4,6 +4,7 @@
 #include "global.h"
 
 enum MapMessageType {
+        StartPhaseOne,
         StartPhaseTwo,
         Destination  
 };

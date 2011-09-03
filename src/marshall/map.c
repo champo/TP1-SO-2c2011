@@ -7,7 +7,8 @@
 struct DestinationsMessage marshall_give_destinations(int planeId, int count, City* cities, int* distances) {
     
     struct DestinationsMessage msg;
-
+    
+    msg.type = Destination;
     msg.planeId = planeId;
     msg.count = count;
 
