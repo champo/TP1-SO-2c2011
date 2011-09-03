@@ -17,7 +17,7 @@
 
 int getCityId(char* cityName, Vector* cities);
 int getTheShitId(char* theShitName, Vector* theShit); 
-
+static void floydMatrix(int** matrix, int counter);
 
 
 //TODO SON SOLO DEFS DSP HAY Q IMPLEMENTARLAS Y  MOVERLAS!!!!
@@ -157,9 +157,27 @@ Map* parseMap(const char* path){
         
     }
 
+    floydMatrix(ans->matrix, counter);
+
     return ans;
 }
 
+
+void floydMatrix(int** matrix, int counter) {
+    
+    int i,j,k;
+    int aux1,aux2;
+        
+    for ( k=0; k<counter; k++) {
+        for ( i=0; i<counter; i++) {
+            for ( i=0; i<counter;i++) {
+                aux1 = matrix[i][j];
+                aux2= matrix[i][k]+matrix[k][j];
+                matrix[i][j] = aux1 < aux2 ? aux1 : aux2;
+            }
+        }
+    }
+}
 
 
 Airline* parseAirlines(FILE* pFile, Map* map) {

@@ -2,6 +2,7 @@
 #define __MAP__
 
 #include "utils/vector.h"
+#include "models/city.h"
 
 typedef struct {
     Vector* cities;
@@ -10,5 +11,6 @@ typedef struct {
 } Map;
 
 void freeMap(Map* map);
+int getDistance(Map* map, City* city1, City* city2);
 
 #endif
