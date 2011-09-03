@@ -11,7 +11,8 @@ struct DestinationsMessage {
 };
 
 enum MapMessageType {
-        StartPhaseTwo  
+    StartPhaseTwo,
+    StartPhaseOne
 };
 
 struct DestinationsMessage marshall_give_destinations(int planeId, int cityNumber, City* cities, int* distances); 

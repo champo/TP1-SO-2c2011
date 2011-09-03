@@ -16,6 +16,7 @@ static struct MapMessage getMessageForMap();
 static int endSimulation(Map* map);
 static int cityIsSatisfied(City* city);
 static void updateMap(Map* map, Plane* plane);
+static void startPhaseOne(Vector*conns);
 static void startPhaseTwo(Vector* conns);
 static int app_give_destinations(Map* map, Plane* plane, ipc_t conn);
 
@@ -29,7 +30,8 @@ void runMap(Map* map, Vector* airlines, Vector* conns){
     
     while (endSimulation(map)) {
                 
-            
+            startPhaseOne(conns);     
+
             while (i != airlinesize) {
                 msg = getMessageForMap(); 
                 
@@ -133,7 +135,13 @@ int app_give_destinations(Map* map, Plane* plane, ipc_t conn) {
 
     return 0;
 }
-void startPhaseTwo(Vector* conns){
+
+void startPhaseOne(Vector* conns) {
+    comm_start_phase_one(conns);
+    return;
+}
+
+void startPhaseTwo(Vector* conns) {
     comm_start_phase_two(conns);
     return;
 }
