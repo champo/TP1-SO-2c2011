@@ -4,7 +4,7 @@
 
 
 
-struct DestinationsMessage marshall_give_destinations(int planeId, int count, City* cities, int* distances) {
+struct DestinationsMessage marshall_give_destinations(int planeId, int count, int* citiesIds, int* distances) {
     
     struct DestinationsMessage msg;
     
@@ -13,7 +13,7 @@ struct DestinationsMessage marshall_give_destinations(int planeId, int count, Ci
     msg.count = count;
 
     for (size_t i = 0; i < msg.count; i++) {
-        msg.destinations[i] = cities[i].id;
+        msg.destinations[i] = citiesIds[i];
         msg.distance[i] = distances[i];
     }
     return msg;
