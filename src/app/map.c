@@ -6,8 +6,10 @@
 #include "models/airline.h"
 #include "app/map.h"
 #include "communication/map.h"
+#include "marshall/map.h"
+#include "marshall/plane.h"
 
-static int getMessageForMap(Plane* plane, int* airlineID);
+static struct MapMessage getMessageForMap();
 static int endSimulation(Map* map);
 static int cityIsSatisfied(City* city);
 static void updateMap(Map* map, Plane* plane);
@@ -17,6 +19,7 @@ static void startPhaseTwo(Vector* conns);
 void runMap(Map* map, Vector* airlines, Vector* conns){
     
     int i,temp,airlinesize,airlineID;
+    struct MapMessage msg;
     Plane curplane;
 
     airlinesize = getVectorSize(airlines);
@@ -24,15 +27,12 @@ void runMap(Map* map, Vector* airlines, Vector* conns){
     
     while (endSimulation(map)) {
             while (i != airlinesize) {
-                temp = getMessageForMap(&curplane, &airlineID); 
-                                                   //returns 0 if it has read a plane which wants to discharge,
-                                                   // 1 if it has read an end airline message
-                                                   // -1 any other choice
+                msg = getMessageForMap(); 
                 
-                if (temp == 1) {
+                if (msg->type == AIRLINEFINISHED) /*Airline finished not set yet*/ {
                     i++;
                 }
-                if (temp == 0) {
+                if (msg->type == UnloadStockType) {
                     updateMap(map, &curplane);
                     comm_unloaded_stock(&curplane, (ipc_t)getFromVector(conns,airlineID));
                 }
@@ -43,15 +43,11 @@ void runMap(Map* map, Vector* airlines, Vector* conns){
             startPhaseTwo(conns);
 
             while (i != airlinesize) {
-                temp = getMessageForMap(&curplane, &airlineID); 
-                                                  //returns 0 if it has read a plane which wants instructions,
-                                                   // 1 if it has read an end airline message
-                                                   // -1 any other choice
-                
-                if (temp == 1) {
+                msg = getMessageForMap(); 
+                if (msg->type == AIRLINEFINISHED) /*Airline finished not set yet*/ {
                     i++;
                 }
-                if (temp == 0) {
+                if (msg->type == CheckDestinationsType) {
                     giveDirections(map, curplane, (ipc_t)getFromVector(conns,airlineID));
                 }
             }
@@ -61,7 +57,7 @@ void runMap(Map* map, Vector* airlines, Vector* conns){
     }
 }
     
-int getMessageForMap(Plane* plane, int* airlineID){
+struct MapMessage getMessageForMap(){
     return 1;
 }
 int endSimulation(Map* map){
@@ -134,6 +130,7 @@ void giveDirections(Map* map, Plane plane, ipc_t conn){
 }
 
 void startPhaseTwo(Vector* conns){
+    comm_start_phase_two(conns);
     return;
 }
 
