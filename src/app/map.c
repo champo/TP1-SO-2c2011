@@ -12,12 +12,7 @@
 
 #define AIRLINEFINISHED 1 //TODO Que este el posta
 
-#define AIRLINEFINISHED 1 //TODO Que este el posta
-
-
 static struct MapMessage getMessageForMap();
-#define AIRLINEFINISHED 1 //TODO Que este el posta
-
 static int endSimulation(Map* map);
 static int cityIsSatisfied(City* city);
 static void updateMap(Map* map, Plane* plane);
@@ -33,6 +28,8 @@ void runMap(Map* map, Vector* airlines, Vector* conns){
     i = 0;
     
     while (endSimulation(map)) {
+                
+            
             while (i != airlinesize) {
                 msg = getMessageForMap(); 
                 
