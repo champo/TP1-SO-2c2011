@@ -1,4 +1,3 @@
-#include <stdlib.h>
 #include "ipc/ipc.h"
 #include "models/plane.h"
 #include "models/city.h"
@@ -8,15 +7,14 @@
 #include "communication/map.h"
 #include "marshall/map.h"
 #include "marshall/plane.h"
-
-
-#define AIRLINEFINISHED 1 //TODO Que este el posta
+#include "global.h"
+#include <stdlib.h>
+#include <stddef.h>
 
 #define AIRLINEFINISHED 1 //TODO Que este el posta
 
 
 static struct MapMessage getMessageForMap();
-#define AIRLINEFINISHED 1 //TODO Que este el posta
 
 static int endSimulation(Map* map);
 static int cityIsSatisfied(City* city);
@@ -71,8 +69,8 @@ struct MapMessage getMessageForMap(){
 int endSimulation(Map* map){
     
     City* city;
-    unsigned int i;
-    unsigned int cities = getVectorSize(map->cities);
+    size_t i;
+    size_t cities = getVectorSize(map->cities);
     for (i = 0; i < cities; i++) {
         if ( !cityIsSatisfied(getFromVector(map->cities, i))) {
             return CONTINUE_SIM;
@@ -84,8 +82,8 @@ int endSimulation(Map* map){
 int cityIsSatisfied(City* city) {
    
     Stock* stock;
-    unsigned int i;
-    unsigned int stock_size = getVectorSize(city->stock);
+    size_t i;
+    size_t stock_size = getVectorSize(city->stock);
     for (i = 0; i < stock_size; i++) {
         Stock* stock = getFromVector(city->stock, i);
         if (stock->amount != 0) {
@@ -99,15 +97,15 @@ int cityIsSatisfied(City* city) {
 void updateMap(Map* map, Plane* plane){
 
     City* city = getFromVector(map->cities, plane->cityId);
-    unsigned int i;
-    unsigned int plane_stock_size = getVectorSize(plane->stocks);
+    size_t i;
+    size_t plane_stock_size = getVectorSize(plane->stocks);
 
     for (i = 0; i < plane_stock_size; i++) {
 
         Stock* plane_stock = getFromVector(plane->stocks,i);
         Stock* city_stock;
-        unsigned int j;
-        unsigned int city_stock_size = getVectorSize(city->stock);
+        size_t j;
+        size_t city_stock_size = getVectorSize(city->stock);
         for(j = 0; j < city_stock_size; j++) {
             
             city_stock = getFromVector(city->stock,j);
@@ -133,9 +131,18 @@ void updateMap(Map* map, Plane* plane){
 }
 
 int app_give_destinations(Map* map, Plane* plane, ipc_t conn) {
-
+    
+    int distances[MAX_DESTINATIONS];
+    City cities[MAX_DESTINATIONS];
+    size_t count;
+    size_t cityNumber;
+    for (size_t i = 0; i < count; i++) {
+        i++;
+    }
+    comm_give_destinations(plane, conn, count, cities, distances);
     return 0;
 }
+
 void startPhaseTwo(Vector* conns){
     comm_start_phase_two(conns);
     return;

@@ -3,17 +3,19 @@
 
 #include "global.h"
 
+enum MapMessageType {
+        StartPhaseTwo,
+        Destination  
+};
+
 struct DestinationsMessage {
+    enum MapMessageType type;
     int planeId;
     size_t count;
     int destinations[MAX_DESTINATIONS];
     int distance[MAX_DESTINATIONS];
 };
 
-enum MapMessageType {
-        StartPhaseTwo  
-};
-
-struct DestinationsMessage marshall_give_destinations(int planeId, int cityNumber, City* cities, int* distances); 
+struct DestinationsMessage marshall_give_destinations(int planeId, int count, City* cities, int* distances); 
 #endif
 
