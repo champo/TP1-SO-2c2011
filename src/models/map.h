@@ -11,6 +11,6 @@ typedef struct {
 } Map;
 
 void freeMap(Map* map);
-int getDistance(Map* map, City* city1, City* city2);
+int getDistance(Map* map, int city1, int city2);
 
 #endif

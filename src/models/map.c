@@ -25,7 +25,7 @@ void freeMap(Map* map){
     return;
 }
 
-int getDistance(Map* map, City* city1, City* city2) {
+int getDistance(Map* map, int city1, int city2) {
 
-    return map->matrix[city1->id][city2->id];
+    return map->matrix[city1][city2];
 }
