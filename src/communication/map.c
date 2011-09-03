@@ -29,7 +29,7 @@ int comm_give_destinations(Plane* plane, ipc_t conn, int cityNumber, City* citie
 
 int comm_start_phase_one(Vector* conns) {
     
-    enum MapMessageType msg = StartPhaseOne;
+    enum MapMessageType msg = StepMessageType;
     unsigned i;
 
     for ( i=0; i<getVectorSize(conns); i++) {
@@ -39,7 +39,7 @@ int comm_start_phase_one(Vector* conns) {
 
 int comm_start_phase_two(Vector* conns) {
     
-    enum MapMessageType msg = StartPhaseTwo;
+    enum MapMessageType msg = ContinueMessageType;
     unsigned i;
 
     for ( i=0; i<getVectorSize(conns); i++) {
