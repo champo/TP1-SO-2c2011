@@ -5,9 +5,9 @@
 #include "models/city.h"
 
 enum MapMessageType {
-        StepMessageType,
-        ContinueMessageType,
-        DestinationMessageType 
+    StepMessageType,
+    ContinueMessageType,
+    DestinationMessageType 
 };
 
 struct DestinationsMessage {
