@@ -67,6 +67,7 @@ struct MapMessage getMessageForMap(){
     struct MapMessage msg;
     return msg;
 }
+
 int endSimulation(Map* map){
     
     City* city;
