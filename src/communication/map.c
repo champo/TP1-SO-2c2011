@@ -27,7 +27,7 @@ int comm_give_destinations(Plane* plane, ipc_t conn, int cityNumber, City* citie
     return 0;
 }
 
-int comm_start_phase_one(Vector* conns) {
+int comm_turn_step(Vector* conns) {
     
     enum MapMessageType msg = StartPhaseOne;
     unsigned i;
@@ -37,7 +37,7 @@ int comm_start_phase_one(Vector* conns) {
     }
 }
 
-int comm_start_phase_two(Vector* conns) {
+int comm_turn_continue(Vector* conns) {
     
     enum MapMessageType msg = StartPhaseTwo;
     unsigned i;
