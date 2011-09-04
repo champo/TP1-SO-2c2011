@@ -4,11 +4,13 @@
 #include "marshall/map.h"
 #include "ipc/ipc.h"
 #include "communication/types.h"
+#include "marshall/plane.h"
 
 struct MapMessage {
     enum MessageType type;
     union {
         struct DestinationsMessage destinations;
+        struct StockStateMessage stock;
     } payload;
 };
 

@@ -20,6 +20,8 @@ static void broadcast(Vector* threads, struct Message msg);
 
 static void redirect_destinations_message(Vector* threads, struct MapMessage* in);
 
+static void redirect_stock_message(Vector* threads, struct MapMessage* in);
+
 static void set_planes_left(Vector* threads);
 
 static pthread_cond_t exitWait = PTHREAD_COND_INITIALIZER;
@@ -105,12 +107,26 @@ void listen(Vector* threads) {
             case MessageTypeDestinations:
                 redirect_destinations_message(threads, &msg);
                 break;
-                //TODO: handle the stock message
+            case MessageTypeStock:
+                redirect_stock_message(threads, &msg);
+                break;
             default:
                 exit_handler();
                 return;
         }
     }
+}
+
+void redirect_stock_message(Vector* threads, struct MapMessage* in) {
+    struct Message msg;
+    struct PlaneThread* thread = (struct PlaneThread*) getFromVector(threads, in->payload.stock.header.id);
+    struct StockMessagePart* stock = &in->payload.stock.stocks;
+
+    msg.type = MessageTypeStock;
+    msg.payload.stock.count = stock->count;
+    memcpy(msg.payload.stock.delta, stock->quantities, sizeof(int) * MAX_STOCKS);
+
+    message_queue_push(thread->queue, msg);
 }
 
 void redirect_destinations_message(Vector* threads, struct MapMessage* in) {
