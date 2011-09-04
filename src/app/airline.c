@@ -92,19 +92,20 @@ void listen(Vector* threads) {
 
     while (comm_airline_recieve(&msg) == 0) {
         switch (msg.type) {
-            case StepMessageType:
+            case MessageTypeStep:
                 planesLeftInStage = getVectorSize(threads);
                 outMsg.type = MessageTypeStep;
                 broadcast(threads, outMsg);
                 break;
-            case ContinueMessageType:
+            case MessageTypeContinue:
                 planesLeftInStage = getVectorSize(threads);
                 outMsg.type = MessageTypeContinue;
                 broadcast(threads, outMsg);
                 break;
-            case DestinationMessageType:
+            case MessageTypeDestinations:
                 redirect_destinations_message(threads, &msg);
                 break;
+                //TODO: handle the stock message
             default:
                 exit_handler();
                 return;

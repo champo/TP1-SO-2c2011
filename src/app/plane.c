@@ -9,9 +9,7 @@
 static int unload_stock(struct PlaneThread* self);
 
 void run_plane(struct PlaneThread* self) {
-    int finished = 0;
     int destinations[5], distances[5];
-    int target;
     size_t len;
 
     while (self->done == 0 && comm_step(self) != -1) {
@@ -52,7 +50,7 @@ int unload_stock(struct PlaneThread* self) {
     }
 
     int done = 1;
-    for (int i = 0; i < stockLen; i++) {
+    for (size_t i = 0; i < stockLen; i++) {
         Stock* stock = (Stock*) getFromVector(stocks, i);
         stock->amount -= stockDelta[i];
         if (stock->amount > 0) {

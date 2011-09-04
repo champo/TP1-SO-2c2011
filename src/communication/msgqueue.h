@@ -2,7 +2,9 @@
 #define __COMM_MSGQUEUE__
 
 #include <stddef.h>
+
 #include "global.h"
+#include "communication/types.h"
 
 struct MessageQueue;
 
@@ -16,14 +18,6 @@ union MessagePayload {
         size_t count;
         int delta[MAX_STOCKS];
     } stock;
-};
-
-enum MessageType {
-    MessageTypeNone = 0,
-    MessageTypeContinue,
-    MessageTypeDestinations,
-    MessageTypeStep,
-    MessageTypeStock
 };
 
 struct Message {

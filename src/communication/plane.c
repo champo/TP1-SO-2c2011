@@ -63,5 +63,6 @@ int comm_unload_stock(struct PlaneThread* plane, int* stockDelta) {
 int comm_intransit(struct PlaneThread* plane) {
     struct InTransitMessage msg = marshall_intransit(plane->airline, plane->plane->id);
     send(plane, msg);
+    return 0;
 }
 

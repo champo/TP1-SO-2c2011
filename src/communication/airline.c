@@ -17,7 +17,7 @@ int comm_airline_recieve(struct MapMessage* msg) {
 }
 
 int comm_airline_ready(ipc_t conn) {
-    enum MapMessageType type = AirlineDoneMessageType;
+    enum MessageType type = MessageTypeAirlineDone;
     return ipc_write(conn, &type, sizeof(type)) == -1 ? -1 : 0;
 }
 

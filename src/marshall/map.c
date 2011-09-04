@@ -5,10 +5,10 @@
 
 
 struct DestinationsMessage marshall_give_destinations(int planeId, int count, int* citiesIds, int* distances) {
-    
+
     struct DestinationsMessage msg;
-    
-    msg.type = DestinationMessageType;
+
+    msg.type = MessageTypeDestinations;
     msg.planeId = planeId;
     msg.count = count;
 

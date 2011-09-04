@@ -44,10 +44,10 @@ void runMap(Map* map, Vector* airlines, Vector* conns){
             while (i != airlinesize) {
                 msg = getMessageForMap();
 
-                if (msg.type == AirlineDoneMessageType) /*Airline finished not set yet*/ {
+                if (msg.type == MessageTypeAirlineDone) {
                     i++;
                 }
-                if (msg.type == UnloadStockType) {
+                if (msg.type == MessageTypeUnloadStock) {
                     updateMap(map, &(msg.planeInfo.plane));
                     comm_unloaded_stock(msg.planeInfo.airlineID , &(msg.planeInfo.plane), (ipc_t)getFromVector(conns,msg.planeInfo.airlineID));
                 }
@@ -59,10 +59,10 @@ void runMap(Map* map, Vector* airlines, Vector* conns){
 
             while (i != airlinesize) {
                 msg = getMessageForMap();
-                if (msg.type == AirlineDoneMessageType) /*Airline finished not set yet*/ {
+                if (msg.type == MessageTypeAirlineDone) {
                     i++;
                 }
-                if (msg.type == CheckDestinationsType) {
+                if (msg.type == MessageTypeCheckDestinations) {
                     app_give_destinations(map, &(msg.planeInfo.plane), (ipc_t)getFromVector(conns,msg.planeInfo.airlineID));
                 }
             }
