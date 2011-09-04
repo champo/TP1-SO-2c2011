@@ -52,7 +52,7 @@ int unload_stock(struct PlaneThread* self) {
     int done = 1;
     for (size_t i = 0; i < stockLen; i++) {
         Stock* stock = (Stock*) getFromVector(stocks, i);
-        stock->amount -= stockDelta[i];
+        stock->amount = stockDelta[i];
         if (stock->amount > 0) {
             done = 0;
         }
