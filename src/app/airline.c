@@ -23,7 +23,13 @@ static pthread_mutex_t resourcesLock = PTHREAD_MUTEX_INITIALIZER;
 
 static int exitState = 0;
 
+static int planesLeftInStage;
+
+static ipc_t ipcConn;
+
 void run_airline(Airline* self, ipc_t conn) {
+
+    ipcConn = conn;
 
     pthread_mutex_lock(&resourcesLock);
     register_exit_function(exit_handler);
@@ -78,13 +84,16 @@ void listen(Vector* threads) {
 
     struct MapMessage msg;
     struct Message outMsg;
+
     while (comm_airline_recieve(&msg) == 0) {
         switch (msg.type) {
             case StepMessageType:
+                planesLeftInStage = getVectorSize(threads);
                 outMsg.type = MessageTypeStep;
                 broadcast(threads, outMsg);
                 break;
             case ContinueMessageType:
+                planesLeftInStage = getVectorSize(threads);
                 outMsg.type = MessageTypeContinue;
                 broadcast(threads, outMsg);
                 break;
@@ -110,6 +119,24 @@ void broadcast(Vector* threads, struct Message msg) {
     for (size_t i = 0; i < len; i++) {
         struct PlaneThread* plane = (struct PlaneThread*) getFromVector(threads, i);
         message_queue_push(plane->queue, msg);
+    }
+}
+
+void set_planes_left(Vector* threads) {
+    size_t len = getVectorSize(threads);
+    planesLeftInStage = 0;
+    for (size_t i = 0; i < len; i++) {
+        struct PlaneThread* thread = (struct PlaneThread*) getFromVector(threads, i);
+        if (!thread->done) {
+            planesLeftInStage++;
+        }
+    }
+}
+
+void app_airline_plane_ready(void) {
+    planesLeftInStage--;
+    if (planesLeftInStage == 0) {
+        comm_airline_ready(ipcConn);
     }
 }
 

@@ -7,7 +7,8 @@
 enum MapMessageType {
     StepMessageType,
     ContinueMessageType,
-    DestinationMessageType
+    DestinationMessageType,
+    AirlineDoneMessageType
 };
 
 struct DestinationsMessage {

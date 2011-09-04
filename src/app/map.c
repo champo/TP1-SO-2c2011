@@ -11,14 +11,10 @@
 #include <stdlib.h>
 #include <stddef.h>
 
-
-#define AIRLINEFINISHED 1
-
-
 static struct CityInfo {
     int cityId;
     int distance;
-    int score; 
+    int score;
 };
 
 static struct MapMessage getMessageForMap(void);
@@ -29,26 +25,26 @@ static void updateMap(Map* map, Plane* plane);
 static void turnStep(Vector* conns);
 static void turnContinue(Vector* conns);
 static int app_give_destinations(Map* map, Plane* plane, ipc_t conn);
-static int cityInfoComparator(const void* a, const void* b); 
+static int cityInfoComparator(const void* a, const void* b);
 static int insertScore(struct CityInfo* cityInfo, int size, int elems, int score);
 static int getCityScore(Vector* cityStocks, Vector* planeStocks);
 
 void runMap(Map* map, Vector* airlines, Vector* conns){
-    
+
     int i,airlinesize;
     struct MapMessage msg;
 
     airlinesize = getVectorSize(airlines);
     i = 0;
-    
+
     while (endSimulation(map)) {
-                
-            turnStep(conns);     
+
+            turnStep(conns);
 
             while (i != airlinesize) {
-                msg = getMessageForMap(); 
-                
-                if (msg.type == AIRLINEFINISHED) /*Airline finished not set yet*/ {
+                msg = getMessageForMap();
+
+                if (msg.type == AirlineDoneMessageType) /*Airline finished not set yet*/ {
                     i++;
                 }
                 if (msg.type == UnloadStockType) {
@@ -58,31 +54,31 @@ void runMap(Map* map, Vector* airlines, Vector* conns){
             }
 
             i = 0;
-            
+
             turnContinue(conns);
 
             while (i != airlinesize) {
-                msg = getMessageForMap(); 
-                if (msg.type == AIRLINEFINISHED) /*Airline finished not set yet*/ {
+                msg = getMessageForMap();
+                if (msg.type == AirlineDoneMessageType) /*Airline finished not set yet*/ {
                     i++;
                 }
                 if (msg.type == CheckDestinationsType) {
                     app_give_destinations(map, &(msg.planeInfo.plane), (ipc_t)getFromVector(conns,msg.planeInfo.airlineID));
                 }
             }
-            
 
-            
+
+
     }
 }
-    
+
 struct MapMessage getMessageForMap(void){
     struct MapMessage msg;
     return msg;
 }
 
 int endSimulation(Map* map){
-    
+
     size_t i;
     size_t cities = getVectorSize(map->cities);
     for (i = 0; i < cities; i++) {
@@ -94,7 +90,7 @@ int endSimulation(Map* map){
 }
 
 int cityIsSatisfied(City* city) {
-   
+
     size_t i;
     size_t stock_size = getVectorSize(city->stock);
     for (i = 0; i < stock_size; i++) {
@@ -120,15 +116,15 @@ void updateMap(Map* map, Plane* plane){
         size_t j;
         size_t city_stock_size = getVectorSize(city->stock);
         for(j = 0; j < city_stock_size; j++) {
-            
+
             city_stock = getFromVector(city->stock,j);
             if ( plane_stock->theShit->id == city_stock->theShit->id) {
                 break;
             }
         }
-        
+
         if (city_stock->amount >= plane_stock->amount ) {
-            
+
             // Then discharge everything
             city_stock->amount -= plane_stock->amount;
             plane_stock->amount = 0;
@@ -144,8 +140,8 @@ void updateMap(Map* map, Plane* plane){
 }
 
 int app_give_destinations(Map* map, Plane* plane, ipc_t conn) {
-    
-    struct CityInfo cityInfo[MAX_DESTINATIONS]; 
+
+    struct CityInfo cityInfo[MAX_DESTINATIONS];
     int citiesIds[MAX_DESTINATIONS];
     int distances[MAX_DESTINATIONS];
     size_t count = 0, score;
@@ -153,7 +149,7 @@ int app_give_destinations(Map* map, Plane* plane, ipc_t conn) {
     int index;
 
     for (size_t i = 0; i < cityNumber; i++) {
-        
+
         City* city = getFromVector(map->cities, i);
         score = getCityScore(city->stock, plane->stocks);
         if (score != 0 && (index = insertScore(cityInfo, MAX_DESTINATIONS, count, score) != -1)) {
@@ -162,16 +158,16 @@ int app_give_destinations(Map* map, Plane* plane, ipc_t conn) {
             count++;
         }
     }
-    
+
     qsort(cityInfo, count, sizeof(struct CityInfo), cityInfoComparator);
-    
+
     for (size_t i = 0; i < count; i++) {
         citiesIds[i] = cityInfo[i].cityId;
         distances[i] = cityInfo[i].distance;
-    } 
+    }
 
     comm_give_destinations(plane, conn, count, citiesIds, distances);
-    
+
     return 0;
 }
 
@@ -188,7 +184,7 @@ int insertScore(struct CityInfo* cityInfo, int size, int elems, int score) {
             if ( cityInfo[i].score < min) {
                 min = cityInfo[i].score;
                 minIndex = i;
-            }     
+            }
         }
         if (score > cityInfo[minIndex].score) {
             cityInfo[minIndex].score = score;
@@ -201,7 +197,7 @@ int insertScore(struct CityInfo* cityInfo, int size, int elems, int score) {
 }
 
 int cityInfoComparator(const void* a, const void* b) {
-    return (((const struct CityInfo*)a)->score - ((const struct CityInfo*)b)->score); 
+    return (((const struct CityInfo*)a)->score - ((const struct CityInfo*)b)->score);
 }
 
 
@@ -211,13 +207,13 @@ void turnStep(Vector* conns) {
 }
 
 int getCityScore(Vector* cityStocks, Vector* planeStocks) {
-    
+
     size_t cityStockSize = getVectorSize(cityStocks);
     size_t planeStockSize = getVectorSize(planeStocks);
     int score = 0;
 
     for (size_t i = 0; i < cityStockSize; i++) {
-        Stock* cityStock = getFromVector(cityStocks, i);    
+        Stock* cityStock = getFromVector(cityStocks, i);
         for (size_t j = 0; j < planeStockSize; j++) {
             Stock* planeStock = getFromVector(planeStocks, j);
             if (cityStock->theShit->id ==  planeStock->theShit->id) {

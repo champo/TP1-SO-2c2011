@@ -1,4 +1,5 @@
 #include "app/plane.h"
+#include "app/airline.h"
 #include "communication/plane.h"
 
 #include <stdlib.h>
@@ -21,6 +22,7 @@ void run_plane(struct PlaneThread* self) {
             CHECK_EXIT(comm_intransit(self));
         }
 
+        app_airline_plane_ready();
         CHECK_EXIT(comm_continue(self));
 
         if (self->plane->distance == 0) {

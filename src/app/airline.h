@@ -6,4 +6,6 @@
 
 void run_airline(Airline* self, ipc_t conn);
 
+void app_airline_plane_ready(void);
+
 #endif

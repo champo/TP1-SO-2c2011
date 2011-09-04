@@ -1,6 +1,7 @@
 #include "communication/airline.h"
 
 #include "ipc/ipc.h"
+#include "marshall/map.h"
 
 int comm_airline_recieve(struct MapMessage* msg) {
     char buff[IPC_MAX_PACKET_LEN];
@@ -11,5 +12,10 @@ int comm_airline_recieve(struct MapMessage* msg) {
 
     memcpy(msg, buff, len);
     return 0;
+}
+
+int comm_airline_ready(ipc_t conn) {
+    enum MapMessageType type = AirlineDoneMessageType;
+    return ipc_write(conn, &type, sizeof(type)) == -1 ? -1 : 0;
 }
 

@@ -2,6 +2,7 @@
 #define __COMM_AIRLINE__
 
 #include "marshall/map.h"
+#include "ipc/ipc.h"
 
 struct MapMessage {
     enum MapMessageType type;
@@ -11,5 +12,7 @@ struct MapMessage {
 };
 
 int comm_airline_recieve(struct MapMessage* msg);
+
+int comm_airline_ready(ipc_t conn);
 
 #endif
