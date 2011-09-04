@@ -1,5 +1,7 @@
 #include "communication/airline.h"
 
+#include <string.h>
+
 #include "ipc/ipc.h"
 #include "marshall/map.h"
 
