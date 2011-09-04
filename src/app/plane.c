@@ -33,6 +33,7 @@ void run_plane(struct PlaneThread* self) {
         } else {
             self->plane->distance--;
         }
+        app_airline_plane_ready();
     }
 
     self->done = 1;
