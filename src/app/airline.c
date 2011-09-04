@@ -2,6 +2,7 @@
 
 #include <pthread.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "app/signal.h"
 #include "communication/plane.h"
@@ -16,6 +17,10 @@ static void listen(Vector* conns);
 static Vector* bootstrap_planes(Airline* self, ipc_t conn);
 
 static void broadcast(Vector* threads, struct Message msg);
+
+static void redirect_destinations_message(Vector* threads, struct MapMessage* in);
+
+static void set_planes_left(Vector* threads);
 
 static pthread_cond_t exitWait = PTHREAD_COND_INITIALIZER;
 
@@ -98,13 +103,26 @@ void listen(Vector* threads) {
                 broadcast(threads, outMsg);
                 break;
             case DestinationMessageType:
-                //TODO: Implement me :D
+                redirect_destinations_message(threads, &msg);
                 break;
             default:
                 exit_handler();
                 return;
         }
     }
+}
+
+void redirect_destinations_message(Vector* threads, struct MapMessage* in) {
+
+    struct Message msg;
+    struct PlaneThread* thread = (struct PlaneThread*) getFromVector(threads, in->payload.destinations.planeId);
+
+    msg.type = MessageTypeDestinations;
+    memcpy(msg.payload.destinations.destinations, in->payload.destinations.destinations, MAX_DESTINATIONS * sizeof(int));
+    memcpy(msg.payload.destinations.distances, in->payload.destinations.distance, MAX_DESTINATIONS * sizeof(int));
+    msg.payload.destinations.count = in->payload.destinations.count;
+
+    message_queue_push(thread->queue, msg);
 }
 
 void exit_handler(void) {
