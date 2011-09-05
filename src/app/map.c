@@ -37,7 +37,7 @@ void runMap(Map* map, Vector* airlines, Vector* conns){
     airlinesize = getVectorSize(airlines);
     i = 0;
 
-    while (endSimulation(map)) {
+    while (endSimulation(map) == CONTINUE_SIM) {
 
             turnStep(conns);
 

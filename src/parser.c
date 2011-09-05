@@ -42,15 +42,16 @@ Map* parseMap(const char* path){
         free(ans);
         fclose(mapfile);
     }
+    fscanf(mapfile, "%d\n\n", &counter);
+
     if ((cities = malloc(counter * sizeof(City))) == NULL){
         destroyVector(ans->cities);
         free(ans);
         fclose(mapfile);
         return NULL;
     }
-    fscanf(mapfile, "%d\n\n", &counter);
     //init matrix
-    if ( (ans->matrix = malloc(counter * sizeof(int *))) == NULL){
+    if ( (ans->matrix = calloc(counter, sizeof(int *))) == NULL){
         free(ans);
         fclose(mapfile);
         destroyVector(ans->cities);
