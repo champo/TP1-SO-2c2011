@@ -95,12 +95,12 @@ void listen(Vector* threads) {
     while (comm_airline_recieve(&msg) == 0) {
         switch (msg.type) {
             case MessageTypeStep:
-                planesLeftInStage = getVectorSize(threads);
+                set_planes_left(threads);
                 outMsg.type = MessageTypeStep;
                 broadcast(threads, outMsg);
                 break;
             case MessageTypeContinue:
-                planesLeftInStage = getVectorSize(threads);
+                set_planes_left(threads);
                 outMsg.type = MessageTypeContinue;
                 broadcast(threads, outMsg);
                 break;
