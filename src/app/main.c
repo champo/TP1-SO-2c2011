@@ -3,6 +3,8 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <dirent.h>
+#include <string.h>
 
 #include "util.h"
 #include "ipc/ipc.h"
@@ -36,14 +38,37 @@ int main(int argc, char *argv[]) {
         abort();
     }
 
-    //TODO: Parse everything, and get the proper data structures
-    //TODO: Position the planes on their initial places on the map
     register_exit_function(cleanup);
     register_signal_handlers();
-    //TODO: Register an exit handler
-    Vector* airlines = NULL;
-    //run_airlines(airlines);
-    //ipc_listen(PARENT_NAME);
+
+    Map* map;
+    Vector* airlines = createVector();
+    DIR* config = opendir(argv[1]);
+    struct dirent* entry;
+    char path[512];
+
+    if (NULL == config) {
+        perror("Failed opening the config folder.");
+        mprintf_end();
+        ipc_end();
+        abort();
+    }
+
+    sprintf(path, "%s/map", argv[1]);
+    map = parseMap(path);
+    while ((entry = readdir(config)) != NULL) {
+        if (strncmp(entry->d_name, "airline_", 8) == 0) {
+            FILE* file;
+            sprintf(path, "%s/%s", argv[1], entry->d_name);
+            file = fopen(path, "r");
+            addToVector(airlines, parseAirlines(file, map));
+            fclose(file);
+        }
+    }
+    closedir(config);
+
+    run_airlines(airlines);
+    ipc_listen(PARENT_NAME);
 
     cleanup();
 }

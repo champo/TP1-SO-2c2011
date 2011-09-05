@@ -3,8 +3,6 @@
 #include "utils/vector.h"
 #include "models/stock.h"
 
-
-
 Stock* initStock(char* name, int amount, Vector* theShit) {
 
     Stock* stock;
@@ -22,8 +20,8 @@ void freeStocks(Vector* stocks) {
 
     if (stocks != NULL) {
         for (i = 0; i < size; i++) {
-			free(getFromVector(stocks,i));
-		}
+            free(getFromVector(stocks,i));
+        }
         destroyVector(stocks);
     }
 }

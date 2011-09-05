@@ -8,10 +8,10 @@ typedef struct {
     char*   name;
 } TheShit;
 
+int getTheShitId(char* theShitName, Vector* theShit);
 
 TheShit* getTheShit(char* name, Vector* theShit);
+
 void freeTheShit(TheShit* theShit);
 
 #endif
-
-

@@ -12,41 +12,10 @@
 #define NAME_MAX_LENGTH         30
 #define FIRST                   1
 
-
-
-
-int getCityId(char* cityName, Vector* cities);
-int getTheShitId(char* theShitName, Vector* theShit); 
 static void floydMatrix(int** matrix, int counter);
 
-
-//TODO SON SOLO DEFS DSP HAY Q IMPLEMENTARLAS Y  MOVERLAS!!!!
-int getCityId(char* cityName, Vector* cities) {
-    int i;
-
-    for ( i = 0; i<getVectorSize(cities); i++ ){
-        if ( strcmp(cityName, ((City*)getFromVector(cities,i))->name) == 0 ){
-            return ((City*)getFromVector(cities,i))->id;
-        }
-    }
-    return -1;
-}
-
-//TODO IDEM
-int getTheShitId(char* theShitName, Vector* theShit) {
-    int i;
-
-    for (i =0; i<getVectorSize(theShit); i++){
-        if ( strcmp(theShitName, ((TheShit*)getFromVector(theShit,i))->name) ==0){
-            return ((TheShit*)getFromVector(theShit,i))->id;
-        }
-    }
-    return -1;
-}
-
-
 Map* parseMap(const char* path){
-    
+
     FILE* mapfile;
     Map* ans;
     Vector* vec;
@@ -56,7 +25,7 @@ Map* parseMap(const char* path){
     char buffer[NAME_MAX_LENGTH];
     char buffer2[NAME_MAX_LENGTH];
     City* cities;
-    
+
 
     if ( (ans = malloc(sizeof(Map))) == NULL){
         return NULL;
@@ -77,7 +46,7 @@ Map* parseMap(const char* path){
         destroyVector(ans->cities);
         free(ans);
         fclose(mapfile);
-        return NULL; 
+        return NULL;
     }
     fscanf(mapfile, "%d\n\n", &counter);
     //init matrix
@@ -88,7 +57,7 @@ Map* parseMap(const char* path){
         free(cities);
         return NULL;
     }
-    
+
     for (i=0; i<counter; i++){
         if( (ans->matrix[i] = calloc(counter, sizeof(int))) == NULL){
             //TODO hacer frees
@@ -100,8 +69,8 @@ Map* parseMap(const char* path){
         //TODO FALTAN FREES
         return NULL;
     }
-   
-    //Let's read each city!   
+
+    //Let's read each city!
     for (i = 0; i<counter; i++){
         if (flag == FIRST){
             if ( (cities[i].name = malloc(NAME_MAX_LENGTH * sizeof(char))) == NULL ){
@@ -113,19 +82,19 @@ Map* parseMap(const char* path){
         cities[i].id = i;
         vec = createVector();
         //Let's read the stock for the city!
-        while ( ( state = fscanf(mapfile, "%s %d\n", buffer, &aux)) == 2){			
-			char* name;
-			if ( (name = malloc(strlen(buffer)*sizeof(char))) == NULL ) {
-				//TODO check if this frees everything well
-				return NULL;
-			}
-			strcpy(name,buffer);
-			Stock* stock;
-			if ((stock = initStock(name,aux, ans->theShit)) == NULL ) {
-				//TODO check if this frees everything well
-				return NULL;
-			}
-			addToVector(vec,stock);
+        while ( ( state = fscanf(mapfile, "%s %d\n", buffer, &aux)) == 2){
+            char* name;
+            if ( (name = malloc(strlen(buffer)*sizeof(char))) == NULL ) {
+                //TODO check if this frees everything well
+                return NULL;
+            }
+            strcpy(name,buffer);
+            Stock* stock;
+            if ((stock = initStock(name,aux, ans->theShit)) == NULL ) {
+                //TODO check if this frees everything well
+                return NULL;
+            }
+            addToVector(vec,stock);
         }
         //Let's leave everything cool for the next city...
         if (state == 1){
@@ -137,7 +106,7 @@ Map* parseMap(const char* path){
                 }
                 strcpy(cities[i+1].name,buffer);
                 buffer[0] = "\0";
-            } 
+            }
         }
         cities[i].stock = vec;
         if ( addToVector(ans->cities, &(cities[i])) == -1 ){
@@ -154,7 +123,7 @@ Map* parseMap(const char* path){
             ans->matrix[getCityId(buffer, ans->cities)][getCityId(buffer2, ans->cities)] = aux;
             ans->matrix[getCityId(buffer2, ans->cities)][getCityId(buffer, ans->cities)] = aux;
         }
-        
+
     }
 
     floydMatrix(ans->matrix, counter);
@@ -164,10 +133,10 @@ Map* parseMap(const char* path){
 
 
 void floydMatrix(int** matrix, int counter) {
-    
+
     int i,j,k;
     int aux1,aux2;
-        
+
     for ( k=0; k<counter; k++) {
         for ( i=0; i<counter; i++) {
             for ( i=0; i<counter;i++) {
@@ -181,56 +150,61 @@ void floydMatrix(int** matrix, int counter) {
 
 
 Airline* parseAirlines(FILE* pFile, Map* map) {
+
     Airline* airline = NULL;
+
     unsigned int i;
     int stockAmount,state,flag = FIRST;
     char cityName[NAME_MAX_LENGTH],buffer[NAME_MAX_LENGTH];
-    Vector* vec = NULL; 
-	Stock* stock;
-    
+    Vector* vec = NULL;
+    Stock* stock;
+
     if ((airline = calloc(1, sizeof(Airline))) == NULL) {
         return NULL;
     }
-    
+
     fscanf(pFile, "%u", &(airline->numberOfPlanes));
 
     if ((airline->planes = calloc(airline->numberOfPlanes, sizeof(Plane))) == NULL) {
         freeAirline(airline);
         return NULL;
     }
+
     for (i = 0; i < airline->numberOfPlanes; i++) {
 
-        if(flag == FIRST) {
-            fscanf(pFile, "%s\n", cityName); 
+        if (flag == FIRST) {
+            fscanf(pFile, "%s\n", cityName);
         }
-        
+
         airline->planes[i].cityId = getCityId(cityName, map->cities); //TODO
-        
+
         vec = createVector();
-        while ((state = fscanf(pFile, "%s %d\n", buffer, &stockAmount)) == 2) { 
-			
+        while ((state = fscanf(pFile, "%s %d\n", buffer, &stockAmount)) == 2) {
+
             char* theShitName;
-			if ((theShitName = malloc(strlen(buffer) * sizeof(char))) == NULL) {
-				freeAirline(airline); //TODO check if this frees everything well
-				return NULL;
-			}
-			strcpy(theShitName,buffer);
-			
+            if ((theShitName = malloc(strlen(buffer) * sizeof(char))) == NULL) {
+                freeAirline(airline); //TODO check if this frees everything well
+                return NULL;
+            }
+            strcpy(theShitName,buffer);
+
             if ((stock = initStock(theShitName, stockAmount, map->theShit)) == NULL) {
-				freeAirline(airline); //TODO check if this frees1 everything well
-				return NULL;
-			}
-			addToVector(vec, stock);
+                freeAirline(airline); //TODO check if this frees1 everything well
+                return NULL;
+            }
+            addToVector(vec, stock);
         }
+
         if (state == 1) {
             flag = !FIRST;
             strcpy(cityName, buffer);
         }
 
         airline->planes[i].stocks = vec;
-        //TODO ASIGN PLANE ID
-    } 
+        airline->planes[i].id = i;
+    }
+
     return airline;
-} 
+}
 
 
