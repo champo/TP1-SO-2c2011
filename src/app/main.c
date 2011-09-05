@@ -13,10 +13,11 @@
 #include "app/airline.h"
 #include "utils/vector.h"
 #include "parser.h"
+#include "app/map.h"
 
 #define PARENT_NAME "map_ipc"
 
-void run_airlines(Vector* airlines);
+void run_airlines(Map* map, Vector* airlines);
 
 void cleanup(void);
 
@@ -67,8 +68,27 @@ int main(int argc, char *argv[]) {
     }
     closedir(config);
 
-    run_airlines(airlines);
+    run_airlines(map, airlines);
     ipc_listen(PARENT_NAME);
+
+    Vector* conns = createVector();
+    size_t numAirlines = getVectorSize(airlines);
+    for (size_t i = 0; i < numAirlines; i++) {
+        sprintf(path, "airline_%d", i);
+        addToVector(conns, ipc_establish(path));
+    }
+
+    runMap(map, airlines, conns);
+
+    for (size_t i = 0; i < numAirlines; i++) {
+        freeAirline(getFromVector(airlines, i));
+        ipc_close(getFromVector(conns, i));
+    }
+
+    destroyVector(conns);
+    destroyVector(airlines);
+
+    freeMap(map);
 
     cleanup();
 }
@@ -80,7 +100,7 @@ void cleanup(void) {
     exit(0);
 }
 
-void run_airlines(Vector* airlines) {
+void run_airlines(Map* map, Vector* airlines) {
 
     size_t count = getVectorSize(airlines);
     char name[512];
@@ -91,17 +111,14 @@ void run_airlines(Vector* airlines) {
         Airline* self = getFromVector(airlines, i);
         sprintf(name, "airline_%d", self->id);
         if (fork()) {
-
-            // This is the creator process
-            conn = ipc_establish(name);
-            // TODO: Store this somewhere
+            // Nothing :D
         } else {
 
-            //FIXME: I'm gonna leak the map! Yay! Good for me! :D
+            freeMap(map);
 
             for (size_t j = 0; j < count; j++) {
                 if (j != i) {
-                    //TODO: Free the airline
+                    freeAirline(getFromVector(airlines, j));
                 }
             }
             destroyVector(airlines);
