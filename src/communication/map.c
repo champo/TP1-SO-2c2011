@@ -51,19 +51,17 @@ int comm_turn_continue(Vector* conns) {
     return 0;
 }
 
-struct MapMessage comm_get_map_message(void) {
-    
-    char msg[IPC_MAX_PACKET_LEN];
-    struct MapMessage ans;
+int comm_get_map_message(struct PlaneMessage* msg) {
 
-    ipc_read(msg, sizeof(msg));
+    char buff[IPC_MAX_PACKET_LEN];
+    int len;
 
-    ans.type = (int)msg;
-    if ( ans.type == MessageTypeCheckDestinations || ans.type == MessageTypeUnloadStock) {
-        //Chequear con la implementacion si esto es alrevez
-        ans.planeInfo.airlineID = (int) msg[sizeof(int)];
-        //ans.planeInfo.plane = (Plane) msg[2*sizeof(int)];
+    if ((len = ipc_read(buff, IPC_MAX_PACKET_LEN)) == -1) {
+        return -1;
     }
 
-    return ans;
+    memcpy(msg, buff, len);
+
+    return 0;
+
 }

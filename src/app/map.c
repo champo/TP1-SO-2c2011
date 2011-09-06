@@ -3,6 +3,7 @@
 #include "models/city.h"
 #include "models/map.h"
 #include "models/airline.h"
+#include "models/theShit.h"
 #include "app/map.h"
 #include "communication/map.h"
 #include "marshall/map.h"
@@ -10,6 +11,7 @@
 #include "global.h"
 #include <stdlib.h>
 #include <stddef.h>
+#include "parser.h"
 
 struct CityInfo {
     int cityId;
@@ -24,11 +26,14 @@ static int app_give_destinations(Map* map, Plane* plane, ipc_t conn);
 static int cityInfoComparator(const void* a, const void* b);
 static int insertScore(struct CityInfo* cityInfo, int size, int elems, int score);
 static int getCityScore(Vector* cityStocks, Vector* planeStocks);
+void initPlane(struct StockMessagePart* stocks, struct PlaneMessageHeader* header, Plane* plane, Map* map);
 
 void runMap(Map* map, Vector* airlines, Vector* conns){
 
-    int i,airlinesize;
-    struct MapMessage msg;
+    int i, airlinesize;
+    struct PlaneMessage msg;
+    Plane plane;
+    int airlineId;
 
     airlinesize = getVectorSize(airlines);
     i = 0;
@@ -38,13 +43,17 @@ void runMap(Map* map, Vector* airlines, Vector* conns){
         comm_turn_step(conns);
         i = 0;
         while (i != airlinesize) {
-            msg = comm_get_map_message();
+            comm_get_map_message(&msg);
 
             if (msg.type == MessageTypeAirlineDone) {
                 i++;
             } else if (msg.type == MessageTypeUnloadStock) {
-                updateMap(map, &(msg.planeInfo.plane));
-                comm_unloaded_stock(msg.planeInfo.airlineID, &(msg.planeInfo.plane), (ipc_t)getFromVector(conns, msg.planeInfo.airlineID));
+
+                airlineId = msg.planeInfo.stockState.header.airline;
+                initPlane(&msg.planeInfo.stockState.stocks, &msg.planeInfo.stockState.header, &plane, map);
+                updateMap(map, &plane);
+                comm_unloaded_stock(airlineId, &plane, (ipc_t)getFromVector(conns, airlineId));
+                destroyVector(plane.stocks);
             }
         }
 
@@ -52,15 +61,33 @@ void runMap(Map* map, Vector* airlines, Vector* conns){
 
         i = 0;
         while (i != airlinesize) {
-            msg = comm_get_map_message();
+            comm_get_map_message(&msg);
             if (msg.type == MessageTypeAirlineDone) {
                 i++;
             } else if (msg.type == MessageTypeCheckDestinations) {
-                app_give_destinations(map, &(msg.planeInfo.plane), (ipc_t)getFromVector(conns, msg.planeInfo.airlineID));
+                airlineId = msg.planeInfo.stockState.header.airline;
+                initPlane(&msg.planeInfo.checkDestinations.stocks, &msg.planeInfo.checkDestinations.header, &plane, map);
+                app_give_destinations(map, &plane, (ipc_t)getFromVector(conns, airlineId));
             }
         }
     }
 }
+
+void initPlane(struct StockMessagePart* stocks, struct PlaneMessageHeader* header, Plane* plane, Map* map) {
+
+    plane->id = header->id;
+    plane->cityId = header->cityId;
+    plane->stocks = createVector();
+    for (unsigned int j = 0; j < stocks->count; j++) {
+                    
+        char name[NAME_MAX_LENGTH];
+        getTheShitName(stocks->stockId[j], map->theShit, name);
+        int quant = stocks->quantities[j];
+        Stock* stock = initStock(name, quant, map->theShit);
+        addToVector(plane->stocks, stock);
+    }
+}  
+
 
 int endSimulation(Map* map) {
 

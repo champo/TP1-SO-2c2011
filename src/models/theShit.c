@@ -8,7 +8,6 @@ int getTheShitId(char* theShitName, Vector* theShit) {
 
     size_t len = getVectorSize(theShit);
     for (size_t i =0; i < len; i++) {
-
         TheShit* shit = (TheShit*) getFromVector(theShit, i);
         if (strcmp(theShitName, shit->name) ==0){
             return shit->id;
@@ -16,6 +15,18 @@ int getTheShitId(char* theShitName, Vector* theShit) {
     }
 
     return -1;
+}
+
+void getTheShitName(int id, Vector* theShit, char* name) {
+    size_t len = getVectorSize(theShit);
+    for (size_t i =0; i < len; i++) {
+        TheShit* shit = (TheShit*) getFromVector(theShit,i);
+        if ( id == shit->id) {
+            strcpy(name, shit->name);
+            return name;
+        }
+    }
+    return NULL;
 }
 
 TheShit* getTheShit(char* name, Vector* theShit) {
@@ -40,6 +51,10 @@ TheShit* getTheShit(char* name, Vector* theShit) {
     product->id = i;
 
     return product;
+}
+
+TheShit* getTheShitByID(int id, Vector* theShit) {
+    return (TheShit*) getFromVector(theShit, id);
 }
 
 

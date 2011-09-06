@@ -10,6 +10,7 @@ struct PlaneMessageHeader {
     enum MessageType type;
     int airline;
     int id;
+    int cityId;
 };
 
 struct StockMessagePart {

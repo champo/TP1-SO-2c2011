@@ -8,9 +8,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define FINISHED                1
-#define NAME_MAX_LENGTH         30
-#define FIRST                   1
 
 static void floydMatrix(int** matrix, int counter);
 
