@@ -24,7 +24,7 @@ Map* parseMap(const char* path){
     int counter;
     char buffer[NAME_MAX_LENGTH];
     char buffer2[NAME_MAX_LENGTH];
-    City* cities;
+    City** cities;
 
 
     if ( (ans = malloc(sizeof(Map))) == NULL){
@@ -45,12 +45,19 @@ Map* parseMap(const char* path){
 
     fscanf(mapfile, "%d\n\n", &counter);
 
-    if ((cities = malloc(counter * sizeof(City))) == NULL){
+    if ((cities = malloc(counter * sizeof(City*))) == NULL){
         destroyVector(ans->cities);
         free(ans);
         fclose(mapfile);
         return NULL;
     }
+
+    for ( i=0; i<counter; i++){
+        if ((cities[i] = malloc(sizeof(City))) == NULL) {
+            //TODO frees
+        }
+    }
+    
     //init matrix
     if ( (ans->matrix = calloc(counter, sizeof(int *))) == NULL){
         free(ans);
@@ -75,13 +82,13 @@ Map* parseMap(const char* path){
     //Let's read each city!
     for (i = 0; i<counter; i++){
         if (flag == FIRST){
-            if ( (cities[i].name = malloc(NAME_MAX_LENGTH * sizeof(char))) == NULL ){
+            if ( (cities[i]->name = malloc(NAME_MAX_LENGTH * sizeof(char))) == NULL ){
                 return NULL;
                 //TODO FREE EVERYTHING
             }
-            fscanf(mapfile, "%s\n", cities[i].name);
+            fscanf(mapfile, "%s\n", cities[i]->name);
         }
-        cities[i].id = i;
+        cities[i]->id = i;
         vec = createVector();
         //Let's read the stock for the city!
         while ( ( state = fscanf(mapfile, "%s %d\n", buffer, &aux)) == 2){
@@ -102,16 +109,16 @@ Map* parseMap(const char* path){
         if (state == 1){
             flag = !FIRST;
             if ( (i+1) != counter){
-                if ( (cities[i+1].name = malloc(NAME_MAX_LENGTH * sizeof(char))) == NULL){
+                if ( (cities[i+1]->name = malloc(NAME_MAX_LENGTH * sizeof(char))) == NULL){
                     //TODO FREE EVERYTHING
                     return NULL;
                 }
-                strcpy(cities[i+1].name,buffer);
+                strcpy(cities[i+1]->name,buffer);
                 buffer[0] = 0;
             }
         }
-        cities[i].stock = vec;
-        if ( addToVector(ans->cities, &(cities[i])) == -1 ){
+        cities[i]->stock = vec;
+        if ( addToVector(ans->cities, cities[i]) == -1 ){
             //TODO Frees1
             return NULL;
         }
@@ -129,7 +136,9 @@ Map* parseMap(const char* path){
     }
 
     floydMatrix(ans->matrix, counter);
-
+    
+    free(cities);
+    fclose(mapfile);
     return ans;
 }
 
