@@ -22,12 +22,25 @@ void register_signal_handlers(void) {
     HANDLE(SIGQUIT);
     HANDLE(SIGTERM);
     HANDLE(SIGCHLD);
+    HANDLE(SIGILL);
+    HANDLE(SIGFPE);
+    HANDLE(SIGSEGV);
+    HANDLE(SIGPIPE);
 }
+
+#define CASE_SIG(sig) case sig: \
+    mprintf("Caugh signal "#sig"\n"); \
+    abort(); \
+    break;
 
 void signal_handler(int sig) {
     // Things just go boom
 #ifdef DEBUG
     switch (sig) {
+        CASE_SIG(SIGILL)
+        CASE_SIG(SIGFPE)
+        CASE_SIG(SIGSEGV)
+        CASE_SIG(SIGPIPE)
         case SIGHUP:
             mprintf("Caught signal SIGHUP\n");
             break;
