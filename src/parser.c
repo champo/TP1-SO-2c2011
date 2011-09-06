@@ -107,7 +107,7 @@ Map* parseMap(const char* path){
                     return NULL;
                 }
                 strcpy(cities[i+1].name,buffer);
-                buffer[0] = "\0";
+                buffer[0] = 0;
             }
         }
         cities[i].stock = vec;
@@ -116,18 +116,16 @@ Map* parseMap(const char* path){
             return NULL;
         }
     }
-    
-    
     //Now let's read the connections between the cities...
-    if (strcmp(buffer, "") != 0){
+    if (strcmp(buffer, "") != 0) {
+        int i, j;
         fscanf(mapfile, "%s %d\n", buffer2, &aux);
-        ans->matrix[getCityId(buffer, ans->cities)][getCityId(buffer2, ans->cities)] = aux;
-        ans->matrix[getCityId(buffer2, ans->cities)][getCityId(buffer, ans->cities)] = aux;
-        while ( fscanf(mapfile, "%s %s %d\n", buffer, buffer2, &aux) == 3){
-            ans->matrix[getCityId(buffer, ans->cities)][getCityId(buffer2, ans->cities)] = aux;
-            ans->matrix[getCityId(buffer2, ans->cities)][getCityId(buffer, ans->cities)] = aux;
-        }
-
+        do {
+            i = getCityId(buffer, ans->cities);
+            j = getCityId(buffer2, ans->cities);
+            ans->matrix[i][j] = aux;
+            ans->matrix[j][i] = aux;
+        } while (fscanf(mapfile, "%s %s %d\n", buffer, buffer2, &aux) == 3);
     }
 
     floydMatrix(ans->matrix, counter);

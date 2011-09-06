@@ -9,6 +9,7 @@
 #include "communication/airline.h"
 #include "utils/vector.h"
 #include "app/plane.h"
+#include "global.h"
 
 static void exit_handler(void);
 

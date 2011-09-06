@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <stddef.h>
 
-static struct CityInfo {
+struct CityInfo {
     int cityId;
     int distance;
     int score;
@@ -20,8 +20,6 @@ static struct CityInfo {
 static int endSimulation(Map* map);
 static int cityIsSatisfied(City* city);
 static void updateMap(Map* map, Plane* plane);
-static void turnStep(Vector* conns);
-static void turnContinue(Vector* conns);
 static int app_give_destinations(Map* map, Plane* plane, ipc_t conn);
 static int cityInfoComparator(const void* a, const void* b);
 static int insertScore(struct CityInfo* cityInfo, int size, int elems, int score);
@@ -37,8 +35,8 @@ void runMap(Map* map, Vector* airlines, Vector* conns){
 
     while (endSimulation(map) == CONTINUE_SIM) {
 
-            turnStep(conns);
-
+        comm_turn_step(conns);
+        /**
             while (i != airlinesize) {
                 msg = comm_get_map_message(); 
                 
@@ -49,13 +47,24 @@ void runMap(Map* map, Vector* airlines, Vector* conns){
                     updateMap(map, &(msg.planeInfo.plane));
                     comm_unloaded_stock(msg.planeInfo.airlineID , &(msg.planeInfo.plane), (ipc_t)getFromVector(conns,msg.planeInfo.airlineID));
                 }
+
+        */
+        i = 0;
+        while (i != airlinesize) {
+            msg = comm_get_map_message();
+
+            if (msg.type == MessageTypeAirlineDone) {
+                i++;
+            } else if (msg.type == MessageTypeUnloadStock) {
+                updateMap(map, &(msg.planeInfo.plane));
+                comm_unloaded_stock(msg.planeInfo.airlineID, &(msg.planeInfo.plane), (ipc_t)getFromVector(conns, msg.planeInfo.airlineID));
             }
+        }
 
-            i = 0;
+        comm_turn_continue(conns);
 
-            turnContinue(conns);
-
-            while (i != airlinesize) {
+        /**    
+        while (i != airlinesize) {
                 msg = comm_get_map_message(); 
                 if (msg.type == MessageTypeAirlineDone) {
                     i++;
@@ -63,19 +72,33 @@ void runMap(Map* map, Vector* airlines, Vector* conns){
                 if (msg.type == MessageTypeCheckDestinations) {
                     app_give_destinations(map, &(msg.planeInfo.plane), (ipc_t)getFromVector(conns,msg.planeInfo.airlineID));
                 }
+        */
+        i = 0;
+        while (i != airlinesize) {
+            msg = comm_get_map_message();
+            if (msg.type == MessageTypeAirlineDone) {
+                i++;
+            } else if (msg.type == MessageTypeCheckDestinations) {
+                app_give_destinations(map, &(msg.planeInfo.plane), (ipc_t)getFromVector(conns, msg.planeInfo.airlineID));
             }
-
-
-
+        }
     }
 }
 
+/**
 int endSimulation(Map* map){
+struct MapMessage getMessageForMap(void) {
+    struct MapMessage msg;
+    return msg;
+}
+*/
+
+int endSimulation(Map* map) {
 
     size_t i;
     size_t cities = getVectorSize(map->cities);
     for (i = 0; i < cities; i++) {
-        if ( !cityIsSatisfied(getFromVector(map->cities, i))) {
+        if (!cityIsSatisfied(getFromVector(map->cities, i))) {
             return CONTINUE_SIM;
         }
     }
@@ -96,7 +119,7 @@ int cityIsSatisfied(City* city) {
 }
 
 
-void updateMap(Map* map, Plane* plane){
+void updateMap(Map* map, Plane* plane) {
 
     City* city = getFromVector(map->cities, plane->cityId);
     size_t i;
@@ -166,8 +189,7 @@ int app_give_destinations(Map* map, Plane* plane, ipc_t conn) {
 
 int insertScore(struct CityInfo* cityInfo, int size, int elems, int score) {
 
-
-    if( elems < size ) {
+    if (elems < size) {
         cityInfo[elems].score = score;
     } else {
         int min = cityInfo[0].score;
@@ -193,12 +215,6 @@ int cityInfoComparator(const void* a, const void* b) {
     return (((const struct CityInfo*)a)->score - ((const struct CityInfo*)b)->score);
 }
 
-
-void turnStep(Vector* conns) {
-    comm_turn_step(conns);
-    return;
-}
-
 int getCityScore(Vector* cityStocks, Vector* planeStocks) {
 
     size_t cityStockSize = getVectorSize(cityStocks);
@@ -216,11 +232,5 @@ int getCityScore(Vector* cityStocks, Vector* planeStocks) {
         }
     }
     return score;
-}
-
-
-void turnContinue(Vector* conns) {
-    comm_turn_continue(conns);
-    return;
 }
 

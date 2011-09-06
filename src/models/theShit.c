@@ -2,6 +2,7 @@
 #include "models/theShit.h"
 #include "utils/vector.h"
 
+#include <string.h>
 
 int getTheShitId(char* theShitName, Vector* theShit) {
 
