@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <stddef.h>
 
-static struct CityInfo {
+struct CityInfo {
     int cityId;
     int distance;
     int score;

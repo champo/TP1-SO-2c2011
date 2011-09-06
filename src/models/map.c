@@ -3,10 +3,12 @@
 #include "models/city.h"
 #include "models/map.h"
 
+#include <stdlib.h>
+
 void freeMap(Map* map){
     int i;
     int counter = getVectorSize(map->cities);
-    
+
     for ( i=0; i<counter; i++){
         freeCity((City*)getFromVector(map->cities,i));
         free((map->matrix)[i]);
@@ -18,7 +20,7 @@ void freeMap(Map* map){
     for ( i=0; i<counter; i++){
         freeTheShit((TheShit*)getFromVector(map->theShit,i));
     }
-    
+
     destroyVector(map->cities);
     destroyVector(map->theShit);
     free(map);

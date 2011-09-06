@@ -2,6 +2,9 @@
 #include "models/stock.h"
 #include "models/city.h"
 
+#include <stdlib.h>
+#include <string.h>
+
 void freeCity(City* city){
 
     freeStocks(city->stock);

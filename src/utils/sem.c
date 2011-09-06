@@ -5,6 +5,7 @@
 #include <sys/sem.h>
 #include <pthread.h>
 #include <errno.h>
+#include <stdio.h>
 
 #include "util.h"
 

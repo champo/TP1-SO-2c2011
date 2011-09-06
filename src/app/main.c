@@ -74,7 +74,7 @@ int main(int argc, char *argv[]) {
     Vector* conns = createVector();
     size_t numAirlines = getVectorSize(airlines);
     for (size_t i = 0; i < numAirlines; i++) {
-        sprintf(path, "airline_%d", i);
+        sprintf(path, "airline_%d", (int) i);
         addToVector(conns, ipc_establish(path));
     }
 
