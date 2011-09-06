@@ -1,8 +1,0 @@
-\select@language {spanish}
-\contentsline {section}{\numberline {1}Introducci\IeC {\'o}n}{2}
-\contentsline {section}{\numberline {2}Esquema de la aplicaci\IeC {\'o}n}{3}
-\contentsline {section}{\numberline {3}Modelo OSI}{4}
-\contentsline {section}{\numberline {4}Interfaz de comunicaci\IeC {\'o}n(???)}{5}
-\contentsline {section}{\numberline {5}Problemas encontrados(???)}{5}
-\contentsline {section}{\numberline {6}Conclusiones}{6}
-\contentsline {section}{\numberline {7}Referencias}{7}
