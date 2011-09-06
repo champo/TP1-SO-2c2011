@@ -31,8 +31,8 @@ int comm_turn_step(Vector* conns) {
     enum MessageType msg = MessageTypeStep;
     unsigned i;
 
-    for ( i=0; i<getVectorSize(conns); i++) {
-        transmit(getFromVector(conns,i),msg);
+    for (i = 0; i < getVectorSize(conns); i++) {
+        transmit(getFromVector(conns, i), msg);
     }
     return 0;
 }
@@ -42,8 +42,8 @@ int comm_turn_continue(Vector* conns) {
     enum MessageType msg = MessageTypeContinue;
     unsigned i;
 
-    for ( i=0; i<getVectorSize(conns); i++) {
-        transmit(getFromVector(conns,i),msg);
+    for (i = 0; i < getVectorSize(conns); i++) {
+        transmit(getFromVector(conns, i), msg);
     }
 
     return 0;
