@@ -14,8 +14,6 @@
 
 #define AIRLINEFINISHED 1
 
-static struct MapMessage getMessageForMap();
-
 static int endSimulation(Map* map);
 static int cityIsSatisfied(City* city);
 static void updateMap(Map* map, Plane* plane);
@@ -36,7 +34,7 @@ void runMap(Map* map, Vector* airlines, Vector* conns){
             turnStep(conns);     
 
             while (i != airlinesize) {
-                msg = getMessageForMap(); 
+                msg = comm_get_map_message(); 
                 
                 if (msg.type == AIRLINEFINISHED) /*Airline finished not set yet*/ {
                     i++;
@@ -52,7 +50,7 @@ void runMap(Map* map, Vector* airlines, Vector* conns){
             turnContinue(conns);
 
             while (i != airlinesize) {
-                msg = getMessageForMap(); 
+                msg = comm_get_map_message(); 
                 if (msg.type == AIRLINEFINISHED) /*Airline finished not set yet*/ {
                     i++;
                 }
@@ -64,11 +62,6 @@ void runMap(Map* map, Vector* airlines, Vector* conns){
 
             
     }
-}
-    
-struct MapMessage getMessageForMap(){
-    struct MapMessage msg;
-    return msg;
 }
 
 int endSimulation(Map* map){

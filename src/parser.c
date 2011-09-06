@@ -73,13 +73,15 @@ Map* parseMap(const char* path){
         free(ans);
         fclose(mapfile);
     }
+
+    fscanf(mapfile, "%d\n\n", &counter);
+
     if ((cities = malloc(counter * sizeof(City))) == NULL){
         destroyVector(ans->cities);
         free(ans);
         fclose(mapfile);
         return NULL; 
     }
-    fscanf(mapfile, "%d\n\n", &counter);
     //init matrix
     if ( (ans->matrix = malloc(counter * sizeof(int *))) == NULL){
         free(ans);
@@ -170,7 +172,7 @@ void floydMatrix(int** matrix, int counter) {
         
     for ( k=0; k<counter; k++) {
         for ( i=0; i<counter; i++) {
-            for ( i=0; i<counter;i++) {
+            for ( j=0; j<counter;j++) {
                 aux1 = matrix[i][j];
                 aux2= matrix[i][k]+matrix[k][j];
                 matrix[i][j] = aux1 < aux2 ? aux1 : aux2;
