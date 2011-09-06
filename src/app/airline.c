@@ -37,6 +37,7 @@ static ipc_t ipcConn;
 
 void run_airline(Airline* self, ipc_t conn) {
 
+    mprintf("Dude\n");
     ipcConn = conn;
 
     pthread_mutex_lock(&resourcesLock);

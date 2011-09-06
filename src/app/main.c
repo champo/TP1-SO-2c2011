@@ -58,10 +58,12 @@ int main(int argc, char *argv[]) {
     map = parseMap(path);
     while ((entry = readdir(config)) != NULL) {
         if (strncmp(entry->d_name, "airline_", 8) == 0) {
+            Airline* line;
             FILE* file;
             sprintf(path, "%s/%s", argv[1], entry->d_name);
             file = fopen(path, "r");
-            addToVector(airlines, parseAirlines(file, map));
+            line = parseAirlines(file, map);
+            line->id = addToVector(airlines, line);
             fclose(file);
         }
     }
@@ -73,13 +75,14 @@ int main(int argc, char *argv[]) {
     Vector* conns = createVector();
     size_t numAirlines = getVectorSize(airlines);
     for (size_t i = 0; i < numAirlines; i++) {
-        sprintf(path, "airline_%d", (int) i);
+        sprintf(path, "%d_air", (int) i);
         addToVector(conns, ipc_establish(path));
     }
 
     runMap(map, airlines, conns);
 
     for (size_t i = 0; i < numAirlines; i++) {
+        wait(0);
         freeAirline(getFromVector(airlines, i));
         ipc_close(getFromVector(conns, i));
     }
@@ -108,10 +111,8 @@ void run_airlines(Map* map, Vector* airlines) {
     for (size_t i = 0; i < count; i++) {
 
         Airline* self = getFromVector(airlines, i);
-        sprintf(name, "airline_%d", self->id);
-        if (fork()) {
-            // Nothing :D
-        } else {
+        sprintf(name, "%d_air", self->id);
+        if (fork() == 0) {
 
             freeMap(map);
 
@@ -126,6 +127,8 @@ void run_airlines(Map* map, Vector* airlines) {
             conn = ipc_establish(PARENT_NAME);
             run_airline(self, conn);
             ipc_close(conn);
+
+            mprintf("Bye folks! %d\n", getpid());
 
             cleanup();
         }
