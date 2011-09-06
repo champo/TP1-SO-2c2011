@@ -10,10 +10,11 @@
 #include "ipc/ipc.h"
 #include "communication/types.h"
 
+#include <string.h>
 int comm_unloaded_stock(int airlineID, Plane* plane, ipc_t conn){
 
     struct StockStateMessage msg;
-    msg = marshall_change_stock(airlineID, plane->id, plane->stocks);
+    msg = marshall_change_stock(airlineID, plane->id, plane->cityId, plane->stocks);
     transmit(conn, msg);
 
     return 0;

@@ -14,7 +14,7 @@ int comm_check_destinations(struct PlaneThread* plane, int* destinations, int* d
     struct Message res;
     union MessagePayload* payload;
 
-    msg = marshall_check_destinations(plane->airline, model->id, model->stocks, *len);
+    msg = marshall_check_destinations(plane->airline, model->id, plane->plane->cityId, model->stocks, *len);
     send(plane, msg);
 
     res = message_queue_pop(plane->queue);
@@ -48,7 +48,7 @@ int comm_unload_stock(struct PlaneThread* plane, int* stockDelta) {
     struct Message res;
     struct StockStateMessage msg;
 
-    msg = marshall_change_stock(plane->airline, model->id, model->stocks);
+    msg = marshall_change_stock(plane->airline, model->id, plane->plane->cityId, model->stocks);
     send(plane, msg);
 
     res = message_queue_pop(plane->queue);
@@ -61,7 +61,7 @@ int comm_unload_stock(struct PlaneThread* plane, int* stockDelta) {
 }
 
 int comm_intransit(struct PlaneThread* plane) {
-    struct InTransitMessage msg = marshall_intransit(plane->airline, plane->plane->id);
+    struct InTransitMessage msg = marshall_intransit(plane->airline, plane->plane->id, plane->plane->cityId);
     send(plane, msg);
     return 0;
 }

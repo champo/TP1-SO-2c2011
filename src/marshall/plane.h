@@ -39,12 +39,12 @@ struct InTransitMessage {
     struct PlaneMessageHeader header;
 };
 
-struct SetDestinationMessage marshall_set_destination(int airline, int id, int target);
+//struct SetDestinationMessage marshall_set_destination(int airline, int id, int target);
 
-struct CheckDestinationsMessage marshall_check_destinations(int airline, int id, Vector* stocks, size_t len);
+struct CheckDestinationsMessage marshall_check_destinations(int airline, int id, int cityId, Vector* stocks, size_t len);
 
-struct InTransitMessage marshall_intransit(int airline, int id);
+struct InTransitMessage marshall_intransit(int airline, int id, int cityId);
 
-struct StockStateMessage marshall_change_stock(int airline, int id, Vector* stocks);
+struct StockStateMessage marshall_change_stock(int airline, int id, int cityId, Vector* stocks);
 
 #endif
