@@ -1,0 +1,88 @@
+\documentclass[a4paper,10pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage{t1enc}
+\usepackage[spanish]{babel}
+\usepackage[pdftex,usenames,dvipsnames]{color}
+\usepackage[pdftex]{graphicx}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{listings}
+\lstset{language=C}
+\lstset{showstringspaces=false}
+\lstset{basicstyle=\ttfamily,}
+
+\begin{document}
+
+
+\renewcommand{\lstlistingname}{C\'odigo Fuente}
+\lstloadlanguages{Octave} 
+\lstdefinelanguage{MyPseudoCode}[]{Octave}{
+	deletekeywords={beta,det},
+	morekeywords={repmat}
+} 
+\lstset{
+	language=MyPseudoCode,
+	stringstyle=\ttfamily,
+	showstringspaces = false,
+	basicstyle=\footnotesize\ttfamily,
+	commentstyle=\color{gray},
+	keywordstyle=\bfseries,
+	numbers=left,
+	numberstyle=\ttfamily\footnotesize,
+	stepnumber=1,                   
+	framexleftmargin=0.20cm,
+	numbersep=0.37cm,              
+	backgroundcolor=\color{white},
+	showspaces=false,
+	showtabs=false,
+	frame=l,
+	tabsize=4,
+	captionpos=b,               
+	breaklines=true,             
+	breakatwhitespace=false,      
+	mathescape=true
+}
+\begin{titlepage}
+        \thispagestyle{empty}
+        \begin{center}
+                \includegraphics{./images/itba.jpg}
+                \vfill
+                \Huge{Sistemas Operativos}\\
+                \vspace{1cm}
+                \huge{Trabajo Práctico Especial Nº1}\\
+        \end{center}
+        \vspace{2cm}
+        \large{
+                \begin{tabular}{lcrc}
+                        \textbf{Alvaro Crespo} & & 50758 & \ \ \texttt{acrespo@alu.itba.edu.ar}\\
+                        \textbf{Juan Pablo Civile} & & 50453 & \ \ \texttt{jcivile@alu.itba.edu.ar}\\
+                        \textbf{Darío Susnisky} & & 50592 & \ \ \texttt{dsusnisk@alu.itba.edu.ar}\\
+                        \\ 
+                \end{tabular}
+        }
+        \vfill
+        \flushright{12 de Septiembre del 2011}
+\end{titlepage}
+
+\setcounter{page}{1}
+
+\tableofcontents
+\newpage
+\section{Introducción}
+
+\newpage
+
+
+\newpage     
+\section{Referencias}
+
+\begin{itemize}
+  \item Material provisto por la cátedra.
+  \item UNIX system programming. Second Edition. Keith Havilland, Dina Gray, Ben Salama.
+  \item http://cplusplus.com/
+
+\end{itemize}
+   
+\end{document}
