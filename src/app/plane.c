@@ -1,4 +1,5 @@
 #include "app/plane.h"
+#include "app/airline.h"
 #include "communication/plane.h"
 
 #include <stdlib.h>
@@ -8,9 +9,7 @@
 static int unload_stock(struct PlaneThread* self);
 
 void run_plane(struct PlaneThread* self) {
-    int finished = 0;
     int destinations[5], distances[5];
-    int target;
     size_t len;
 
     while (self->done == 0 && comm_step(self) != -1) {
@@ -21,6 +20,7 @@ void run_plane(struct PlaneThread* self) {
             CHECK_EXIT(comm_intransit(self));
         }
 
+        app_airline_plane_ready();
         CHECK_EXIT(comm_continue(self));
 
         if (self->plane->distance == 0) {
@@ -31,6 +31,7 @@ void run_plane(struct PlaneThread* self) {
         } else {
             self->plane->distance--;
         }
+        app_airline_plane_ready();
     }
 
     self->done = 1;
@@ -49,9 +50,9 @@ int unload_stock(struct PlaneThread* self) {
     }
 
     int done = 1;
-    for (int i = 0; i < stockLen; i++) {
+    for (size_t i = 0; i < stockLen; i++) {
         Stock* stock = (Stock*) getFromVector(stocks, i);
-        stock->amount -= stockDelta[i];
+        stock->amount = stockDelta[i];
         if (stock->amount > 0) {
             done = 0;
         }

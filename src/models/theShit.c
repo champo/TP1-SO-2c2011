@@ -3,29 +3,41 @@
 #include "utils/vector.h"
 
 
+int getTheShitId(char* theShitName, Vector* theShit) {
 
-//TODO THIS IS WRONG! JUST HARD-CODING! THIS SHOULD RETURN A REFERENCE TO AN
-//ALREADY CREATED STRUCTURE. 
-TheShit* getTheShit(char* name, Vector* theShit) {
-    int i;
+    size_t len = getVectorSize(theShit);
+    for (size_t i =0; i < len; i++) {
 
-    for ( i = 0; i<getVectorSize(theShit); i++ ){
-        if ( strcmp(name, ((TheShit*)getFromVector(theShit,i))->name) == 0 ){
-            return (TheShit*)getFromVector(theShit,i);
+        TheShit* shit = (TheShit*) getFromVector(theShit, i);
+        if (strcmp(theShitName, shit->name) ==0){
+            return shit->id;
         }
     }
+
+    return -1;
+}
+
+TheShit* getTheShit(char* name, Vector* theShit) {
+
+    int i = getTheShitId(name, theShit);
+
+    if (i != -1) {
+        return (TheShit*) getFromVector(theShit, i);
+    }
+
     //this TheShit doesn't exist, let's add it
     TheShit* product;
-    if ( (product = malloc(sizeof(TheShit))) == NULL ){
-        //TODO Frees!
+    if ((product = malloc(sizeof(TheShit))) == NULL) {
+        return NULL;
+    }
+
+    product->name = name;
+    if ((i = addToVector(theShit, product)) == -1) {
+        free(product);
         return NULL;
     }
     product->id = i;
-    product->name = name;
-    if ( addToVector(theShit, product) == -1 ){
-        //TODO Frees!
-        return NULL;
-    }
+
     return product;
 }
 

@@ -3,21 +3,16 @@
 
 #include "global.h"
 #include "models/city.h"
-
-enum MapMessageType {
-    StepMessageType,
-    ContinueMessageType,
-    DestinationMessageType
-};
+#include "communication/types.h"
 
 struct DestinationsMessage {
-    enum MapMessageType type;
+    enum MessageType type;
     int planeId;
     size_t count;
     int destinations[MAX_DESTINATIONS];
     int distance[MAX_DESTINATIONS];
 };
 
-struct DestinationsMessage marshall_give_destinations(int planeId, int count, City* cities, int* distances);
+struct DestinationsMessage marshall_give_destinations(int planeId, int count, int* citiesIds, int* distances);
 
 #endif

@@ -3,6 +3,8 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <dirent.h>
+#include <string.h>
 
 #include "util.h"
 #include "ipc/ipc.h"
@@ -11,10 +13,11 @@
 #include "app/airline.h"
 #include "utils/vector.h"
 #include "parser.h"
+#include "app/map.h"
 
 #define PARENT_NAME "map_ipc"
 
-void run_airlines(Vector* airlines);
+void run_airlines(Map* map, Vector* airlines);
 
 void cleanup(void);
 
@@ -36,14 +39,56 @@ int main(int argc, char *argv[]) {
         abort();
     }
 
-    //TODO: Parse everything, and get the proper data structures
-    //TODO: Position the planes on their initial places on the map
     register_exit_function(cleanup);
     register_signal_handlers();
-    //TODO: Register an exit handler
-    Vector* airlines = NULL;
-    //run_airlines(airlines);
-    //ipc_listen(PARENT_NAME);
+
+    Map* map;
+    Vector* airlines = createVector();
+    DIR* config = opendir(argv[1]);
+    struct dirent* entry;
+    char path[512];
+
+    if (NULL == config) {
+        perror("Failed opening the config folder.");
+        mprintf_end();
+        ipc_end();
+        abort();
+    }
+
+    sprintf(path, "%s/map", argv[1]);
+    map = parseMap(path);
+    while ((entry = readdir(config)) != NULL) {
+        if (strncmp(entry->d_name, "airline_", 8) == 0) {
+            FILE* file;
+            sprintf(path, "%s/%s", argv[1], entry->d_name);
+            file = fopen(path, "r");
+            addToVector(airlines, parseAirlines(file, map));
+            fclose(file);
+        }
+    }
+    closedir(config);
+
+    run_airlines(map, airlines);
+    ipc_listen(PARENT_NAME);
+
+    Vector* conns = createVector();
+    size_t numAirlines = getVectorSize(airlines);
+    for (size_t i = 0; i < numAirlines; i++) {
+        sprintf(path, "airline_%d", i);
+        addToVector(conns, ipc_establish(path));
+    }
+
+    runMap(map, airlines, conns);
+
+    for (size_t i = 0; i < numAirlines; i++) {
+        freeAirline(getFromVector(airlines, i));
+        ipc_close(getFromVector(conns, i));
+    }
+
+    destroyVector(conns);
+    destroyVector(airlines);
+
+    freeMap(map);
 
     cleanup();
 }
@@ -55,7 +100,7 @@ void cleanup(void) {
     exit(0);
 }
 
-void run_airlines(Vector* airlines) {
+void run_airlines(Map* map, Vector* airlines) {
 
     size_t count = getVectorSize(airlines);
     char name[512];
@@ -66,17 +111,14 @@ void run_airlines(Vector* airlines) {
         Airline* self = getFromVector(airlines, i);
         sprintf(name, "airline_%d", self->id);
         if (fork()) {
-
-            // This is the creator process
-            conn = ipc_establish(name);
-            // TODO: Store this somewhere
+            // Nothing :D
         } else {
 
-            //FIXME: I'm gonna leak the map! Yay! Good for me! :D
+            freeMap(map);
 
             for (size_t j = 0; j < count; j++) {
                 if (j != i) {
-                    //TODO: Free the airline
+                    freeAirline(getFromVector(airlines, j));
                 }
             }
             destroyVector(airlines);

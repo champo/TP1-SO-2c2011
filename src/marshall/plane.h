@@ -4,17 +4,10 @@
 #include "global.h"
 #include <stddef.h>
 #include "utils/vector.h"
-
-enum PlaneMessageType {
-    SetDestinationType,
-    CheckDestinationsType,
-    UnloadStockType,
-    InTransitType,
-    OutOfTransitType
-};
+#include "communication/types.h"
 
 struct PlaneMessageHeader {
-    enum PlaneMessageType type;
+    enum MessageType type;
     int airline;
     int id;
 };
