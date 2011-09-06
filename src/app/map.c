@@ -57,7 +57,6 @@ void runMap(Map* map, Vector* airlines, Vector* conns){
 
             while (i != airlinesize) {
                 msg = comm_get_map_message(); 
-                msg = getMessageForMap();
                 if (msg.type == MessageTypeAirlineDone) {
                     i++;
                 }

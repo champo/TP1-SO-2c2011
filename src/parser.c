@@ -116,6 +116,8 @@ Map* parseMap(const char* path){
             return NULL;
         }
     }
+    
+    
     //Now let's read the connections between the cities...
     if (strcmp(buffer, "") != 0){
         fscanf(mapfile, "%s %d\n", buffer2, &aux);
@@ -138,13 +140,19 @@ void floydMatrix(int** matrix, int counter) {
 
     int i,j,k;
     int aux1,aux2;
+    
 
     for ( k=0; k<counter; k++) {
         for ( i=0; i<counter; i++) {
             for ( j=0; j<counter;j++) {
+                aux2 = 0;
                 aux1 = matrix[i][j];
-                aux2= matrix[i][k]+matrix[k][j];
-                matrix[i][j] = aux1 < aux2 ? aux1 : aux2;
+                if (matrix[i][k] != 0 && matrix[k][j] !=0) {
+                    aux2= matrix[i][k]+matrix[k][j];
+                }
+                if (aux2!= 0 && i != j && (aux1 == 0 || aux2 < aux1)) {
+                    matrix[i][j] = aux2;
+                }
             }
         }
     }
