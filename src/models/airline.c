@@ -4,7 +4,6 @@
 
 
 void freeAirline(Airline* airline) {
-    unsigned int i;
     if (airline != NULL) {
         free(airline->planes);
         free(airline);

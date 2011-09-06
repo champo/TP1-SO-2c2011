@@ -46,7 +46,7 @@ int ipc_listen(const char* name) {
     set_path(&addr, name);
     strcpy(path, addr.sun_path);
 
-    if (bind(readSocket, (struct sockaddr*) &addr, sizeof(addr.sun_family) + strlen(addr.sun_path)) == -1) {
+    if (bind(readSocket, (struct sockaddr*) &addr, sizeof(addr.sun_family) + strlen(addr.sun_path) + 2) == -1) {
         perror("Couldnt bind the read socket");
         pthread_mutex_unlock(&readLock);
         close(readSocket);

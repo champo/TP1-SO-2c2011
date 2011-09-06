@@ -3,15 +3,13 @@
 #include <signal.h>
 #include <stddef.h>
 #include <pthread.h>
+#include <stdlib.h>
 
 #include "util.h"
 
 #define HANDLE(sig) signal(sig, signal_handler)
-#define IGNORE(sig) signal(sig, signal_ignore)
 
 static void signal_handler(int sig);
-
-static void signal_ignore(int sig);
 
 static void (*exitFunction)(void) = NULL;
 
@@ -23,24 +21,27 @@ void register_signal_handlers(void) {
     HANDLE(SIGHUP);
     HANDLE(SIGINT);
     HANDLE(SIGQUIT);
-    HANDLE(SIGILL);
-    HANDLE(SIGTRAP);
-    HANDLE(SIGABRT);
-    HANDLE(SIGFPE);
-    HANDLE(SIGBUS);
-    HANDLE(SIGSEGV);
-    HANDLE(SIGSYS);
-    HANDLE(SIGPIPE);
-    HANDLE(SIGALRM);
     HANDLE(SIGTERM);
-    IGNORE(SIGTSTP);
     HANDLE(SIGCHLD);
+    HANDLE(SIGILL);
+    HANDLE(SIGFPE);
+    HANDLE(SIGSEGV);
+    HANDLE(SIGPIPE);
 }
+
+#define CASE_SIG(sig) case sig: \
+    mprintf("Caugh signal "#sig"\n"); \
+    abort(); \
+    break;
 
 void signal_handler(int sig) {
     // Things just go boom
 #ifdef DEBUG
     switch (sig) {
+        CASE_SIG(SIGILL)
+        CASE_SIG(SIGFPE)
+        CASE_SIG(SIGSEGV)
+        CASE_SIG(SIGPIPE)
         case SIGHUP:
             mprintf("Caught signal SIGHUP\n");
             break;
@@ -49,33 +50,6 @@ void signal_handler(int sig) {
             break;
         case SIGQUIT:
             mprintf("Caught signal SIGQUIT\n");
-            break;
-        case SIGILL:
-            mprintf("Caught signal SIGILL\n");
-            break;
-        case SIGTRAP:
-            mprintf("Caught signal SIGTRAP\n");
-            break;
-        case SIGABRT:
-            mprintf("Caught signal SIGABRT\n");
-            break;
-        case SIGFPE:
-            mprintf("Caught signal SIGFPE\n");
-            break;
-        case SIGBUS:
-            mprintf("Caught signal SIGBUS\n");
-            break;
-        case SIGSEGV:
-            mprintf("Caught signal SIGSEGV\n");
-            break;
-        case SIGSYS:
-            mprintf("Caught signal SIGSYS\n");
-            break;
-        case SIGPIPE:
-            mprintf("Caught signal SIGPIPE\n");
-            break;
-        case SIGALRM:
-            mprintf("Caught signal SIGALRM\n");
             break;
         case SIGTERM:
             mprintf("Caught signal SIGTERM\n");
@@ -94,10 +68,5 @@ void signal_handler(int sig) {
     if (exitFunction) {
         exitFunction();
     }
-    exit(1);
-}
-
-void signal_ignore(int sig) {
-    // What? I didn't catch that, can you repeat it?
 }
 

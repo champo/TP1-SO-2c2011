@@ -9,6 +9,8 @@ typedef struct {
     Vector* stock;
 } City;
 
+int getCityId(const char* cityName, Vector* cities);
+
 void freeCity(City* city);
 
 #endif
