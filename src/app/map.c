@@ -36,19 +36,6 @@ void runMap(Map* map, Vector* airlines, Vector* conns){
     while (endSimulation(map) == CONTINUE_SIM) {
 
         comm_turn_step(conns);
-        /**
-            while (i != airlinesize) {
-                msg = comm_get_map_message(); 
-                
-                if (msg.type == MessageTypeAirlineDone) {
-                    i++;
-                }
-                if (msg.type == MessageTypeUnloadStock) {
-                    updateMap(map, &(msg.planeInfo.plane));
-                    comm_unloaded_stock(msg.planeInfo.airlineID , &(msg.planeInfo.plane), (ipc_t)getFromVector(conns,msg.planeInfo.airlineID));
-                }
-
-        */
         i = 0;
         while (i != airlinesize) {
             msg = comm_get_map_message();
@@ -63,16 +50,6 @@ void runMap(Map* map, Vector* airlines, Vector* conns){
 
         comm_turn_continue(conns);
 
-        /**    
-        while (i != airlinesize) {
-                msg = comm_get_map_message(); 
-                if (msg.type == MessageTypeAirlineDone) {
-                    i++;
-                }
-                if (msg.type == MessageTypeCheckDestinations) {
-                    app_give_destinations(map, &(msg.planeInfo.plane), (ipc_t)getFromVector(conns,msg.planeInfo.airlineID));
-                }
-        */
         i = 0;
         while (i != airlinesize) {
             msg = comm_get_map_message();
@@ -84,14 +61,6 @@ void runMap(Map* map, Vector* airlines, Vector* conns){
         }
     }
 }
-
-/**
-int endSimulation(Map* map){
-struct MapMessage getMessageForMap(void) {
-    struct MapMessage msg;
-    return msg;
-}
-*/
 
 int endSimulation(Map* map) {
 
