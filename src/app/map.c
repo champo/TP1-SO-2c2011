@@ -73,8 +73,9 @@ void runMap(Map* map, Vector* airlines, Vector* conns){
             }
         }
 
-        mprintf("Turn ended.. Press a key to continue... ");
-        getchar();
+        mprintf("Turn ended.. Press a key to continue...\n");
+        //getchar();
+        mprintf("------------------------------------------------------------------\n");
     }
 
     mprintf("Done biatch.\n");
@@ -178,7 +179,9 @@ int app_give_destinations(Map* map, Plane* plane, ipc_t conn) {
         if (score != 0 && (index = insertScore(cityInfo, MAX_DESTINATIONS, count, score)) != -1) {
             cityInfo[index].cityId = city->id;
             cityInfo[index].distance = getDistance(map, city->id, plane->cityId);
-            count++;
+            if (count != MAX_DESTINATIONS) {
+                count++;
+            }
         }
     }
 
