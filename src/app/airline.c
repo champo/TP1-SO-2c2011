@@ -95,16 +95,25 @@ void listen(Vector* threads) {
     struct Message outMsg;
 
     while (comm_airline_recieve(&msg) == 0) {
+        mprintf("Got message with type %d\n", msg.type);
         switch (msg.type) {
             case MessageTypeStep:
                 set_planes_left(threads);
-                outMsg.type = MessageTypeStep;
-                broadcast(threads, outMsg);
+                if (planesLeftInStage == 0) {
+                    comm_airline_ready(ipcConn);
+                } else {
+                    outMsg.type = MessageTypeStep;
+                    broadcast(threads, outMsg);
+                }
                 break;
             case MessageTypeContinue:
                 set_planes_left(threads);
-                outMsg.type = MessageTypeContinue;
-                broadcast(threads, outMsg);
+                if (planesLeftInStage == 0) {
+                    comm_airline_ready(ipcConn);
+                } else {
+                    outMsg.type = MessageTypeContinue;
+                    broadcast(threads, outMsg);
+                }
                 break;
             case MessageTypeDestinations:
                 redirect_destinations_message(threads, &msg);
@@ -152,6 +161,7 @@ void exit_handler(void) {
 }
 
 void broadcast(Vector* threads, struct Message msg) {
+    mprintf("Broadcasting message with type %d\n", msg.type);
     size_t len = getVectorSize(threads);
     for (size_t i = 0; i < len; i++) {
         struct PlaneThread* plane = (struct PlaneThread*) getFromVector(threads, i);
@@ -168,10 +178,12 @@ void set_planes_left(Vector* threads) {
             planesLeftInStage++;
         }
     }
+    mprintf("Setting planes left to %d\n", planesLeftInStage);
 }
 
 void app_airline_plane_ready(void) {
     planesLeftInStage--;
+    mprintf("Plane ready, %d left\n", planesLeftInStage);
     if (planesLeftInStage == 0) {
         comm_airline_ready(ipcConn);
     }

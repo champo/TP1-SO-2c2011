@@ -52,17 +52,7 @@ int comm_turn_continue(Vector* conns) {
     return 0;
 }
 
-int comm_get_map_message(struct PlaneMessage* msg) {
-
-    char buff[IPC_MAX_PACKET_LEN];
-    int len;
-
-    if ((len = ipc_read(buff, IPC_MAX_PACKET_LEN)) == -1) {
-        return -1;
-    }
-
-    memcpy(msg, buff, len);
-
-    return 0;
-
+int comm_get_map_message(union MapMessage* msg) {
+    return ipc_read(msg, sizeof(union MapMessage));
 }
+

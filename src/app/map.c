@@ -31,16 +31,18 @@ void initPlane(struct StockMessagePart* stocks, struct PlaneMessageHeader* heade
 void runMap(Map* map, Vector* airlines, Vector* conns){
 
     int i, airlinesize;
-    struct PlaneMessage msg;
+    unsigned int turn = 0;
+    union MapMessage msg;
     Plane plane;
     int airlineId;
 
     airlinesize = getVectorSize(airlines);
-    i = 0;
 
     while (endSimulation(map) == CONTINUE_SIM) {
 
+        mprintf("Doing turn %d\n", turn++);
         comm_turn_step(conns);
+
         i = 0;
         while (i != airlinesize) {
             comm_get_map_message(&msg);
@@ -49,8 +51,8 @@ void runMap(Map* map, Vector* airlines, Vector* conns){
                 i++;
             } else if (msg.type == MessageTypeUnloadStock) {
 
-                airlineId = msg.planeInfo.stockState.header.airline;
-                initPlane(&msg.planeInfo.stockState.stocks, &msg.planeInfo.stockState.header, &plane, map);
+                airlineId = msg.stockState.header.airline;
+                initPlane(&msg.stockState.stocks, &msg.stockState.header, &plane, map);
                 updateMap(map, &plane);
                 comm_unloaded_stock(airlineId, &plane, (ipc_t)getFromVector(conns, airlineId));
                 destroyVector(plane.stocks);
@@ -65,8 +67,8 @@ void runMap(Map* map, Vector* airlines, Vector* conns){
             if (msg.type == MessageTypeAirlineDone) {
                 i++;
             } else if (msg.type == MessageTypeCheckDestinations) {
-                airlineId = msg.planeInfo.stockState.header.airline;
-                initPlane(&msg.planeInfo.checkDestinations.stocks, &msg.planeInfo.checkDestinations.header, &plane, map);
+                airlineId = msg.stockState.header.airline;
+                initPlane(&msg.checkDestinations.stocks, &msg.checkDestinations.header, &plane, map);
                 app_give_destinations(map, &plane, (ipc_t)getFromVector(conns, airlineId));
             }
         }
@@ -79,14 +81,14 @@ void initPlane(struct StockMessagePart* stocks, struct PlaneMessageHeader* heade
     plane->cityId = header->cityId;
     plane->stocks = createVector();
     for (unsigned int j = 0; j < stocks->count; j++) {
-                    
+
         char name[NAME_MAX_LENGTH];
         getTheShitName(stocks->stockId[j], map->theShit, name);
         int quant = stocks->quantities[j];
         Stock* stock = initStock(name, quant, map->theShit);
         addToVector(plane->stocks, stock);
     }
-}  
+}
 
 
 int endSimulation(Map* map) {
