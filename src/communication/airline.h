@@ -6,15 +6,13 @@
 #include "communication/types.h"
 #include "marshall/plane.h"
 
-struct MapMessage {
+union MapMessage {
     enum MessageType type;
-    union {
-        struct DestinationsMessage destinations;
-        struct StockStateMessage stock;
-    } payload;
+    struct DestinationsMessage destinations;
+    struct StockStateMessage stock;
 };
 
-int comm_airline_recieve(struct MapMessage* msg);
+int comm_airline_recieve(union MapMessage* msg);
 
 int comm_airline_ready(ipc_t conn);
 

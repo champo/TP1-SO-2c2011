@@ -19,9 +19,9 @@ static Vector* bootstrap_planes(Airline* self, ipc_t conn);
 
 static void broadcast(Vector* threads, struct Message msg);
 
-static void redirect_destinations_message(Vector* threads, struct MapMessage* in);
+static void redirect_destinations_message(Vector* threads, union MapMessage* in);
 
-static void redirect_stock_message(Vector* threads, struct MapMessage* in);
+static void redirect_stock_message(Vector* threads, union MapMessage* in);
 
 static void set_planes_left(Vector* threads);
 
@@ -91,9 +91,10 @@ Vector* bootstrap_planes(Airline* self, ipc_t conn) {
 
 void listen(Vector* threads) {
 
-    struct MapMessage msg;
+    union MapMessage msg;
     struct Message outMsg;
 
+    mprintf("Starting listen loop\n");
     while (comm_airline_recieve(&msg) == 0) {
         mprintf("Got message with type %d\n", msg.type);
         switch (msg.type) {
@@ -125,31 +126,32 @@ void listen(Vector* threads) {
                 exit_handler();
                 return;
         }
+        mprintf("Done handling. Waiting for next msg\n");
     }
 }
 
-void redirect_stock_message(Vector* threads, struct MapMessage* in) {
+void redirect_stock_message(Vector* threads, union MapMessage* in) {
     struct Message msg;
-    struct PlaneThread* thread = (struct PlaneThread*) getFromVector(threads, in->payload.stock.header.id);
-    struct StockMessagePart* stock = &in->payload.stock.stocks;
+    struct PlaneThread* thread = (struct PlaneThread*) getFromVector(threads, in->stock.header.id);
+    struct StockMessagePart* stock = &in->stock.stocks;
 
     msg.type = MessageTypeStock;
     msg.payload.stock.count = stock->count;
     memcpy(msg.payload.stock.delta, stock->quantities, sizeof(int) * MAX_STOCKS);
 
-    mprintf("Redirect stock message to %d\n", thread->plane->id);
+    mprintf("Redirect stock message to %d with stock count %d\n", thread->plane->id, stock->count);
     message_queue_push(thread->queue, msg);
 }
 
-void redirect_destinations_message(Vector* threads, struct MapMessage* in) {
+void redirect_destinations_message(Vector* threads, union MapMessage* in) {
 
     struct Message msg;
-    struct PlaneThread* thread = (struct PlaneThread*) getFromVector(threads, in->payload.destinations.planeId);
+    struct PlaneThread* thread = (struct PlaneThread*) getFromVector(threads, in->destinations.planeId);
 
     msg.type = MessageTypeDestinations;
-    memcpy(msg.payload.destinations.destinations, in->payload.destinations.destinations, MAX_DESTINATIONS * sizeof(int));
-    memcpy(msg.payload.destinations.distances, in->payload.destinations.distance, MAX_DESTINATIONS * sizeof(int));
-    msg.payload.destinations.count = in->payload.destinations.count;
+    memcpy(msg.payload.destinations.destinations, in->destinations.destinations, MAX_DESTINATIONS * sizeof(int));
+    memcpy(msg.payload.destinations.distances, in->destinations.distance, MAX_DESTINATIONS * sizeof(int));
+    msg.payload.destinations.count = in->destinations.count;
 
     message_queue_push(thread->queue, msg);
 }

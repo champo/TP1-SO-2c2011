@@ -37,6 +37,7 @@ int comm_turn_step(Vector* conns) {
     for (i = 0; i < getVectorSize(conns); i++) {
         transmit(getFromVector(conns, i), msg);
     }
+
     return 0;
 }
 
@@ -52,7 +53,7 @@ int comm_turn_continue(Vector* conns) {
     return 0;
 }
 
-int comm_get_map_message(union MapMessage* msg) {
-    return ipc_read(msg, sizeof(union MapMessage));
+int comm_get_map_message(union PlaneMessage* msg) {
+    return ipc_read(msg, sizeof(union PlaneMessage));
 }
 

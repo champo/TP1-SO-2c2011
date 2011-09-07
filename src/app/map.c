@@ -32,7 +32,7 @@ void runMap(Map* map, Vector* airlines, Vector* conns){
 
     int i, airlinesize;
     unsigned int turn = 0;
-    union MapMessage msg;
+    union PlaneMessage msg;
     Plane plane;
     int airlineId;
 
