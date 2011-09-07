@@ -125,7 +125,7 @@ Map* parseMap(const char* path){
     }
     //Now let's read the connections between the cities...
     if (strcmp(buffer, "") != 0) {
-        int i, j;
+        int j;
         fscanf(mapfile, "%s %d\n", buffer2, &aux);
         do {
             i = getCityId(buffer, ans->cities);

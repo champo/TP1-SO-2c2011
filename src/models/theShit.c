@@ -18,15 +18,9 @@ int getTheShitId(char* theShitName, Vector* theShit) {
 }
 
 void getTheShitName(int id, Vector* theShit, char* name) {
-    size_t len = getVectorSize(theShit);
-    for (size_t i =0; i < len; i++) {
-        TheShit* shit = (TheShit*) getFromVector(theShit,i);
-        if ( id == shit->id) {
-            strcpy(name, shit->name);
-            return name;
-        }
-    }
-    return NULL;
+    
+    TheShit* shit = (TheShit*) getFromVector(theShit, id);
+    strcpy(name, shit->name);
 }
 
 TheShit* getTheShit(char* name, Vector* theShit) {

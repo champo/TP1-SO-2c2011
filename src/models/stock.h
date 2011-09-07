@@ -11,6 +11,7 @@ typedef struct {
     TheShit*     theShit;
 } Stock;
 
+Stock* initStockById(int theShitId, int amount, Vector* theShit);
 Stock* initStock(char* name, int amount, Vector* theShit); 
 void freeStocks(Vector* stocks);
 #endif

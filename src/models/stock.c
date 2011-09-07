@@ -14,6 +14,18 @@ Stock* initStock(char* name, int amount, Vector* theShit) {
     return stock;
 }
 
+Stock* initStockById(int theShitId, int amount, Vector* theShit) {
+
+    Stock* stock;
+    if ((stock = malloc(sizeof(Stock))) == NULL) {
+        return NULL;
+    }
+    stock->amount = amount;
+    stock->theShit = getFromVector(theShit, theShitId);  
+    return stock;
+}
+
+
 void freeStocks(Vector* stocks) {
     unsigned int i;
     unsigned int size =  getVectorSize(stocks);
