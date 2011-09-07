@@ -160,7 +160,9 @@ void broadcast(Vector* threads, struct Message msg) {
     size_t len = getVectorSize(threads);
     for (size_t i = 0; i < len; i++) {
         struct PlaneThread* plane = (struct PlaneThread*) getFromVector(threads, i);
-        message_queue_push(plane->queue, msg);
+        if (!plane->done) {
+            message_queue_push(plane->queue, msg);
+        }
     }
 }
 
