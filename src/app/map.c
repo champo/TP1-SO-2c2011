@@ -171,9 +171,11 @@ int app_give_destinations(Map* map, Plane* plane, ipc_t conn) {
     for (size_t i = 0; i < cityNumber; i++) {
 
         City* city = getFromVector(map->cities, i);
+
         score = getCityScore(city->stock, plane->stocks);
-        mprintf("City %d gave score %d for plane %d\n", i, score, plane->id);
-        if (score != 0 && (index = insertScore(cityInfo, MAX_DESTINATIONS, count, score) != -1)) {
+        mprintf("City %d gave score %d for plane %d\n", city->id, score, plane->id);
+
+        if (score != 0 && (index = insertScore(cityInfo, MAX_DESTINATIONS, count, score)) != -1) {
             cityInfo[index].cityId = city->id;
             cityInfo[index].distance = getDistance(map, city->id, plane->cityId);
             count++;
@@ -186,22 +188,29 @@ int app_give_destinations(Map* map, Plane* plane, ipc_t conn) {
         citiesIds[i] = cityInfo[i].cityId;
         distances[i] = cityInfo[i].distance;
     }
-    mprintf("Sendint to plane %d city %d (%d) with %d more\n", plane->id, citiesIds[0], distances[0], count);
+
+    if (count > 0) {
+        mprintf("Sending to plane %d city %d (%d) with %d more\n", plane->id, citiesIds[0], distances[0], count);
+    } else {
+        mprintf("No options for plane %d\n", plane->id);
+    }
+
 
     comm_give_destinations(plane, conn, count, citiesIds, distances);
 
     return 0;
 }
 
-int insertScore(struct CityInfo* cityInfo, int size, int elems, int score) {
+int insertScore(struct CityInfo cityInfo[], int size, int elems, int score) {
 
     if (elems < size) {
         cityInfo[elems].score = score;
+        return elems;
     } else {
         int min = cityInfo[0].score;
         int minIndex = 0;
 
-        for (int i = 0; i < size; i++) {
+        for (int i = 0; i < elems; i++) {
             if ( cityInfo[i].score < min) {
                 min = cityInfo[i].score;
                 minIndex = i;
@@ -209,12 +218,11 @@ int insertScore(struct CityInfo* cityInfo, int size, int elems, int score) {
         }
         if (score > cityInfo[minIndex].score) {
             cityInfo[minIndex].score = score;
+            return minIndex;
         } else {
-
             return -1; // Nothing was inserted
         }
     }
-    return score;
 }
 
 int cityInfoComparator(const void* a, const void* b) {
