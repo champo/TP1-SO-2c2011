@@ -79,10 +79,26 @@ comunicación de procesos (IPC) y manejar con autoridad el \textit{filesystem} d
 \section{Esquema de la aplicación}
 Esquema onda el que hicimos con bruno sobre que cosas son procesos y que son threads, y que cosa se comunica con que. Aunque sea un paint.
 
+A la hora de encarar el problema en cuestión, una de las primeras cosas a plantearse era el diseño de la aplicación. Dadas la naturaleza y los objetivos planteados para este trabajo práctico, era necesario poder identificar que partes de nuestra simulación iban a ser procesos paralelos y cuales tenia coherencia implementarlas con \textit{threads}. En este debate, también fue importante no forzar la separación de procesos cuando el problema no lo requeria. 
+
+En un primer analisís, identificamos como potenciales procesos paralelos de nuestro programa al control del flujo principal del programa, a los parsers, al mapa, a las aerolineas y a los aviones. Luego de cierto debate, vimos que la relación entre el flujo principal, los parsers y el mapa era demasiado fuerte, pues, la combinacion de estas tres cosas iban a controlar el flujo de la simulación en sí. Inclusive, estas partes tenian una secuencia bastante marcada. Así, se decició que estos elementos que originalmente bien podrian haber sido planteado como procesos paralelos, era mas intuitivo y coherente escribirlo como uno solo. 
+
+Por otra parte, la aerolinea y los aviones nos resulto intuitivo implementarlo como un proceso aparte. La siguiente decisión tomada fue que los aviones debian ser \textit{threads} de los procesos aerolineas. Pues nos resulto que necesario implementarlo de esta manera ya que la relacion entre una aerolinea y sus aviones era constante, ya que un avión es parte de una aerolinea.
+
+A continuación se presentan esquemas que representan las tomas de decisiones respecto al esquema de la simulación recién mencionadas:
+
 \newpage
 \section{Modelo OSI}
 Separación en capas. Separación clara de responsabilidades. Mejora en la claridad del código.
 Esquema gráfico.
+
+El modelo OSI es un modelo que estandariza la forma de diseñar un programa y como comunicar diferentes programas. Como se puede ver en el esquema (INCLUIR ESQUEMA) el modelo OSI cuenta con 7 capaz aunque dadas las funcionalidades de nuestra aplicación nuestro programa solo cuenta con las primeras cuatro implementadas (e inclusive, dos de las mismas están implementadas como una). Esto se debe a que nuestro programa no se comunica con otros programas, reduciendo así las capas del modelo OSI implementadas por nosotros.
+
+El modelo OSI es muy util ya que permite realizar las diferentes partes de una aplicación por separado sin mezclar información innecesaria y de esta manera las implementaciones en cada capa son independientes del resto. Por último, la separación en capaz mejora ampliamente la claridad del código.
+
+En nuestro caso, la capa de aplicación es la encargada de realizar el flujo y la lógica de la aplicación en sí. Las capas de presentación y sesión estan implementadas como una sola, la capa de Marshalling. Esta se encarga de recibir los datos que se desean transmitir a otro proceso y dejarlos en estructuras de modo tal que la capa de Marshalling de otro proceso lo pueda entender. Nuestra última capa implementada es la de transporte que es la que se encarga de utilizar los diferentes tipos de \textit{IPCs} para comunicar procesos.
+
+Notese que es de suma importancia la separación en capas ya que por ejemplo, gracias a esto fue posible implementar los distintos tipos de \textit{IPCs} sin importar el resto de las implementaciones.
 
 \newpage
 \section{Interfaz de comunicación(???)}
@@ -99,6 +115,7 @@ problema con las líneas en blanco que marcaban los límites. fscanf(``\%s'',str
 \newpage
 \section{Conclusiones}
 ACUERDENSE DE COMO NOS LA HIZO COMER ROMANNNNN!!!PONGAMOS ALGO COPADO ACA!!!XD
+Estaria bueno poder comparar el programa usando los diferentes tipos de ipc
 
 \newpage     
 \section{Referencias}
