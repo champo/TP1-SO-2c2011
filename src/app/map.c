@@ -76,6 +76,8 @@ void runMap(Map* map, Vector* airlines, Vector* conns){
                 app_give_destinations(map, &plane, (ipc_t)getFromVector(conns, airlineId));
             }
         }
+
+        getchar();
     }
 
     mprintf("Done biatch.\n");
@@ -92,7 +94,6 @@ void initPlane(struct StockMessagePart* stocks, struct PlaneMessageHeader* heade
         char name[NAME_MAX_LENGTH];
         getTheShitName(stocks->stockId[j], map->theShit, name);
         int quant = stocks->quantities[j];
-        mprintf("Plane %d has %d of %d\n", header->id, quant, stocks->stockId[j]);
         Stock* stock = initStock(name, quant, map->theShit);
         addToVector(plane->stocks, stock);
     }
@@ -231,7 +232,6 @@ int getCityScore(Vector* cityStocks, Vector* planeStocks) {
 
     for (size_t i = 0; i < cityStockSize; i++) {
         Stock* cityStock = getFromVector(cityStocks, i);
-        mprintf("City has %d of %d\n", cityStock->amount, cityStock->theShit->id);
         for (size_t j = 0; j < planeStockSize; j++) {
             Stock* planeStock = getFromVector(planeStocks, j);
             if (cityStock->theShit->id ==  planeStock->theShit->id) {

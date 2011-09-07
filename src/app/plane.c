@@ -22,16 +22,25 @@ void run_plane(struct PlaneThread* self) {
         }
 
         app_airline_plane_ready();
+        if (self->done) {
+            echo("I unloaded everything, so I'm bialing");
+            break;
+        }
         echo("Waiting for phase2...");
         CHECK_EXIT(comm_continue(self));
 
         if (self->plane->distance == 0) {
             len = 5;
             CHECK_EXIT(comm_check_destinations(self, destinations, distances, &len));
-            mprintf("[%d] Goint from %d to %d with distance %d\n",
-                    self->plane->id, self->plane->cityId, *destinations, *distances);
-            self->plane->cityId = *destinations;
-            self->plane->distance = *distances;
+            if (len == 0) {
+                echo("Done early dude!");
+                self->done = 1;
+            } else {
+                mprintf("[%d] Goint from %d to %d with distance %d\n",
+                        self->plane->id, self->plane->cityId, *destinations, *distances);
+                self->plane->cityId = *destinations;
+                self->plane->distance = *distances;
+            }
         } else {
             self->plane->distance--;
         }
