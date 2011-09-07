@@ -19,11 +19,6 @@ struct StockMessagePart {
     int quantities[MAX_STOCKS];
 };
 
-struct SetDestinationMessage {
-    struct PlaneMessageHeader header;
-    int target;
-};
-
 struct CheckDestinationsMessage {
     struct PlaneMessageHeader header;
     size_t maxDestinations;
@@ -35,15 +30,7 @@ struct StockStateMessage {
     struct StockMessagePart stocks;
 };
 
-struct InTransitMessage {
-    struct PlaneMessageHeader header;
-};
-
-//struct SetDestinationMessage marshall_set_destination(int airline, int id, int target);
-
 struct CheckDestinationsMessage marshall_check_destinations(int airline, int id, int cityId, Vector* stocks, size_t len);
-
-struct InTransitMessage marshall_intransit(int airline, int id, int cityId);
 
 struct StockStateMessage marshall_change_stock(int airline, int id, int cityId, Vector* stocks);
 

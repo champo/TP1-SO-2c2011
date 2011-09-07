@@ -43,9 +43,3 @@ struct StockStateMessage marshall_change_stock(int airline, int id, int cityId, 
     return msg;
 }
 
-struct InTransitMessage marshall_intransit(int airline, int id, int cityId ) {
-    return (struct InTransitMessage) {
-        .header = prepare_header(airline, id, cityId, MessageTypeInTransit)
-    };
-}
-
