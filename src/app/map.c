@@ -58,10 +58,6 @@ void runMap(Map* map, Vector* airlines, Vector* conns){
             }
         }
 
-        if (endSimulation(map) != CONTINUE_SIM) {
-            break;
-        }
-
         comm_turn_continue(conns);
 
         i = 0;
