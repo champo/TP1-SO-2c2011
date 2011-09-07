@@ -11,7 +11,6 @@
 #include "global.h"
 #include <stdlib.h>
 #include <stddef.h>
-#include "parser.h"
 
 struct CityInfo {
     int cityId;
@@ -55,7 +54,7 @@ void runMap(Map* map, Vector* airlines, Vector* conns){
                 initPlane(&msg.stockState.stocks, &msg.stockState.header, &plane, map);
                 updateMap(map, &plane);
                 comm_unloaded_stock(airlineId, &plane, (ipc_t)getFromVector(conns, airlineId));
-                destroyVector(plane.stocks);
+                freeStocks(plane.stocks);
             }
         }
 
@@ -74,6 +73,7 @@ void runMap(Map* map, Vector* airlines, Vector* conns){
                 airlineId = msg.stockState.header.airline;
                 initPlane(&msg.checkDestinations.stocks, &msg.checkDestinations.header, &plane, map);
                 app_give_destinations(map, &plane, (ipc_t)getFromVector(conns, airlineId));
+                freeStocks(plane.stocks);
             }
         }
 
@@ -91,7 +91,7 @@ void initPlane(struct StockMessagePart* stocks, struct PlaneMessageHeader* heade
     plane->stocks = createVector();
     for (unsigned int j = 0; j < stocks->count; j++) {
 
-        char name[NAME_MAX_LENGTH];
+        char name[CITY_NAME_MAX_LENGTH];
         getTheShitName(stocks->stockId[j], map->theShit, name);
         int quant = stocks->quantities[j];
         Stock* stock = initStock(name, quant, map->theShit);

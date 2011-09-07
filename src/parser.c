@@ -7,7 +7,10 @@
 #include "models/map.h"
 #include <stdlib.h>
 #include <string.h>
+#include "global.h"
 
+#define FINISHED                1
+#define FIRST                   1
 
 static void floydMatrix(int** matrix, int counter);
 
@@ -19,8 +22,8 @@ Map* parseMap(const char* path){
     int i;
     int aux, state, flag = FIRST;
     int counter;
-    char buffer[NAME_MAX_LENGTH];
-    char buffer2[NAME_MAX_LENGTH];
+    char buffer[CITY_NAME_MAX_LENGTH];
+    char buffer2[CITY_NAME_MAX_LENGTH];
     City** cities;
 
 
@@ -79,7 +82,7 @@ Map* parseMap(const char* path){
     //Let's read each city!
     for (i = 0; i<counter; i++){
         if (flag == FIRST){
-            if ( (cities[i]->name = malloc(NAME_MAX_LENGTH * sizeof(char))) == NULL ){
+            if ( (cities[i]->name = malloc(CITY_NAME_MAX_LENGTH * sizeof(char))) == NULL ){
                 return NULL;
                 //TODO FREE EVERYTHING
             }
@@ -106,7 +109,7 @@ Map* parseMap(const char* path){
         if (state == 1){
             flag = !FIRST;
             if ( (i+1) != counter){
-                if ( (cities[i+1]->name = malloc(NAME_MAX_LENGTH * sizeof(char))) == NULL){
+                if ( (cities[i+1]->name = malloc(CITY_NAME_MAX_LENGTH * sizeof(char))) == NULL){
                     //TODO FREE EVERYTHING
                     return NULL;
                 }
@@ -169,7 +172,7 @@ Airline* parseAirlines(FILE* pFile, Map* map) {
 
     unsigned int i;
     int stockAmount,state,flag = FIRST;
-    char cityName[NAME_MAX_LENGTH],buffer[NAME_MAX_LENGTH];
+    char cityName[CITY_NAME_MAX_LENGTH],buffer[CITY_NAME_MAX_LENGTH];
     Vector* vec = NULL;
     Stock* stock;
 
