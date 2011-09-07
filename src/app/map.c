@@ -179,6 +179,7 @@ int app_give_destinations(Map* map, Plane* plane, ipc_t conn) {
         citiesIds[i] = cityInfo[i].cityId;
         distances[i] = cityInfo[i].distance;
     }
+    mprintf("Sendint to plane %d city %d (%d) with %d more\n", plane->id, citiesIds[0], distances[0], count);
 
     comm_give_destinations(plane, conn, count, citiesIds, distances);
 

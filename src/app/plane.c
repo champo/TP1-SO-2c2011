@@ -28,6 +28,8 @@ void run_plane(struct PlaneThread* self) {
         if (self->plane->distance == 0) {
             len = 5;
             CHECK_EXIT(comm_check_destinations(self, destinations, distances, &len));
+            mprintf("[%d] Goint from %d to %d with distance %d\n",
+                    self->plane->id, self->plane->cityId, *destinations, *distances);
             self->plane->cityId = *destinations;
             self->plane->distance = *distances;
         } else {

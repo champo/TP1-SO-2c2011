@@ -43,8 +43,6 @@ struct Message message_queue_pop(struct MessageQueue* queue) {
     pthread_cond_signal(&queue->read);
     pthread_mutex_unlock(&queue->mutex);
 
-    mprintf("Popped mesasge with type %d\n", msg.type);
-
     return msg;
 }
 
@@ -60,7 +58,6 @@ void message_queue_push(struct MessageQueue* queue, struct Message msg) {
 
     pthread_cond_signal(&queue->write);
     pthread_mutex_unlock(&queue->mutex);
-    mprintf("Pushed message! %d\n", msg.type);
 }
 
 void message_queue_destroy(struct MessageQueue* queue) {

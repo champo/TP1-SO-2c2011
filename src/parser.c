@@ -54,7 +54,7 @@ Map* parseMap(const char* path){
             //TODO frees
         }
     }
-    
+
     //init matrix
     if ( (ans->matrix = calloc(counter, sizeof(int *))) == NULL){
         free(ans);
@@ -133,7 +133,7 @@ Map* parseMap(const char* path){
     }
 
     floydMatrix(ans->matrix, counter);
-    
+
     free(cities);
     fclose(mapfile);
     return ans;
@@ -144,7 +144,7 @@ void floydMatrix(int** matrix, int counter) {
 
     int i,j,k;
     int aux1,aux2;
-    
+
 
     for ( k=0; k<counter; k++) {
         for ( i=0; i<counter; i++) {
