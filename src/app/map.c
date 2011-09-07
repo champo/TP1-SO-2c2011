@@ -59,6 +59,10 @@ void runMap(Map* map, Vector* airlines, Vector* conns){
             }
         }
 
+        if (endSimulation(map) != CONTINUE_SIM) {
+            break;
+        }
+
         comm_turn_continue(conns);
 
         i = 0;
@@ -73,6 +77,9 @@ void runMap(Map* map, Vector* airlines, Vector* conns){
             }
         }
     }
+
+    mprintf("Done biatch.\n");
+    //TODO: Broadcast end
 }
 
 void initPlane(struct StockMessagePart* stocks, struct PlaneMessageHeader* header, Plane* plane, Map* map) {
@@ -85,6 +92,7 @@ void initPlane(struct StockMessagePart* stocks, struct PlaneMessageHeader* heade
         char name[NAME_MAX_LENGTH];
         getTheShitName(stocks->stockId[j], map->theShit, name);
         int quant = stocks->quantities[j];
+        mprintf("Plane %d has %d of %d\n", header->id, quant, stocks->stockId[j]);
         Stock* stock = initStock(name, quant, map->theShit);
         addToVector(plane->stocks, stock);
     }
@@ -166,6 +174,7 @@ int app_give_destinations(Map* map, Plane* plane, ipc_t conn) {
 
         City* city = getFromVector(map->cities, i);
         score = getCityScore(city->stock, plane->stocks);
+        mprintf("City %d gave score %d for plane %d\n", i, score, plane->id);
         if (score != 0 && (index = insertScore(cityInfo, MAX_DESTINATIONS, count, score) != -1)) {
             cityInfo[index].cityId = city->id;
             cityInfo[index].distance = getDistance(map, city->id, plane->cityId);
@@ -222,6 +231,7 @@ int getCityScore(Vector* cityStocks, Vector* planeStocks) {
 
     for (size_t i = 0; i < cityStockSize; i++) {
         Stock* cityStock = getFromVector(cityStocks, i);
+        mprintf("City has %d of %d\n", cityStock->amount, cityStock->theShit->id);
         for (size_t j = 0; j < planeStockSize; j++) {
             Stock* planeStock = getFromVector(planeStocks, j);
             if (cityStock->theShit->id ==  planeStock->theShit->id) {

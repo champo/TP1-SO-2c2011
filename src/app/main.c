@@ -115,19 +115,17 @@ void run_airlines(Map* map, Vector* airlines) {
         sprintf(name, "%d_air", self->id);
         if (fork() == 0) {
 
-            freeMap(map);
-
-            for (size_t j = 0; j < count; j++) {
-                if (j != i) {
-                    freeAirline(getFromVector(airlines, j));
-                }
-            }
-            destroyVector(airlines);
 
             ipc_listen(name);
             conn = ipc_establish(PARENT_NAME);
             run_airline(self, conn);
             ipc_close(conn);
+
+            freeMap(map);
+            for (size_t j = 0; j < count; j++) {
+                freeAirline(getFromVector(airlines, j));
+            }
+            destroyVector(airlines);
 
             mprintf("Bye folks! %d\n", getpid());
 
