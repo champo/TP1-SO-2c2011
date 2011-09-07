@@ -73,6 +73,7 @@ void runMap(Map* map, Vector* airlines, Vector* conns){
             }
         }
 
+        mprintf("Turn ended.. Press a key to continue... ");
         getchar();
     }
 
