@@ -60,7 +60,7 @@ void message_queue_push(struct MessageQueue* queue, struct Message msg) {
 
     pthread_cond_signal(&queue->write);
     pthread_mutex_unlock(&queue->mutex);
-    mprintf("Pushed message with type %d\n", msg.type);
+    mprintf("Pushed message! %d\n", msg.type);
 }
 
 void message_queue_destroy(struct MessageQueue* queue) {

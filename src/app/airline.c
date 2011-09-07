@@ -118,7 +118,7 @@ void listen(Vector* threads) {
             case MessageTypeDestinations:
                 redirect_destinations_message(threads, &msg);
                 break;
-            case MessageTypeStock:
+            case MessageTypeUnloadStock:
                 redirect_stock_message(threads, &msg);
                 break;
             default:
@@ -137,6 +137,7 @@ void redirect_stock_message(Vector* threads, struct MapMessage* in) {
     msg.payload.stock.count = stock->count;
     memcpy(msg.payload.stock.delta, stock->quantities, sizeof(int) * MAX_STOCKS);
 
+    mprintf("Redirect stock message to %d\n", thread->plane->id);
     message_queue_push(thread->queue, msg);
 }
 

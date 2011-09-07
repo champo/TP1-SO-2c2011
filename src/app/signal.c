@@ -31,6 +31,7 @@ void register_signal_handlers(void) {
 
 #define CASE_SIG(sig) case sig: \
     mprintf("Caugh signal "#sig"\n"); \
+    print_trace(); \
     abort(); \
     break;
 

@@ -4,7 +4,7 @@
 
 #include <stdlib.h>
 
-#define CHECK_EXIT(r) {if((r) == -1) {pthread_exit(0);}}
+#define CHECK_EXIT(r) {if((r) == -1) {mprintf("OH NO\n");print_trace();pthread_exit(0);}}
 
 static int unload_stock(struct PlaneThread* self);
 
