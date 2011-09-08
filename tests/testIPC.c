@@ -1,10 +1,12 @@
 #include "ipc/ipc.h"
+#include "../tests/tests.h"
 #include <sys/wait.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
+#include <mqueue.h>
 
 #define MAXSIZE    100
 

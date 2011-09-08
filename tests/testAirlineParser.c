@@ -12,7 +12,7 @@ int testAirlineParser(void) {
     unsigned int i,j;
     if ( (pFile = fopen ("./configFiles/sim1/empresa2.txt","r")) == NULL) {
         printf("Could not open file\n");
-        return NULL;
+        return -1;
     }
     Airline* airline = parseAirlines(pFile,NULL);
     printf("Numero de  aviones :%d\n",airline->numberOfPlanes);

@@ -18,7 +18,7 @@ struct CityInfo {
     int score;
 };
 
-static int endSimulation(Map* map);
+static int endSimulation(Map* map, int turn);
 static int cityIsSatisfied(City* city);
 static void updateMap(Map* map, Plane* plane);
 static int app_give_destinations(Map* map, Plane* plane, ipc_t conn);
@@ -37,7 +37,7 @@ void runMap(Map* map, Vector* airlines, Vector* conns){
 
     airlinesize = getVectorSize(airlines);
 
-    while (endSimulation(map) == CONTINUE_SIM) {
+    while (endSimulation(map, turn) == CONTINUE_SIM) {
 
         mprintf("Doing turn %d\n", turn++);
         comm_turn_step(conns);
@@ -96,13 +96,17 @@ void initPlane(struct StockMessagePart* stocks, struct PlaneMessageHeader* heade
 }
 
 
-int endSimulation(Map* map) {
+int endSimulation(Map* map, int turn) {
 
     size_t i;
     size_t cities = getVectorSize(map->cities);
-    for (i = 0; i < cities; i++) {
-        if (!cityIsSatisfied(getFromVector(map->cities, i))) {
-            return CONTINUE_SIM;
+
+    if (turn >= 70000) {
+
+        for (i = 0; i < cities; i++) {
+            if (!cityIsSatisfied(getFromVector(map->cities, i))) {
+                return CONTINUE_SIM;
+            }
         }
     }
     return END_SIM;
@@ -227,7 +231,7 @@ int insertScore(struct CityInfo cityInfo[], int size, int elems, int score) {
 }
 
 int cityInfoComparator(const void* a, const void* b) {
-    return (((const struct CityInfo*)a)->score - ((const struct CityInfo*)b)->score);
+    return (((const struct CityInfo*)a)->distance - ((const struct CityInfo*)b)->distance);
 }
 
 int getCityScore(Vector* cityStocks, Vector* planeStocks) {
