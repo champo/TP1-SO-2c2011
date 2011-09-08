@@ -103,7 +103,7 @@ int endSimulation(Map* map, int turn) {
     size_t i;
     size_t cities = getVectorSize(map->cities);
 
-    if (turn >= 70000) {
+    if (turn < 70000) {
 
         for (i = 0; i < cities; i++) {
             if (!cityIsSatisfied(getFromVector(map->cities, i))) {
