@@ -57,3 +57,15 @@ int comm_get_map_message(union PlaneMessage* msg) {
     return ipc_read(msg, sizeof(union PlaneMessage));
 }
 
+int comm_end(Vector* conns) {
+
+    enum MessageType msg = MessageTypeEnd;
+    unsigned i;
+
+    for (i = 0; i < getVectorSize(conns); i++) {
+        ipc_write(getFromVector(conns, i), &msg, sizeof(msg));
+    }
+
+    return 0;
+}
+

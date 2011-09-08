@@ -55,9 +55,12 @@ void run_airline(Airline* self, ipc_t conn) {
     }
 
     // If we got here, it means we recieved an end message
+    struct Message msg;
+    msg.type = MessageTypeEnd;
+    broadcast(threads, msg);
+
     for (size_t i = 0; i < self->numberOfPlanes; i++) {
         struct PlaneThread* t = getFromVector(threads, i);
-        //TODO: Broadcast end message
         pthread_join(t->thread, NULL);
         message_queue_destroy(t->queue);
         free(t);
@@ -149,10 +152,8 @@ void redirect_destinations_message(Vector* threads, union MapMessage* in) {
 }
 
 void exit_handler(void) {
-    pthread_mutex_lock(&resourcesLock);
     exitState = 1;
     pthread_cond_signal(&exitWait);
-    pthread_mutex_unlock(&resourcesLock);
 }
 
 void broadcast(Vector* threads, struct Message msg) {

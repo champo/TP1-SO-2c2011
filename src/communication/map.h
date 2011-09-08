@@ -21,4 +21,6 @@ int comm_get_map_message(union PlaneMessage* msg);
 
 int comm_give_destinations(Plane* plane, ipc_t conn, int count, int* citiesIds, int* distances);
 
+int comm_end(Vector* conns);
+
 #endif

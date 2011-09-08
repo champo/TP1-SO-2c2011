@@ -14,12 +14,35 @@
 #include "utils/vector.h"
 #include "parser.h"
 #include "app/map.h"
+#include "communication/map.h"
+
+#include <pthread.h>
 
 #define PARENT_NAME "map_ipc"
 
-void run_airlines(Map* map, Vector* airlines);
+struct MapData {
+    Vector* conns;
+    Vector* airlines;
+    Map* map;
+};
 
-void cleanup(void);
+static void run_airlines(Map* map, Vector* airlines);
+
+static void do_map(Map* map, Vector* conns, Vector* airlines);
+
+static void do_exit(void);
+
+static void handle_signal(int sig);
+
+static void start_map(struct MapData* data);
+
+static void cleanup(void);
+
+static pthread_cond_t exitWait = PTHREAD_COND_INITIALIZER;
+
+static pthread_mutex_t exitLock = PTHREAD_MUTEX_INITIALIZER;
+
+static int doExit = 0;
 
 int main(int argc, char *argv[]) {
 
@@ -39,7 +62,9 @@ int main(int argc, char *argv[]) {
         abort();
     }
 
-    register_exit_function(cleanup);
+
+    pthread_mutex_lock(&exitLock);
+    register_exit_function(handle_signal);
     register_signal_handlers();
 
     Map* map;
@@ -80,7 +105,8 @@ int main(int argc, char *argv[]) {
         addToVector(conns, ipc_establish(path));
     }
 
-    runMap(map, airlines, conns);
+    do_map(map, conns, airlines);
+    comm_end(conns);
 
     for (size_t i = 0; i < numAirlines; i++) {
         wait(0);
@@ -93,7 +119,45 @@ int main(int argc, char *argv[]) {
 
     freeMap(map);
 
+    pthread_mutex_unlock(&exitLock);
     cleanup();
+}
+
+void do_map(Map* map, Vector* conns, Vector* airlines) {
+
+    pthread_t mapThread;
+    struct MapData data = {
+        .map = map,
+        .airlines = airlines,
+        .conns = conns
+    };
+
+    pthread_create(&mapThread, NULL, start_map, &data);
+
+    while (doExit == 0) {
+        pthread_cond_wait(&exitWait, &exitLock);
+    }
+
+    pthread_cancel(&mapThread);
+}
+
+void start_map(struct MapData* data) {
+
+    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+    pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
+
+    runMap(data->map, data->airlines, data->conns);
+
+    do_exit();
+}
+
+void handle_signal(int sig) {
+    do_exit();
+}
+
+void do_exit(void) {
+    doExit = 1;
+    pthread_cond_signal(&exitWait);
 }
 
 void cleanup(void) {

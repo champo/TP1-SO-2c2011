@@ -8,9 +8,9 @@ enum MessageType {
     MessageTypeStep,
     MessageTypeStock,
     MessageTypeAirlineDone,
-    MessageTypeInTransit,
     MessageTypeUnloadStock,
-    MessageTypeCheckDestinations
+    MessageTypeCheckDestinations,
+    MessageTypeEnd
 };
 
 #endif
