@@ -36,8 +36,6 @@ static void handle_signal(int sig);
 
 static void start_map(struct MapData* data);
 
-static void cleanup(void);
-
 static pthread_cond_t exitWait = PTHREAD_COND_INITIALIZER;
 
 static pthread_mutex_t exitLock = PTHREAD_MUTEX_INITIALIZER;
@@ -110,6 +108,9 @@ int main(int argc, char *argv[]) {
 
     for (size_t i = 0; i < numAirlines; i++) {
         wait(0);
+    }
+
+    for (size_t i = 0; i < numAirlines; i++) {
         freeAirline(getFromVector(airlines, i));
         ipc_close(getFromVector(conns, i));
     }
@@ -120,7 +121,8 @@ int main(int argc, char *argv[]) {
     freeMap(map);
 
     pthread_mutex_unlock(&exitLock);
-    cleanup();
+    ipc_end();
+    mprintf_end();
 }
 
 void do_map(Map* map, Vector* conns, Vector* airlines) {
@@ -160,13 +162,6 @@ void do_exit(void) {
     pthread_cond_signal(&exitWait);
 }
 
-void cleanup(void) {
-    ipc_end();
-    mprintf_end();
-
-    exit(0);
-}
-
 void run_airlines(Map* map, Vector* airlines) {
 
     size_t count = getVectorSize(airlines);
@@ -192,7 +187,8 @@ void run_airlines(Map* map, Vector* airlines) {
 
             mprintf("Bye folks! %d\n", getpid());
 
-            cleanup();
+            ipc_end();
+            exit(0);
         }
     }
 }

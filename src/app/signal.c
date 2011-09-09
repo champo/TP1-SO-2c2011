@@ -30,7 +30,7 @@ void register_signal_handlers(void) {
 }
 
 #define CASE_SIG(sig) case sig: \
-    mprintf("Caugh signal "#sig"\n"); \
+    printf("Caugh signal "#sig"\n"); \
     break;
 
 void signal_handler(int sig) {
@@ -42,22 +42,22 @@ void signal_handler(int sig) {
         CASE_SIG(SIGSEGV)
         CASE_SIG(SIGPIPE)
         case SIGHUP:
-            mprintf("Caught signal SIGHUP\n");
+            printf("Caught signal SIGHUP\n");
             break;
         case SIGINT:
-            mprintf("Caught signal SIGINT\n");
+            printf("Caught signal SIGINT\n");
             break;
         case SIGQUIT:
-            mprintf("Caught signal SIGQUIT\n");
+            printf("Caught signal SIGQUIT\n");
             break;
         case SIGTERM:
-            mprintf("Caught signal SIGTERM\n");
+            printf("Caught signal SIGTERM\n");
             break;
         case SIGCHLD:
-            mprintf("Caught signal SIGCHLD\n");
+            printf("Caught signal SIGCHLD\n");
             break;
         default:
-            mprintf("Caught signal %d\n", sig);
+            printf("Caught signal %d\n", sig);
             break;
     }
 #ifdef VERBOSE

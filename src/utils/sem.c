@@ -30,7 +30,7 @@ semv_t ipc_sem_create(int value) {
     // NIGGA MODE OFF
     if (sem == -1) {
 #ifdef DEBUG
-        perror("Semaphore creation failed");
+        perror("INVALID Semaphore creation failed");
         print_trace();
 #endif
         pthread_mutex_unlock(&keyLock);
@@ -41,7 +41,7 @@ semv_t ipc_sem_create(int value) {
     opt.val = value;
     if (semctl(sem, 0, SETVAL, opt) == -1) {
 #ifdef DEBUG
-        perror("Couldnt set the sem value");
+        perror("INVALID Couldnt set the sem value");
 #ifdef VERBOSE
         print_trace();
 #endif
@@ -66,10 +66,11 @@ int ipc_sem_wait(semv_t sem) {
     op.sem_flg = 0;
     op.sem_op = -1;
 
-    int res = semop(sem, &op, 1);
+    int res;
+    while ((res = semop(sem, &op, 1)) == -1 && errno == EINTR);
 #ifdef DEBUG
     if (res == -1) {
-        perror("ipc_sem_wait");
+        perror("INVALID ipc_sem_wait");
 #ifdef VERBOSE
         print_trace();
 #endif
@@ -85,10 +86,11 @@ int ipc_sem_post(semv_t sem) {
     op.sem_flg = 0;
     op.sem_op = 1;
 
-    int res = semop(sem, &op, 1);
+    int res;
+    while ((res = semop(sem, &op, 1)) == -1 && errno == EINTR);
 #ifdef DEBUG
     if (res == -1) {
-        perror("ipc_sem_post");
+        perror("INVALID ipc_sem_post");
 #ifdef VERBOSE
         print_trace();
 #endif
@@ -100,7 +102,7 @@ int ipc_sem_post(semv_t sem) {
 int ipc_sem_value(semv_t sem) {
     int res = semctl(sem, 0, GETVAL);
     if (res == -1) {
-        perror("WTF");
+        perror("INVALID WTF");
         print_trace();
     }
     return res;
