@@ -21,6 +21,8 @@
 #define ENTRY_SIZE sizeof(struct Entry)
 #define SHMEM_SIZE sizeof(struct Queue)
 
+#define echo(msg) mprintf("[ipc] "msg"\n");
+
 struct Entry {
     size_t len;
     char content[IPC_MAX_PACKET_LEN];
@@ -66,8 +68,12 @@ ipc_t ipc_create(const char* name, int owner) {
             return NULL;
         }
 
+        echo("The sem exists, lock..\n");
         sem_wait(conn->lock);
         isInited = 1;
+        echo("The thing is inited, going for it..\n");
+    } else {
+        echo("The sem aint inited, doint it myslef...\n");
     }
 
     conn->fd = shm_open(conn->name, O_CREAT | O_RDWR, 0666);
@@ -83,16 +89,18 @@ ipc_t ipc_create(const char* name, int owner) {
         return NULL;
     }
 
-    if (!isInited && ftruncate(conn->fd, SHMEM_SIZE) == -1) {
-        perror("Truncate failed");
+    if (!isInited) {
+        if (ftruncate(conn->fd, SHMEM_SIZE) == -1) {
+            perror("Truncate failed");
 
-        sem_close(conn->lock);
-        if (owner) {
-            sem_unlink(conn->name);
-            shm_unlink(conn->name);
+            sem_close(conn->lock);
+            if (owner) {
+                sem_unlink(conn->name);
+                shm_unlink(conn->name);
+            }
+            free(conn);
+            return NULL;
         }
-        free(conn);
-        return NULL;
     }
 
     conn->queue = mmap(NULL, SHMEM_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, conn->fd, 0);
@@ -115,17 +123,19 @@ ipc_t ipc_create(const char* name, int owner) {
     }
 
     queue = conn->queue;
-    memset(queue->index, -1, sizeof(int) * ENTRIES_PER_QUEUE);
     for (size_t i = 0; i < ENTRIES_PER_QUEUE; i++) {
+        queue->index[i] = -1;
         queue->slots[i].len = 0;
     }
 
     queue->readWait = ipc_sem_create(0);
     queue->writeSem = ipc_sem_create(ENTRIES_PER_QUEUE);
+    echo("Creating sems");
     if (queue->readWait == -1 || queue->writeSem == -1) {
         perror("failed creating sems");
         sem_close(conn->lock);
         ipc_sem_destroy(queue->readWait);
+        ipc_sem_destroy(queue->writeSem);
 
         munmap(conn->queue, SHMEM_SIZE);
         if (owner) {
@@ -182,23 +192,30 @@ void ipc_close(ipc_t conn) {
     ipc_destroy(conn, 0);
 }
 
+void assertSems(struct Queue* queue) {
+    int read = ipc_sem_value(queue->readWait);
+    if (read < 0 || read > ENTRIES_PER_QUEUE) {
+        mprintf("[ipc] Read sem has invalid value %d\n", read);
+    }
+    int write = ipc_sem_value(queue->writeSem);
+    if (write < 0 || write > ENTRIES_PER_QUEUE) {
+        mprintf("[ipc] write sem has invalid value %d\n", write);
+    }
+}
+
 int ipc_read(void* buff, size_t len) {
 
     int res;
     struct Queue* queue = me->queue;
     struct Entry* entry;
 
+    mprintf("[ipc] (Pre read) Read: %d Write %d\n", ipc_sem_value(queue->readWait), ipc_sem_value(queue->writeSem));
+    ipc_sem_wait(queue->readWait);
     sem_wait(me->lock);
-    // Why is this a while you ask?
-    // Well, we could have a higher value on the semaphore than actually
-    // readable entries, so we spinlock the sem down to zero, if nedeed.
-    while (queue->index[0] == -1) {
-        sem_post(me->lock);
-        ipc_sem_wait(queue->readWait);
-        sem_wait(me->lock);
-    }
+    assertSems(queue);
+    mprintf("[ipc] (Post read) Read: %d Write %d\n", ipc_sem_value(queue->readWait), ipc_sem_value(queue->writeSem));
 
-    entry = &queue->slots[queue->index[0]];
+    entry = &(queue->slots[queue->index[0]]);
     if (len > entry->len) {
         res = entry->len;
     } else {
@@ -214,8 +231,10 @@ int ipc_read(void* buff, size_t len) {
     // We always make sure to reset the last value, in case the queue was full
     queue->index[ENTRIES_PER_QUEUE - 1] = -1;
 
-    ipc_sem_post(queue->writeSem);
+    echo("Posting for the write slot and leaving");
     sem_post(me->lock);
+    ipc_sem_post(queue->writeSem);
+
     return res;
 }
 
@@ -224,8 +243,11 @@ int ipc_write(ipc_t conn, const void* buff, size_t len) {
     struct Queue* queue = conn->queue;
     struct Entry* entry;
 
+    mprintf("[ipc] (Pre Write) Read: %d Write %d\n", ipc_sem_value(queue->readWait), ipc_sem_value(queue->writeSem));
     ipc_sem_wait(me->queue->writeSem);
     sem_wait(me->lock);
+    assertSems(queue);
+    mprintf("[ipc] (Post Write) Read: %d Write %d\n", ipc_sem_value(queue->readWait), ipc_sem_value(queue->writeSem));
 
     // If we got this far, we know we have a place to write on!
     for (slot = 0; slot < ENTRIES_PER_QUEUE; slot++) {
@@ -240,17 +262,25 @@ int ipc_write(ipc_t conn, const void* buff, size_t len) {
         }
     }
     // I could sanity check those values, and I also could start working out.
+    if (slot == ENTRIES_PER_QUEUE) {
+        echo("We're humped");
+    }
+    if (i == ENTRIES_PER_QUEUE) {
+        echo("WERE ALL GONNA DIE");
+    }
 
     queue->index[i] = slot;
     entry = &queue->slots[slot];
     if (len > IPC_MAX_PACKET_LEN) {
         len = IPC_MAX_PACKET_LEN;
+        echo("Doomed.");
     }
     entry->len = len;
     memcpy(entry->content, buff, len);
 
-    ipc_sem_post(queue->readWait);
+    echo("Posting read & bailing");
     sem_post(me->lock);
+    ipc_sem_post(queue->readWait);
 
     return len;
 }

@@ -35,6 +35,7 @@ int comm_turn_step(Vector* conns) {
     unsigned i;
 
     for (i = 0; i < getVectorSize(conns); i++) {
+        mprintf("Sending to airline %d step\n", i);
         transmit(getFromVector(conns, i), msg);
     }
 

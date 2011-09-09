@@ -7,7 +7,7 @@
 
 #include "utils/sem.h"
 
-static semv_t lock;
+static semv_t lock = -1;
 
 int mprintf_init(void) {
     lock = ipc_sem_create(1);
@@ -45,7 +45,7 @@ void print_trace(void) {
     strings = backtrace_symbols(array, size);
 
     for (i = 0; i < size; i++) {
-        mprintf("%s\n", strings[i]);
+        printf("%s\n", strings[i]);
     }
 
     free(strings);

@@ -44,20 +44,24 @@ void runMap(Map* map, Vector* airlines, Vector* conns){
 
         i = 0;
         while (i != airlinesize) {
+            mprintf("Waiting for phase 1 action\n");
             comm_get_map_message(&msg);
 
             if (msg.type == MessageTypeAirlineDone) {
                 i++;
+                mprintf("Got %d out of %d airlines done\n", i, airlinesize);
             } else if (msg.type == MessageTypeUnloadStock) {
 
                 airlineId = msg.stockState.header.airline;
                 initPlane(&msg.stockState.stocks, &msg.stockState.header, &plane, map);
                 updateMap(map, &plane);
+                mprintf("Sending stocks back\n");
                 comm_unloaded_stock(airlineId, &plane, (ipc_t)getFromVector(conns, airlineId));
                 freeStocks(plane.stocks);
             }
         }
 
+        mprintf("Sending continue\n");
         comm_turn_continue(conns);
 
         i = 0;

@@ -24,7 +24,10 @@ semv_t ipc_sem_create(int value) {
     union semun opt;
 
     pthread_mutex_lock(&keyLock);
-    semv_t sem = semget(key++, 1, IPC_CREAT | 0666);
+    semv_t sem;
+    // NIGGA MODE ON
+    while ((sem = semget(key++, 1, IPC_CREAT | IPC_EXCL | 0666)) == -1 && errno == EEXIST);
+    // NIGGA MODE OFF
     if (sem == -1) {
 #ifdef DEBUG
         perror("Semaphore creation failed");
@@ -36,7 +39,17 @@ semv_t ipc_sem_create(int value) {
     pthread_mutex_unlock(&keyLock);
 
     opt.val = value;
-    semctl(sem, 0, SETVAL, opt);
+    if (semctl(sem, 0, SETVAL, opt) == -1) {
+#ifdef DEBUG
+        perror("Couldnt set the sem value");
+#ifdef VERBOSE
+        print_trace();
+#endif
+#endif
+
+        ipc_sem_destroy(sem);
+        return -1;
+    }
 
 #ifdef VERBOSE
     mprintf("Creating sem with id %d\n", sem);
@@ -53,7 +66,16 @@ int ipc_sem_wait(semv_t sem) {
     op.sem_flg = 0;
     op.sem_op = -1;
 
-    return semop(sem, &op, 1);
+    int res = semop(sem, &op, 1);
+#ifdef DEBUG
+    if (res == -1) {
+        perror("ipc_sem_wait");
+#ifdef VERBOSE
+        print_trace();
+#endif
+    }
+#endif
+    return res;
 }
 
 int ipc_sem_post(semv_t sem) {
@@ -63,11 +85,25 @@ int ipc_sem_post(semv_t sem) {
     op.sem_flg = 0;
     op.sem_op = 1;
 
-    return semop(sem, &op, 1);
+    int res = semop(sem, &op, 1);
+#ifdef DEBUG
+    if (res == -1) {
+        perror("ipc_sem_post");
+#ifdef VERBOSE
+        print_trace();
+#endif
+    }
+#endif
+    return res;
 }
 
 int ipc_sem_value(semv_t sem) {
-    return semctl(sem, 0, GETVAL);
+    int res = semctl(sem, 0, GETVAL);
+    if (res == -1) {
+        perror("WTF");
+        print_trace();
+    }
+    return res;
 }
 
 int ipc_sem_destroy(semv_t sem) {

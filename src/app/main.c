@@ -179,7 +179,6 @@ void run_airlines(Map* map, Vector* airlines) {
         sprintf(name, "%d_air", self->id);
         if (fork() == 0) {
 
-
             ipc_listen(name);
             conn = ipc_establish(PARENT_NAME);
             run_airline(self, conn);
