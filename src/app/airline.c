@@ -44,7 +44,7 @@ void run_airline(Airline* self, ipc_t conn) {
 
     pthread_mutex_lock(&resourcesLock);
     register_exit_function(NULL);
-    ignore_signals();
+    redirect_signals();
 
     pthread_t listenerThread;
     Vector* threads = bootstrap_planes(self, conn);
@@ -62,13 +62,12 @@ void run_airline(Airline* self, ipc_t conn) {
 
     for (size_t i = 0; i < self->numberOfPlanes; i++) {
         struct PlaneThread* t = getFromVector(threads, i);
-        pthread_join(t->thread, NULL);
+        pthread_cancel(t->thread);
         message_queue_destroy(t->queue);
         free(t);
     }
 
     destroyVector(threads);
-    pthread_mutex_unlock(&resourcesLock);
 }
 
 Vector* bootstrap_planes(Airline* self, ipc_t conn) {
@@ -206,19 +205,13 @@ void start_phase(Vector* threads, struct Message msg) {
 void app_airline_plane_ready(void) {
 
     pthread_mutex_lock(&planesLeftLock);
-    pthread_mutex_lock(&resourcesLock);
+
     planesLeftInStage--;
     mprintf("Plane ready, %d left\n", planesLeftInStage);
-    if (planesLeftInStage == 0) {
-
-        if (exitState == 1) {
-            pthread_mutex_unlock(&resourcesLock);
-            pthread_mutex_unlock(&planesLeftLock);
-            return;
-        }
+    if (planesLeftInStage == 0 && exitState != 1) {
         comm_airline_ready(ipcConn);
     }
-    pthread_mutex_unlock(&resourcesLock);
+
     pthread_mutex_unlock(&planesLeftLock);
 }
 

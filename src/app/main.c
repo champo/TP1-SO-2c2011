@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <dirent.h>
 #include <string.h>
+#include <errno.h>
 
 #include "util.h"
 #include "ipc/ipc.h"
@@ -106,10 +107,11 @@ int main(int argc, char *argv[]) {
     }
 
     do_map(map, conns, airlines);
+    mprintf("Broadcasting exit to children\n");
     comm_end(conns);
 
     for (size_t i = 0; i < numAirlines; i++) {
-        wait(0);
+        while (wait(0) == -1 && errno == EINTR);
     }
 
     for (size_t i = 0; i < numAirlines; i++) {

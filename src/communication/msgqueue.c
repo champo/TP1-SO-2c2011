@@ -50,6 +50,7 @@ void message_queue_push(struct MessageQueue* queue, struct Message msg) {
 
     pthread_mutex_lock(&queue->mutex);
     while ((queue->tail + 1) % QUEUE_SIZE == queue->first) {
+        mprintf("Waiting to write to queue\n");
         pthread_cond_wait(&queue->read, &queue->mutex);
     }
 
@@ -58,6 +59,20 @@ void message_queue_push(struct MessageQueue* queue, struct Message msg) {
 
     pthread_cond_signal(&queue->write);
     pthread_mutex_unlock(&queue->mutex);
+}
+
+enum MessageType message_queue_peek(struct MessageQueue* queue) {
+
+    pthread_mutex_lock(&queue->mutex);
+    enum MessageType res;
+    if (queue->tail == queue->first) {
+        res = MessageTypeNone;
+    } else {
+        res = queue->messages[queue->first].type;
+    }
+
+    pthread_mutex_unlock(&queue->mutex);
+    return res;
 }
 
 void message_queue_destroy(struct MessageQueue* queue) {

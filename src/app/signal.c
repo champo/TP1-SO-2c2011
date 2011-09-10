@@ -13,23 +13,23 @@
 
 static void signal_handler(int sig);
 
+static void redirect_handler(int sig);
+
 static void (*exitFunction)(void) = NULL;
 
 void register_exit_function(void (*onExit)(void)) {
     exitFunction = onExit;
 }
 
-void ignore_signals(void) {
-    sigset_t set;
+void redirect_signals(void) {
+    signal(SIGHUP, redirect_handler);
+    signal(SIGINT, redirect_handler);
+    signal(SIGQUIT, redirect_handler);
+    signal(SIGTERM, redirect_handler);
+}
 
-    sigemptyset(&set);
-
-    sigaddset(&set, SIGHUP);
-    sigaddset(&set, SIGINT);
-    sigaddset(&set, SIGQUIT);
-    sigaddset(&set, SIGTERM);
-
-    pthread_sigmask(SIG_BLOCK, &set, NULL);
+void redirect_handler(int sig) {
+    kill(getppid(), sig);
 }
 
 void register_signal_handlers(void) {

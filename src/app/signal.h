@@ -5,6 +5,6 @@ void register_exit_function(void (*onExit)(void));
 
 void register_signal_handlers(void);
 
-void ignore_signals(void);
+void redirect_signals(void);
 
 #endif

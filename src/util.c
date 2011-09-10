@@ -5,22 +5,31 @@
 #include <execinfo.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <pthread.h>
 
 #include "utils/sem.h"
 
 static semv_t printLock = -1;
 
 #define lock { \
-    int hasSem = printLock != -1; \
-    if (hasSem) { \
-        ipc_sem_wait(printLock); \
-    }
+    perform_lock(); \
+    pthread_cleanup_push(perform_unlock, NULL);
 
-#define unlock \
-        if (hasSem) { \
-            ipc_sem_post(printLock); \
-        } \
-    }
+#define unlock\
+    pthread_cleanup_pop(1); \
+}
+
+static void perform_lock(void);
+
+static void perform_unlock(void* u);
+
+void perform_lock(void) {
+    ipc_sem_wait(printLock);
+}
+
+void perform_unlock(void* u) {
+    ipc_sem_post(printLock);
+}
 
 int mprintf_init(void) {
     printLock = ipc_sem_create(1);
@@ -30,6 +39,9 @@ int mprintf_init(void) {
 int mprintf(const char* format, ...) {
     va_list ap;
     int res;
+#ifndef DEBUG
+    return 0;
+#endif
 
     lock
         va_start(ap, format);
@@ -53,6 +65,9 @@ void print_trace(void) {
     size_t size;
     char **strings;
     size_t i;
+#ifndef VERBOSE
+    return;
+#endif
 
     size = backtrace(array, 10);
     strings = backtrace_symbols(array, size);
@@ -68,17 +83,14 @@ void print_trace(void) {
 
 void print_error(const char* format, ...) {
     va_list ap;
-    int res;
 
     lock
         va_start(ap, format);
         printf("(%d) {ERR} ", getpid());
-        res = vprintf(format, ap);
+        vprintf(format, ap);
         fflush(stdout);
         va_end(ap);
     unlock
-
-    return res;
 }
 
 void print_errno(const char* tag) {

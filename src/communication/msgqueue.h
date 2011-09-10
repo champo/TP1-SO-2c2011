@@ -31,6 +31,8 @@ void message_queue_push(struct MessageQueue* queue, struct Message msg);
 
 struct Message message_queue_pop(struct MessageQueue* queue);
 
+enum MessageType message_queue_peek(struct MessageQueue* queue);
+
 void message_queue_destroy(struct MessageQueue* queue);
 
 #endif

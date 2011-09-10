@@ -23,9 +23,7 @@ int* doExit;
 pthread_mutex_t* exitLock;
 
 #define SafeAction(block) { \
-    mprintf("Trying to get safe lock\n"); \
     pthread_mutex_lock(exitLock); \
-    mprintf("Got it\n"); \
     if (*doExit) { \
         pthread_mutex_unlock(exitLock); \
         return; \
