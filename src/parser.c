@@ -19,7 +19,7 @@ Map* parseMap(const char* path){
     FILE* mapfile;
     Map* ans;
     Vector* vec;
-    int i;
+    int i,j;
     int aux, state, flag = FIRST;
     int counter;
     char buffer[CITY_NAME_MAX_LENGTH];
@@ -41,6 +41,7 @@ Map* parseMap(const char* path){
     if( (ans->cities = createVector()) == NULL){
         free(ans);
         fclose(mapfile);
+        return NULL;
     }
 
     fscanf(mapfile, "%d\n\n", &counter);
@@ -54,35 +55,66 @@ Map* parseMap(const char* path){
 
     for ( i=0; i<counter; i++){
         if ((cities[i] = malloc(sizeof(City))) == NULL) {
-            //TODO frees
+            for ( j = 0; j<i; j++) {
+                free(cities[j]);
+            }
+            fclose(mapfile);
+            free(cities);
+            destroyVector(ans->cities);
+            free(ans);
+            return NULL;
         }
     }
 
     //init matrix
     if ( (ans->matrix = calloc(counter, sizeof(int *))) == NULL){
-        free(ans);
+        for ( j = 0; j < counter; j++) {
+            free(cities[j]);
+        }
+        free(cities);
         fclose(mapfile);
         destroyVector(ans->cities);
-        free(cities);
+        free(ans);
         return NULL;
     }
+    
 
     for (i=0; i<counter; i++){
         if( (ans->matrix[i] = calloc(counter, sizeof(int))) == NULL){
-            //TODO hacer frees
+            for ( j = 0; j < i; j++) {
+                free(ans->matrix[j]);
+            } 
+            free(ans->matrix);
+            for ( j = 0; j < counter; j++) {
+            free(cities[j]);
+            }
+            free(cities);
+            fclose(mapfile);
+            destroyVector(ans->cities);
+            free(ans);
             return NULL;
         }
     }
 
-    if ( (ans->theShit = createVector()) == NULL ){
-        //TODO FALTAN FREES
+    if ( (ans->theShit = createVector()) == NULL ) {
+        for ( j = 0; j < counter; j++) {
+            free(ans->matrix[j]);
+        } 
+        free(ans->matrix);
+        for ( j = 0; j < counter; j++) {
+            free(cities[j]);
+        }
+        free(cities);
+        fclose(mapfile);
+        destroyVector(ans->cities);
+        free(ans);
         return NULL;
     }
 
     //Let's read each city!
-    for (i = 0; i<counter; i++){
-        if (flag == FIRST){
-            if ( (cities[i]->name = malloc(CITY_NAME_MAX_LENGTH * sizeof(char))) == NULL ){
+    for (i = 0; i<counter; i++) {
+        if (flag == FIRST) {
+            if ( (cities[i]->name = malloc(CITY_NAME_MAX_LENGTH * sizeof(char))) == NULL ) {
                 return NULL;
                 //TODO FREE EVERYTHING
             }
@@ -119,7 +151,6 @@ Map* parseMap(const char* path){
     }
     //Now let's read the connections between the cities...
     if (strcmp(buffer, "") != 0) {
-        int j;
         fscanf(mapfile, "%s %d\n", buffer2, &aux);
         do {
             i = getCityId(buffer, ans->cities);
