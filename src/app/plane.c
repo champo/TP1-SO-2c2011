@@ -18,7 +18,8 @@ void run_plane(struct PlaneThread* self) {
 
         echo("Waking for phase 1");
         if (self->plane->distance == 0) {
-            CHECK_EXIT(unload_stock(self));
+            int i = unload_stock(self);
+            CHECK_EXIT(i);
         }
 
         app_airline_plane_ready();

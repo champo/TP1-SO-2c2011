@@ -2,6 +2,7 @@
 #include "communication/msgqueue.h"
 #include "ipc/ipc.h"
 #include "marshall/plane.h"
+#include "util.h"
 
 #include <string.h>
 
@@ -55,7 +56,6 @@ int comm_unload_stock(struct PlaneThread* plane, int* stockDelta) {
     if (res.type != MessageTypeStock) {
         return -1;
     }
-
     memcpy(stockDelta, res.payload.stock.delta, sizeof(int) * res.payload.stock.count);
     return 0;
 }

@@ -1,4 +1,5 @@
 #include "ipc/ipc.h"
+#include "util.h"
 
 #include <pthread.h>
 #include <sys/types.h>
@@ -26,8 +27,8 @@ int ipc_init(void) {
 }
 
 int ipc_listen(const char* name) {
-     
-    sprintf(path, "/tmp/%s", name);
+    
+    sprintf(path, "/tmp/sim_%s", name);
     if (mkfifo(path, 0666)) {
         // If the fifo already exists, fine other may have created it.
         if ( errno != EEXIST) { 
@@ -48,11 +49,11 @@ int ipc_listen(const char* name) {
 }
 
 ipc_t ipc_establish(const char* name) {
-
+    
     ipc_t conn;
     char dest[512];
 
-    sprintf(dest, "/tmp/%s", name);
+    sprintf(dest, "/tmp/sim_%s", name);
     if ((conn = malloc(sizeof(struct ipc_t))) == NULL) {
         return NULL;
     }
@@ -88,14 +89,13 @@ int ipc_write(ipc_t conn, const void* buff, size_t len) {
     int res;
     
     char tempbuf[IPC_MAX_PACKET_LEN + sizeof(size_t)];
-    *((size_t*)tempbuf) = len;
+    *((size_t*)tempbuf) = len <= IPC_MAX_PACKET_LEN ? len : IPC_MAX_PACKET_LEN;
     memcpy(tempbuf + sizeof(size_t), buff, (len <= IPC_MAX_PACKET_LEN ? len : IPC_MAX_PACKET_LEN));
     pthread_mutex_lock(&conn->mutex);
     res = write(conn->fd, tempbuf, (len <= IPC_MAX_PACKET_LEN ? len + sizeof(size_t): 
                 IPC_MAX_PACKET_LEN + sizeof(size_t)));
     pthread_mutex_unlock(&conn->mutex);
-
-    return res;
+    return res - sizeof(size_t);
 
 }
 
