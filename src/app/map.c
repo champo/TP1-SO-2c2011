@@ -25,7 +25,7 @@ static int app_give_destinations(Map* map, Plane* plane, ipc_t conn);
 static int cityInfoComparator(const void* a, const void* b);
 static int insertScore(struct CityInfo* cityInfo, int size, int elems, int score);
 static int getCityScore(Vector* cityStocks, Vector* planeStocks);
-void initPlane(struct StockMessagePart* stocks, struct PlaneMessageHeader* header, Plane* plane, Map* map);
+static void initPlane(struct StockMessagePart* stocks, struct PlaneMessageHeader* header, Plane* plane, Map* map);
 
 void runMap(Map* map, Vector* airlines, Vector* conns){
 
@@ -58,6 +58,8 @@ void runMap(Map* map, Vector* airlines, Vector* conns){
                 mprintf("Sending stocks back\n");
                 comm_unloaded_stock(airlineId, &plane, (ipc_t)getFromVector(conns, airlineId));
                 freeStocks(plane.stocks);
+            } else {
+                print_error("Got invalid message on phase 1 loop\n");
             }
         }
 
@@ -74,10 +76,12 @@ void runMap(Map* map, Vector* airlines, Vector* conns){
                 initPlane(&msg.checkDestinations.stocks, &msg.checkDestinations.header, &plane, map);
                 app_give_destinations(map, &plane, (ipc_t)getFromVector(conns, airlineId));
                 freeStocks(plane.stocks);
+            } else {
+                print_error("Got invalid message on phase 2 loop\n");
             }
         }
 
-        mprintf("Turn ended.. Press a key to continue...\n");
+        //mprintf("Turn ended.. Press a key to continue...\n");
         //getchar();
         mprintf("------------------------------------------------------------------\n");
     }
@@ -87,7 +91,15 @@ void runMap(Map* map, Vector* airlines, Vector* conns){
 void initPlane(struct StockMessagePart* stocks, struct PlaneMessageHeader* header, Plane* plane, Map* map) {
 
     plane->id = header->id;
+    if (plane->id < 0 || plane->id > 10) {
+        print_error("Got invalid plane id\n");
+    }
+
     plane->cityId = header->cityId;
+    if (plane->cityId < 0 || plane->cityId > getVectorSize(map->cities)) {
+        print_error("Got invalid city id\n");
+    }
+
     plane->stocks = createVector();
     for (unsigned int j = 0; j < stocks->count; j++) {
 
@@ -96,6 +108,10 @@ void initPlane(struct StockMessagePart* stocks, struct PlaneMessageHeader* heade
         int quant = stocks->quantities[j];
         Stock* stock = initStock(name, quant, map->theShit);
         addToVector(plane->stocks, stock);
+
+        if (quant < 0 || stocks->stockId[j] < 0) {
+            print_error("Got invalid stock");
+        }
     }
 }
 
@@ -150,7 +166,7 @@ void updateMap(Map* map, Plane* plane) {
             }
         }
 
-        if (city_stock->amount >= plane_stock->amount ) {
+        if (city_stock->amount >= plane_stock->amount) {
 
             // Then discharge everything
             city_stock->amount -= plane_stock->amount;
@@ -204,9 +220,7 @@ int app_give_destinations(Map* map, Plane* plane, ipc_t conn) {
         mprintf("No options for plane %d\n", plane->id);
     }
 
-
     comm_give_destinations(plane, conn, count, citiesIds, distances);
-
     return 0;
 }
 

@@ -11,4 +11,8 @@ void mprintf_end(void);
 
 void print_trace(void);
 
+void print_error(const char* format, ...);
+
+void print_errno(const char* tag);
+
 #endif

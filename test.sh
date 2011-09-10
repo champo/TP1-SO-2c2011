@@ -1,6 +1,6 @@
 #!/bin/bash
 mkdir -p out
-for level in $(seq 1 3); do
+for level in $(seq 1 4); do
     for iter in $(seq 1 200); do
         echo "$level iteration $iter"
         echo "$level iteration $iter" > out/sim
@@ -10,7 +10,7 @@ for level in $(seq 1 3); do
             echo "There's something in out/err. Bailing..."
             exit
         fi
-        errs=`grep "INVALID" out/sim | wc -l | cut -d ' ' -f 1`
+        errs=`grep "{ERR}" out/sim | wc -l | cut -d ' ' -f 1`
         if [[ $errs -ne 0 ]]; then
             echo "Found $errs INVALID in out/sim"
             exit

@@ -4,7 +4,7 @@
 
 #include <stdlib.h>
 
-#define CHECK_EXIT(r) {if((r) == -1) {mprintf("OH NO\n");print_trace();pthread_exit(0);}}
+#define CHECK_EXIT(r) {if((r) == -1) {print_error("Read invalid message in plane\n");print_trace();pthread_exit(0);}}
 #define echo(msg) mprintf("[%d] "msg"\n", self->plane->id)
 
 static int unload_stock(struct PlaneThread* self);
@@ -68,6 +68,9 @@ int unload_stock(struct PlaneThread* self) {
         stock->amount = stockDelta[i];
         if (stock->amount > 0) {
             done = 0;
+        } else if (stock->amount < 0) {
+            print_error("Got negative stock when unloading\n");
+            return -1;
         }
     }
     free(stockDelta);

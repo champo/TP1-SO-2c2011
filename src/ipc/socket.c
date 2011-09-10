@@ -44,7 +44,7 @@ int ipc_listen(const char* name) {
     readSocket = socket(DOMAIN, SOCK_DGRAM, 0);
     if (readSocket == -1) {
         pthread_mutex_unlock(&readLock);
-        perror("Failed creating read socket");
+        print_errno("Failed creating read socket");
         return -1;
     }
 
@@ -53,7 +53,7 @@ int ipc_listen(const char* name) {
     strcpy(path, addr.sun_path);
 
     if (bind(readSocket, (struct sockaddr*) &addr, sizeof(addr.sun_family) + strlen(addr.sun_path) + 2) == -1) {
-        perror("Couldnt bind the read socket");
+        print_errno("Couldnt bind the read socket");
         pthread_mutex_unlock(&readLock);
         close(readSocket);
         return -1;
@@ -94,7 +94,7 @@ int ipc_write(ipc_t conn, const void* buff, size_t len) {
         usleep(1000);
     }
     if (res == -1) {
-        perror("ipc_write");
+        print_errno("ipc_write");
     }
     pthread_mutex_unlock(&conn->mutex);
 
@@ -107,7 +107,7 @@ int ipc_read(void* buff, size_t len) {
     pthread_mutex_lock(&readLock);
     while ((res = read(readSocket, buff, len)) == -1 && errno == EINTR);
     if (res == -1) {
-        perror("ipc_read");
+        print_errno("ipc_read");
     }
     pthread_mutex_unlock(&readLock);
 

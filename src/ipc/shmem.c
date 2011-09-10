@@ -64,21 +64,17 @@ ipc_t ipc_create(const char* name, int owner) {
     if ((conn->lock = sem_open(conn->name, O_CREAT | O_EXCL, 0666, 0)) == SEM_FAILED) {
         conn->lock = sem_open(conn->name, 0);
         if (conn->lock == SEM_FAILED) {
-            perror("Failed adquiring named lock");
+            print_errno("Failed adquiring named lock");
             return NULL;
         }
 
-        echo(conn,"The sem exists, lock..\n");
         sem_wait(conn->lock);
         isInited = 1;
-        echo(conn,"The thing is inited, going for it..\n");
-    } else {
-        echo(conn,"The sem aint inited, doint it myslef...\n");
     }
 
     conn->fd = shm_open(conn->name, O_CREAT | O_RDWR, 0666);
     if (conn->fd == -1) {
-        perror("shm_open failed");
+        print_errno("shm_open failed");
 
         sem_close(conn->lock);
         if (owner) {
@@ -91,7 +87,7 @@ ipc_t ipc_create(const char* name, int owner) {
 
     if (!isInited) {
         if (ftruncate(conn->fd, SHMEM_SIZE) == -1) {
-            perror("Truncate failed");
+            print_errno("Truncate failed");
 
             sem_close(conn->lock);
             if (owner) {
@@ -105,7 +101,7 @@ ipc_t ipc_create(const char* name, int owner) {
 
     conn->queue = mmap(NULL, SHMEM_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, conn->fd, 0);
     if (conn->queue == (void*) -1) {
-        perror("mmap");
+        print_errno("mmap");
 
         sem_close(conn->lock);
         if (owner) {
@@ -130,9 +126,8 @@ ipc_t ipc_create(const char* name, int owner) {
 
     queue->readWait = ipc_sem_create(0);
     queue->writeSem = ipc_sem_create(ENTRIES_PER_QUEUE);
-    echo(conn,"Creating sems");
     if (queue->readWait == -1 || queue->writeSem == -1) {
-        perror("failed creating sems");
+        print_errno("failed creating sems");
         sem_close(conn->lock);
         ipc_sem_destroy(queue->readWait);
         ipc_sem_destroy(queue->writeSem);
@@ -195,12 +190,12 @@ void ipc_close(ipc_t conn) {
 void assert_sems(ipc_t conn) {
     int readVal = ipc_sem_value(conn->queue->readWait);
     if (readVal < 0 || readVal > ENTRIES_PER_QUEUE) {
-        mprintf("[%s] INVALID readWait %d\n", readVal);
+        print_error("[%s] INVALID readWait %d\n", readVal);
     }
 
     int writeVal = ipc_sem_value(conn->queue->writeSem);
     if (writeVal < 0 || writeVal > ENTRIES_PER_QUEUE) {
-        mprintf("[%s] INVALID writeSem %d\n", writeVal);
+        print_error("[%s] INVALID writeSem %d\n", writeVal);
     }
 }
 
@@ -211,11 +206,9 @@ int ipc_read(void* buff, size_t len) {
     struct Queue* queue = me->queue;
     struct Entry* entry;
 
-    //mprintf("[%s] (Pre read) Read: %d Write %d[%d]\n", me->name, ipc_sem_value(queue->readWait), ipc_sem_value(queue->writeSem), queue->writeSem);
     ipc_sem_wait(queue->readWait);
     sem_wait(me->lock);
     assert_sems(me);
-    //mprintf("[%s] (Post read) Read: %d Write %d[%d]\n", me->name, ipc_sem_value(queue->readWait), ipc_sem_value(queue->writeSem), queue->writeSem);
 
     entry = &(queue->slots[queue->index[0]]);
     if (len > entry->len) {
@@ -231,7 +224,6 @@ int ipc_read(void* buff, size_t len) {
         queue->index[i] = -1;
     }
 
-    echo(me,"Posting for the write slot and leaving");
     sem_post(me->lock);
     ipc_sem_post(queue->writeSem);
 
@@ -243,11 +235,9 @@ int ipc_write(ipc_t conn, const void* buff, size_t len) {
     struct Queue* queue = conn->queue;
     struct Entry* entry;
 
-    //mprintf("[%s] (Pre Write) Read: %d Write %d[%d]\n", conn->name, ipc_sem_value(queue->readWait), ipc_sem_value(queue->writeSem), queue->writeSem);
     ipc_sem_wait(queue->writeSem);
     sem_wait(conn->lock);
     assert_sems(conn);
-    //mprintf("[%s] (Post Write) Read: %d Write %d[%d]\n", conn->name, ipc_sem_value(queue->readWait), ipc_sem_value(queue->writeSem), queue->writeSem);
 
     // If we got this far, we know we have a place to write on!
     for (slot = 0; slot < ENTRIES_PER_QUEUE; slot++) {
@@ -263,22 +253,21 @@ int ipc_write(ipc_t conn, const void* buff, size_t len) {
     }
     // I could sanity check those values, and I also could start working out.
     if (slot == ENTRIES_PER_QUEUE) {
-        echo(conn,"INVALID slot");
+        print_error("[%s] Trying to write to invalid slot\n", conn->name);
     }
     if (i == ENTRIES_PER_QUEUE) {
-        echo(conn,"INVALID index");
+        print_error("[%s] Trying to write to invalid index entry\n", conn->name);
     }
 
     queue->index[i] = slot;
     entry = &queue->slots[slot];
     if (len > IPC_MAX_PACKET_LEN) {
         len = IPC_MAX_PACKET_LEN;
-        echo(conn,"Doomed.");
+        print_error("[%s] Trying to write something bigger than max packet len\n", conn->name);
     }
     entry->len = len;
     memcpy(entry->content, buff, len);
 
-    echo(conn,"Posting read & bailing");
     sem_post(conn->lock);
     ipc_sem_post(queue->readWait);
 

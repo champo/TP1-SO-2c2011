@@ -72,7 +72,7 @@ int main(int argc, char *argv[]) {
     char path[512];
 
     if (NULL == config) {
-        perror("Failed opening the config folder.");
+        print_errno("Failed opening the config folder.");
         mprintf_end();
         ipc_end();
         abort();

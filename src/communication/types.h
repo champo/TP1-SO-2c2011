@@ -10,7 +10,8 @@ enum MessageType {
     MessageTypeAirlineDone,
     MessageTypeUnloadStock,
     MessageTypeCheckDestinations,
-    MessageTypeEnd
+    MessageTypeEnd,
+    MessageTypeLast // Do not use and keep always in the end, it's for debugging
 };
 
 #endif
