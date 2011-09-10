@@ -92,14 +92,8 @@ Map* parseMap(const char* path){
         vec = createVector();
         //Let's read the stock for the city!
         while ( ( state = fscanf(mapfile, "%s %d\n", buffer, &aux)) == 2){
-            char* name;
-            if ( (name = malloc((strlen(buffer) + 1) * sizeof(char))) == NULL ) {
-                //TODO check if this frees everything well
-                return NULL;
-            }
-            strcpy(name, buffer);
             Stock* stock;
-            if ((stock = initStock(name,aux, ans->theShit)) == NULL ) {
+            if ((stock = initStock(buffer, aux, ans->theShit)) == NULL ) {
                 //TODO check if this frees everything well
                 return NULL;
             }
@@ -198,14 +192,7 @@ Airline* parseAirlines(FILE* pFile, Map* map) {
         vec = createVector();
         while ((state = fscanf(pFile, "%s %d\n", buffer, &stockAmount)) == 2) {
 
-            char* theShitName;
-            if ((theShitName = malloc((strlen(buffer) + 1) * sizeof(char))) == NULL) {
-                freeAirline(airline); //TODO check if this frees everything well
-                return NULL;
-            }
-            strcpy(theShitName,buffer);
-
-            if ((stock = initStock(theShitName, stockAmount, map->theShit)) == NULL) {
+            if ((stock = initStock(buffer, stockAmount, map->theShit)) == NULL) {
                 freeAirline(airline); //TODO check if this frees1 everything well
                 return NULL;
             }

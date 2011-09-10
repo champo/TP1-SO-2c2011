@@ -18,7 +18,7 @@ int getTheShitId(char* theShitName, Vector* theShit) {
 }
 
 void getTheShitName(int id, Vector* theShit, char* name) {
-    
+
     TheShit* shit = (TheShit*) getFromVector(theShit, id);
     strcpy(name, shit->name);
 }
@@ -37,7 +37,13 @@ TheShit* getTheShit(char* name, Vector* theShit) {
         return NULL;
     }
 
-    product->name = name;
+    product->name = malloc((strlen(name) + 1) * sizeof(char));
+    if (product->name == NULL) {
+        free(product);
+        return NULL;
+    }
+    strcpy(product->name, name);
+
     if ((i = addToVector(theShit, product)) == -1) {
         free(product);
         return NULL;

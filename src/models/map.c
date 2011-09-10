@@ -10,7 +10,7 @@ void freeMap(Map* map){
     int counter = getVectorSize(map->cities);
 
     for ( i=0; i<counter; i++){
-        //freeCity((City*)getFromVector(map->cities,i));
+        freeCity((City*)getFromVector(map->cities,i));
         free((map->matrix)[i]);
     }
     free(map->matrix);

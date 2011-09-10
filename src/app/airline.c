@@ -123,11 +123,12 @@ void listen(Vector* threads) {
                 }
 
                 exit_handler();
+                pthread_exit(0);
                 return;
         }
         mprintf("Done handling. Waiting for next msg\n");
     }
-    mprintf("HELL\n\n");
+    print_error("HELL\n");
 }
 
 void redirect_stock_message(Vector* threads, union MapMessage* in) {
