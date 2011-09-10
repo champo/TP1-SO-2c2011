@@ -1,5 +1,7 @@
 #include "app/signal.h"
 
+#define _POSIX_SOURCE
+
 #include <signal.h>
 #include <stddef.h>
 #include <pthread.h>
@@ -11,10 +13,23 @@
 
 static void signal_handler(int sig);
 
+static void redirect_handler(int sig);
+
 static void (*exitFunction)(void) = NULL;
 
 void register_exit_function(void (*onExit)(void)) {
     exitFunction = onExit;
+}
+
+void redirect_signals(void) {
+    signal(SIGHUP, redirect_handler);
+    signal(SIGINT, redirect_handler);
+    signal(SIGQUIT, redirect_handler);
+    signal(SIGTERM, redirect_handler);
+}
+
+void redirect_handler(int sig) {
+    kill(getppid(), sig);
 }
 
 void register_signal_handlers(void) {
