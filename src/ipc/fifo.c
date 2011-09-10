@@ -32,7 +32,7 @@ int ipc_listen(const char* name) {
     if (mkfifo(path, 0666)) {
         // If the fifo already exists, fine other may have created it.
         if ( errno != EEXIST) { 
-            perror("mkfifo failed");
+            print_error("mkfifo failed");
             return -1;
         }
     }
@@ -40,7 +40,7 @@ int ipc_listen(const char* name) {
     readfd = open(path, O_RDWR);
 
     if (readfd == -1) {
-        perror("open failed");
+        print_error("open failed");
         return -1;
     }
 
@@ -55,6 +55,7 @@ ipc_t ipc_establish(const char* name) {
 
     sprintf(dest, "/tmp/sim_%s", name);
     if ((conn = malloc(sizeof(struct ipc_t))) == NULL) {
+        print_error("malloc failed");
         return NULL;
     }
 
@@ -62,7 +63,7 @@ ipc_t ipc_establish(const char* name) {
         // If the fifo already exists, fine other may have created it.
         if ( errno != EEXIST) { 
             free(conn);
-            perror("mkfifo failed");
+            print_error("mkfifo failed");
             return NULL;
         }
     }
@@ -71,13 +72,14 @@ ipc_t ipc_establish(const char* name) {
 
     if (conn->fd == -1) {
         free(conn);
-        perror("open failed");
+        print_error("open failed");
         return NULL;
     }
 
 
     if (pthread_mutex_init(&conn->mutex,NULL) != 0) {
         free(conn);
+        print_error("mutex init failed");
         return NULL;
     }
 
@@ -87,14 +89,26 @@ ipc_t ipc_establish(const char* name) {
 
 int ipc_write(ipc_t conn, const void* buff, size_t len) {
     int res;
-    
+    size_t reallen;
+
+    if ( len > IPC_MAX_PACKET_LEN ) {
+        print_error("message too long");
+        reallen = IPC_MAX_PACKET_LEN;
+    } else {
+        reallen = len;
+    }
+
     char tempbuf[IPC_MAX_PACKET_LEN + sizeof(size_t)];
-    *((size_t*)tempbuf) = len <= IPC_MAX_PACKET_LEN ? len : IPC_MAX_PACKET_LEN;
-    memcpy(tempbuf + sizeof(size_t), buff, (len <= IPC_MAX_PACKET_LEN ? len : IPC_MAX_PACKET_LEN));
+    *((size_t*)tempbuf) = reallen;
+    memcpy(tempbuf + sizeof(size_t), buff, reallen);
     pthread_mutex_lock(&conn->mutex);
-    res = write(conn->fd, tempbuf, (len <= IPC_MAX_PACKET_LEN ? len + sizeof(size_t): 
-                IPC_MAX_PACKET_LEN + sizeof(size_t)));
+    res = write(conn->fd, tempbuf, reallen + sizeof(size_t));
     pthread_mutex_unlock(&conn->mutex);
+    
+    if ( res != reallen + sizeof(size_t) ) {
+        print_error("write failed");
+    }
+    
     return res - sizeof(size_t);
 
 }
@@ -106,6 +120,11 @@ int ipc_read(void* buff, size_t len) {
     read(readfd, &count, sizeof(size_t));
     count = read(readfd,tempbuf,count);
     memcpy(buff, tempbuf, len);
+    
+    if ( count > len ) {
+        print_error("buffer too short for this reading");
+    }
+
     return (len < count? (int) len : count);
 
 }
