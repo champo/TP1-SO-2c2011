@@ -123,6 +123,7 @@ void listen(Vector* threads) {
         }
         mprintf("Done handling. Waiting for next msg\n");
     }
+    mprintf("HELL\n\n");
 }
 
 void redirect_stock_message(Vector* threads, union MapMessage* in) {
