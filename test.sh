@@ -1,6 +1,6 @@
 #!/bin/bash
 mkdir -p out
-for level in $(seq 1 4); do
+for level in $(seq 1 3); do
     for iter in $(seq 1 200); do
         echo "$level iteration $iter"
         echo "$level iteration $iter" > out/sim
