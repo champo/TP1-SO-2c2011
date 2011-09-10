@@ -85,7 +85,7 @@ void runMap(Map* map, Vector* airlines, Vector* conns){
         //getchar();
         mprintf("------------------------------------------------------------------\n");
     }
-    mprintf("Done biatch.\n");
+    //mprintf("Done biatch.\n");
 }
 
 void initPlane(struct StockMessagePart* stocks, struct PlaneMessageHeader* header, Plane* plane, Map* map) {

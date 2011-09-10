@@ -1,4 +1,17 @@
 #!/bin/bash
+
+uname=`uname`
+if [[ "$uname" == "Darwin" ]]; then
+    count() {
+        res=$1
+        echo $res
+    }
+else
+    count() {
+        echo `echo $1 | cut -d ' ' -f 1`
+    }
+fi
+
 mkdir -p out
 for level in $(seq 1 3); do
     for iter in $(seq 1 200); do
@@ -10,9 +23,9 @@ for level in $(seq 1 3); do
             echo "There's something in out/err. Bailing..."
             exit
         fi
-        errs=`grep "{ERR}" out/sim | wc -l | cut -d ' ' -f 1`
-        if [[ $errs -ne 0 ]]; then
-            echo "Found $errs INVALID in out/sim"
+        errs=`grep "{ERR}" out/sim`
+        if [[ -n $errs ]]; then
+            echo "Found {ERR} in out/sim"
             exit
         fi
         biatch=`grep "biatch" out/sim`
@@ -21,8 +34,8 @@ for level in $(seq 1 3); do
             exit
         fi
 
-        airlines=`ls configFiles/sim$level/airline* | wc -l | cut -d ' ' -f 1`
-        bye=`grep "Bye folks" out/sim | wc -l | cut -d ' ' -f 1`
+        airlines=$(count `ls configFiles/sim$level/airline* | wc -l`)
+        bye=$(count `grep "Bye folks" out/sim | wc -l`)
         if [[ $bye -ne $airlines ]]; then
             echo "Not enough bye folks for every airline"
             exit
