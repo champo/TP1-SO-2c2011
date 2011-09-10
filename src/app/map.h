@@ -4,7 +4,11 @@
 #define CONTINUE_SIM    1
 #define END_SIM         0
 
-void runMap(Map* map, Vector* airlines, Vector* conns);
+#include <pthread.h>
+#include "utils/vector.h"
+#include "models/map.h"
+
+void runMap(Map* map, Vector* airlines, Vector* conns, int* exitState, pthread_mutex_t* resourceLock);
 
 
 #endif

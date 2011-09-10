@@ -43,7 +43,8 @@ void run_airline(Airline* self, ipc_t conn) {
     ipcConn = conn;
 
     pthread_mutex_lock(&resourcesLock);
-    register_exit_function(exit_handler);
+    register_exit_function(NULL);
+    ignore_signals();
 
     pthread_t listenerThread;
     Vector* threads = bootstrap_planes(self, conn);
@@ -101,6 +102,12 @@ void listen(Vector* threads) {
 
     mprintf("Starting listen loop\n");
     while (comm_airline_recieve(&msg) == 0) {
+        pthread_mutex_lock(&resourcesLock);
+        if (exitState == 1) {
+            pthread_mutex_unlock(&resourcesLock);
+            pthread_exit(0);
+        }
+
         mprintf("Got message with type %d\n", msg.type);
         switch (msg.type) {
             case MessageTypeStep:
@@ -122,11 +129,13 @@ void listen(Vector* threads) {
                     print_error("Got invalid message type on airline listen\n");
                 }
 
+                pthread_mutex_unlock(&resourcesLock);
                 exit_handler();
                 pthread_exit(0);
                 return;
         }
         mprintf("Done handling. Waiting for next msg\n");
+        pthread_mutex_unlock(&resourcesLock);
     }
     print_error("HELL\n");
 }
@@ -195,12 +204,21 @@ void start_phase(Vector* threads, struct Message msg) {
 }
 
 void app_airline_plane_ready(void) {
+
     pthread_mutex_lock(&planesLeftLock);
+    pthread_mutex_lock(&resourcesLock);
     planesLeftInStage--;
     mprintf("Plane ready, %d left\n", planesLeftInStage);
     if (planesLeftInStage == 0) {
+
+        if (exitState == 1) {
+            pthread_mutex_unlock(&resourcesLock);
+            pthread_mutex_unlock(&planesLeftLock);
+            return;
+        }
         comm_airline_ready(ipcConn);
     }
+    pthread_mutex_unlock(&resourcesLock);
     pthread_mutex_unlock(&planesLeftLock);
 }
 

@@ -1,5 +1,7 @@
 #include "app/signal.h"
 
+#define _POSIX_SOURCE
+
 #include <signal.h>
 #include <stddef.h>
 #include <pthread.h>
@@ -15,6 +17,19 @@ static void (*exitFunction)(void) = NULL;
 
 void register_exit_function(void (*onExit)(void)) {
     exitFunction = onExit;
+}
+
+void ignore_signals(void) {
+    sigset_t set;
+
+    sigemptyset(&set);
+
+    sigaddset(&set, SIGHUP);
+    sigaddset(&set, SIGINT);
+    sigaddset(&set, SIGQUIT);
+    sigaddset(&set, SIGTERM);
+
+    pthread_sigmask(SIG_BLOCK, &set, NULL);
 }
 
 void register_signal_handlers(void) {

@@ -18,6 +18,26 @@ struct CityInfo {
     int score;
 };
 
+int* doExit;
+
+pthread_mutex_t* exitLock;
+
+#define SafeAction(block) { \
+    mprintf("Trying to get safe lock\n"); \
+    pthread_mutex_lock(exitLock); \
+    mprintf("Got it\n"); \
+    if (*doExit) { \
+        pthread_mutex_unlock(exitLock); \
+        return; \
+    } \
+    block; \
+    if (*doExit) { \
+        pthread_mutex_unlock(exitLock); \
+        return; \
+    } \
+    pthread_mutex_unlock(exitLock); \
+}
+
 static int endSimulation(Map* map, int turn);
 static int cityIsSatisfied(City* city);
 static void updateMap(Map* map, Plane* plane);
@@ -27,7 +47,7 @@ static int insertScore(struct CityInfo* cityInfo, int size, int elems, int score
 static int getCityScore(Vector* cityStocks, Vector* planeStocks);
 static void initPlane(struct StockMessagePart* stocks, struct PlaneMessageHeader* header, Plane* plane, Map* map);
 
-void runMap(Map* map, Vector* airlines, Vector* conns){
+void runMap(Map* map, Vector* airlines, Vector* conns, int* exitState, pthread_mutex_t* resourceLock) {
 
     int i, airlinesize;
     unsigned int turn = 0;
@@ -35,17 +55,20 @@ void runMap(Map* map, Vector* airlines, Vector* conns){
     Plane plane;
     int airlineId;
 
+    doExit = exitState;
+    exitLock = resourceLock;
+
     airlinesize = getVectorSize(airlines);
 
     while (endSimulation(map, turn) == CONTINUE_SIM) {
 
         mprintf("Doing turn %d\n", turn++);
-        comm_turn_step(conns);
+        SafeAction(comm_turn_step(conns));
 
         i = 0;
         while (i != airlinesize) {
             mprintf("Waiting for phase 1 action\n");
-            comm_get_map_message(&msg);
+            SafeAction(comm_get_map_message(&msg));
 
             if (msg.type == MessageTypeAirlineDone) {
                 i++;
@@ -56,7 +79,7 @@ void runMap(Map* map, Vector* airlines, Vector* conns){
                 initPlane(&msg.stockState.stocks, &msg.stockState.header, &plane, map);
                 updateMap(map, &plane);
                 mprintf("Sending stocks back\n");
-                comm_unloaded_stock(airlineId, &plane, (ipc_t)getFromVector(conns, airlineId));
+                SafeAction(comm_unloaded_stock(airlineId, &plane, (ipc_t)getFromVector(conns, airlineId)));
                 freeStocks(plane.stocks);
             } else {
                 print_error("Got invalid message on phase 1 loop\n");
@@ -64,17 +87,17 @@ void runMap(Map* map, Vector* airlines, Vector* conns){
         }
 
         mprintf("Sending continue\n");
-        comm_turn_continue(conns);
+        SafeAction(comm_turn_continue(conns));
 
         i = 0;
         while (i != airlinesize) {
-            comm_get_map_message(&msg);
+            SafeAction(comm_get_map_message(&msg));
             if (msg.type == MessageTypeAirlineDone) {
                 i++;
             } else if (msg.type == MessageTypeCheckDestinations) {
                 airlineId = msg.stockState.header.airline;
                 initPlane(&msg.checkDestinations.stocks, &msg.checkDestinations.header, &plane, map);
-                app_give_destinations(map, &plane, (ipc_t)getFromVector(conns, airlineId));
+                SafeAction(app_give_destinations(map, &plane, (ipc_t)getFromVector(conns, airlineId)));
                 freeStocks(plane.stocks);
             } else {
                 print_error("Got invalid message on phase 2 loop\n");

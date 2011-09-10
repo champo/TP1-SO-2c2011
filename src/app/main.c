@@ -24,6 +24,8 @@ struct MapData {
     Vector* conns;
     Vector* airlines;
     Map* map;
+    int* exitState;
+    pthread_mutex_t* exitLock;
 };
 
 static void run_airlines(Map* map, Vector* airlines);
@@ -131,7 +133,9 @@ void do_map(Map* map, Vector* conns, Vector* airlines) {
     struct MapData data = {
         .map = map,
         .airlines = airlines,
-        .conns = conns
+        .conns = conns,
+        .exitState = &doExit,
+        .exitLock = &exitLock
     };
 
     pthread_create(&mapThread, NULL, start_map, &data);
@@ -140,7 +144,7 @@ void do_map(Map* map, Vector* conns, Vector* airlines) {
         pthread_cond_wait(&exitWait, &exitLock);
     }
 
-    pthread_cancel(&mapThread);
+    pthread_cancel(mapThread);
 }
 
 void start_map(struct MapData* data) {
@@ -148,7 +152,7 @@ void start_map(struct MapData* data) {
     pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
     pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
-    runMap(data->map, data->airlines, data->conns);
+    runMap(data->map, data->airlines, data->conns, data->exitState, data->exitLock);
 
     do_exit();
 }
