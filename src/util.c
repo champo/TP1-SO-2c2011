@@ -1,11 +1,14 @@
 #include "util.h"
 
+#define _XOPEN_SOURCE 600
+
 #include <stdio.h>
 #include <unistd.h>
 #include <execinfo.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <pthread.h>
+#include <string.h>
 
 #include "utils/sem.h"
 
@@ -94,10 +97,11 @@ void print_error(const char* format, ...) {
 }
 
 void print_errno(const char* tag) {
+    int res;
     lock
         char buff[512];
-        strerror_r(errno, buff, 512);
-        buff[512] = 0;
+        res = strerror_r(errno, buff, 511);
+        buff[511] = 0;
         printf("(%d) {ERR} %s: %s\n", getpid(), tag, buff);
         fflush(stdout);
     unlock

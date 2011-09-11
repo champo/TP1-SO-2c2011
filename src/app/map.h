@@ -8,7 +8,6 @@
 #include "utils/vector.h"
 #include "models/map.h"
 
-void runMap(Map* map, Vector* airlines, Vector* conns, int* exitState, pthread_mutex_t* resourceLock);
-
+void runMap(Map* map, Vector* airlines, Vector* conns, int* exitState);
 
 #endif

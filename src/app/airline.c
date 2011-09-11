@@ -37,7 +37,7 @@ void run_airline(Airline* self, ipc_t conn) {
     ipcConn = conn;
 
     register_exit_function(NULL);
-    redirect_signals();
+    //redirect_signals();
 
     Vector* threads = bootstrap_planes(self, conn);
 

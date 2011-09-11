@@ -6,6 +6,8 @@
 #include <stddef.h>
 #include <pthread.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
 
 #include "util.h"
 
@@ -29,7 +31,7 @@ void redirect_signals(void) {
 }
 
 void redirect_handler(int sig) {
-    kill(getppid(), sig);
+    kill(getppid(), SIGUSR1);
 }
 
 void register_signal_handlers(void) {
@@ -38,10 +40,11 @@ void register_signal_handlers(void) {
     HANDLE(SIGQUIT);
     HANDLE(SIGTERM);
     HANDLE(SIGCHLD);
-    //HANDLE(SIGILL);
-    //HANDLE(SIGFPE);
-    //HANDLE(SIGSEGV);
-    //HANDLE(SIGPIPE);
+    HANDLE(SIGILL);
+    HANDLE(SIGFPE);
+    HANDLE(SIGSEGV);
+    HANDLE(SIGPIPE);
+    HANDLE(SIGUSR1);
 }
 
 #define CASE_SIG(sig) case sig: \
@@ -49,6 +52,7 @@ void register_signal_handlers(void) {
     break;
 
 void signal_handler(int sig) {
+    printf("Dude WTF\n");
     // Things just go boom
 #ifdef DEBUG
     switch (sig) {
@@ -56,6 +60,7 @@ void signal_handler(int sig) {
         CASE_SIG(SIGFPE)
         CASE_SIG(SIGSEGV)
         CASE_SIG(SIGPIPE)
+        CASE_SIG(SIGUSR1)
         case SIGHUP:
             printf("Caught signal SIGHUP\n");
             break;

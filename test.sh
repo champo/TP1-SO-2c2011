@@ -14,7 +14,7 @@ fi
 
 mkdir -p out
 for level in $(seq 1 4); do
-    for iter in $(seq 1 200); do
+    for iter in $(seq 1 250); do
         echo "$level iteration $iter"
         echo "$level iteration $iter" > out/sim
         bin/sim configFiles/sim$level 2> out/err >> out/sim
