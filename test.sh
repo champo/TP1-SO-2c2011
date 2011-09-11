@@ -28,9 +28,16 @@ for level in $(seq 1 4); do
             echo "Found {ERR} in out/sim"
             exit
         fi
+
         biatch=`grep "biatch" out/sim`
         if [[ -z $biatch ]]; then
             echo "Didnt find a biatch signaling end..."
+            exit
+        fi
+
+        base=`grep "base belong" out/sim`
+        if [[ -z $biatch ]]; then
+            echo "Didnt find a base belong signaling end..."
             exit
         fi
 

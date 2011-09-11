@@ -38,10 +38,10 @@ void register_signal_handlers(void) {
     HANDLE(SIGQUIT);
     HANDLE(SIGTERM);
     HANDLE(SIGCHLD);
-    HANDLE(SIGILL);
-    HANDLE(SIGFPE);
-    HANDLE(SIGSEGV);
-    HANDLE(SIGPIPE);
+    //HANDLE(SIGILL);
+    //HANDLE(SIGFPE);
+    //HANDLE(SIGSEGV);
+    //HANDLE(SIGPIPE);
 }
 
 #define CASE_SIG(sig) case sig: \
@@ -70,6 +70,9 @@ void signal_handler(int sig) {
             break;
         case SIGCHLD:
             printf("Caught signal SIGCHLD\n");
+            break;
+        case 7:
+            printf("Hell.\n");
             break;
         default:
             printf("Caught signal %d\n", sig);

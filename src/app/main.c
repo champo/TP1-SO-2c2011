@@ -6,6 +6,7 @@
 #include <dirent.h>
 #include <string.h>
 #include <errno.h>
+#include <sys/wait.h>
 
 #include "util.h"
 #include "ipc/ipc.h"
@@ -111,8 +112,14 @@ int main(int argc, char *argv[]) {
     comm_end(conns);
 
     for (size_t i = 0; i < numAirlines; i++) {
-        while (wait(0) == -1 && errno == EINTR);
+        int status;
+        while (wait(&status) == -1 && errno == EINTR);
+
+        if (WIFSIGNALED(status)) {
+            mprintf("Child died cause of %d\n", WTERMSIG(status));
+        }
     }
+    mprintf("All your base belong to us\n");
 
     for (size_t i = 0; i < numAirlines; i++) {
         freeAirline(getFromVector(airlines, i));

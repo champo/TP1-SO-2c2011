@@ -11,8 +11,6 @@
 #include "app/plane.h"
 #include "global.h"
 
-static void exit_handler(void);
-
 static void listen(Vector* conns);
 
 static Vector* bootstrap_planes(Airline* self, ipc_t conn);
@@ -24,10 +22,6 @@ static void redirect_destinations_message(Vector* threads, union MapMessage* in)
 static void redirect_stock_message(Vector* threads, union MapMessage* in);
 
 static void start_phase(Vector* threads, struct Message msg);
-
-static pthread_cond_t exitWait = PTHREAD_COND_INITIALIZER;
-
-static pthread_mutex_t resourcesLock = PTHREAD_MUTEX_INITIALIZER;
 
 static pthread_mutex_t planesLeftLock = PTHREAD_MUTEX_INITIALIZER;
 
@@ -42,18 +36,12 @@ void run_airline(Airline* self, ipc_t conn) {
     mprintf("Dude\n");
     ipcConn = conn;
 
-    pthread_mutex_lock(&resourcesLock);
     register_exit_function(NULL);
     redirect_signals();
 
-    pthread_t listenerThread;
     Vector* threads = bootstrap_planes(self, conn);
 
-    pthread_create(&listenerThread, NULL, (void*(*)(void*))listen, threads);
-
-    while (exitState == 0) {
-        pthread_cond_wait(&exitWait, &resourcesLock);
-    }
+    listen(threads);
 
     // If we got here, it means we recieved an end message
     struct Message msg;
@@ -62,12 +50,13 @@ void run_airline(Airline* self, ipc_t conn) {
 
     for (size_t i = 0; i < self->numberOfPlanes; i++) {
         struct PlaneThread* t = getFromVector(threads, i);
-        pthread_cancel(t->thread);
+        pthread_join(t->thread, NULL);
         message_queue_destroy(t->queue);
         free(t);
     }
 
     destroyVector(threads);
+    mprintf("Out of run_airline\n");
 }
 
 Vector* bootstrap_planes(Airline* self, ipc_t conn) {
@@ -101,12 +90,6 @@ void listen(Vector* threads) {
 
     mprintf("Starting listen loop\n");
     while (comm_airline_recieve(&msg) == 0) {
-        pthread_mutex_lock(&resourcesLock);
-        if (exitState == 1) {
-            pthread_mutex_unlock(&resourcesLock);
-            pthread_exit(0);
-        }
-
         mprintf("Got message with type %d\n", msg.type);
         switch (msg.type) {
             case MessageTypeStep:
@@ -127,16 +110,10 @@ void listen(Vector* threads) {
                 if (msg.type >= MessageTypeLast || msg.type < 0) {
                     print_error("Got invalid message type on airline listen\n");
                 }
-
-                pthread_mutex_unlock(&resourcesLock);
-                exit_handler();
-                pthread_exit(0);
                 return;
         }
         mprintf("Done handling. Waiting for next msg\n");
-        pthread_mutex_unlock(&resourcesLock);
     }
-    print_error("HELL\n");
 }
 
 void redirect_stock_message(Vector* threads, union MapMessage* in) {
@@ -163,11 +140,6 @@ void redirect_destinations_message(Vector* threads, union MapMessage* in) {
     msg.payload.destinations.count = in->destinations.count;
 
     message_queue_push(thread->queue, msg);
-}
-
-void exit_handler(void) {
-    exitState = 1;
-    pthread_cond_signal(&exitWait);
 }
 
 void broadcast(Vector* threads, struct Message msg) {

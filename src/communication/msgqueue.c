@@ -12,6 +12,7 @@ struct MessageQueue {
     struct Message messages[QUEUE_SIZE];
     int first;
     int tail;
+    int closing;
 };
 
 struct MessageQueue* message_queue_create(void) {
@@ -27,6 +28,8 @@ struct MessageQueue* message_queue_create(void) {
     queue->first = 0;
     queue->tail = 0;
 
+    queue->closing = 0;
+
     return queue;
 }
 
@@ -37,6 +40,10 @@ struct Message message_queue_pop(struct MessageQueue* queue) {
     pthread_mutex_lock(&queue->mutex);
     while (queue->first == queue->tail) {
         pthread_cond_wait(&queue->write, &queue->mutex);
+        if (queue->closing) {
+            pthread_mutex_unlock(&queue->mutex);
+            return (struct Message) { MessageTypeNone };
+        }
     }
     msg = queue->messages[queue->first];
     queue->first = (queue->first + 1) % QUEUE_SIZE;
@@ -50,8 +57,11 @@ void message_queue_push(struct MessageQueue* queue, struct Message msg) {
 
     pthread_mutex_lock(&queue->mutex);
     while ((queue->tail + 1) % QUEUE_SIZE == queue->first) {
-        mprintf("Waiting to write to queue\n");
         pthread_cond_wait(&queue->read, &queue->mutex);
+        if (queue->closing) {
+            pthread_mutex_unlock(&queue->mutex);
+            return (struct Message) { MessageTypeNone };
+        }
     }
 
     queue->messages[queue->tail] = msg;
@@ -77,9 +87,16 @@ enum MessageType message_queue_peek(struct MessageQueue* queue) {
 
 void message_queue_destroy(struct MessageQueue* queue) {
 
-    pthread_mutex_destroy(&queue->mutex);
+    queue->closing = 1;
+    pthread_cond_broadcast(&queue->read);
+    pthread_cond_broadcast(&queue->write);
+
+    pthread_mutex_lock(&queue->mutex);
     pthread_cond_destroy(&queue->read);
     pthread_cond_destroy(&queue->write);
+
+    pthread_mutex_unlock(&queue->mutex);
+    pthread_mutex_destroy(&queue->mutex);
 
     free(queue);
 }
