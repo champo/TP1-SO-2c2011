@@ -84,35 +84,58 @@ A la hora de encarar el problema en cuestión, una de las primeras cosas a plant
   En este debate, también fue importante no forzar la separación de procesos cuando el problema no lo requería (por ejemplo que cada avión fuera un proceso independiente no agregaba 
   nada y generaba mucha complejidad, por lo que se optó por implementarlos como \textit{threads}).\\ 
 
-En un primer análisis, identificamos como potenciales procesos paralelos de nuestro programa al control del flujo principal del programa, a los parsers, al mapa, a las aerolíneas y
- a los aviones. Luego de cierto debate, vimos que la relación entre el flujo principal, los parsers y el mapa era demasiado fuerte, pues, la combinación de estas tres cosas iban a 
+En un primer análisis, identificamos como potenciales procesos paralelos de nuestro programa al control del flujo principal del programa, a los parsers, al mapa, al \textit{output},
+ a las aerolineas y
+ a los aviones. A continuación se puede ver un esquema de este modelo.\\
+
+\begin{center}
+ \includegraphics{./images/Diagrama_simulacion_2.png}
+ % Diagrama_simulacion_2.png: 549x382 pixel, 96dpi, 14.52x10.11 cm, bb=0 0 412 286
+\end{center}
+
+
+ Luego de cierto debate, vimos que la relación entre el flujo principal, los parsers, el \textit{output} y el mapa era demasiado fuerte, pues, 
+ la combinación de estas tres cosas iban a 
  controlar el flujo de la simulación en sí. Inclusive, estas partes tenian una secuencia bastante marcada. Así, se decidió que estos elementos que originalmente bien podrían haber 
- sido planteado como procesos paralelos, era más intuitivo y coherente escribirlo como uno solo.\\
+ sido planteado como procesos paralelos, era más intuitivo y coherente escribirlo como uno solo.
+ Finalmente, el mapa y el \textit{output} fueron implementados como threads del proceso principal ya que si bien su relación es fuerte, nos resulto coherente
+  que ambos puedan estar ejecutandose paralelamente. \\
 
 Por otra parte, la aerolínea y los aviones nos resulto intuitivo implementarlo como un proceso aparte. La siguiente decisión tomada fue que los aviones debian ser \textit{threads}
- de los procesos aerolinea. Pues nos resultó necesario implementarlo de esta manera ya que la relación entre una aerolínea y sus aviones era constante, ya que un avión es parte
-  de una aerolínea.\\
+ de los procesos aerolinea. Pues nos resulto necesario implementarlo de esta manera ya que la relación entre una aerolínea y sus aviones era constante, ya que un avión es parte
+  de una aerolínea. Aquí se presente otro esquema del modelo final\\
 
-A continuación se presentan esquemas que representan las tomas de decisiones respecto al esquema de la simulación recién mencionadas:
+\begin{center}
+ \includegraphics{./images/Diagrama_simulacion_1.png}
+ % Diagrama_simulacion_1.png: 566x382 pixel, 96dpi, 14.97x10.11 cm, bb=0 0 424 286
+\end{center}
+
 
 \newpage
 \section{Modelo OSI}
 Separación en capas. Separación clara de responsabilidades. Mejora en la claridad del código.
 Esquema gráfico.
 
-El modelo OSI es un modelo que estandariza la forma de diseñar un programa y como comunicar diferentes programas. Como se puede ver en el esquema\\
- (INCLUIR ESQUEMA)\\
- el modelo OSI cuenta con 7 capaz aunque dadas las funcionalidades de nuestra aplicación nuestro programa solo cuenta con las primeras cuatro implementadas (e inclusive, dos de las
-  mismas están implementadas como una). Esto se debe a que nuestro programa no se comunica con otros programas, reduciendo así las capas del modelo OSI implementadas por nosotros.\\
+El modelo OSI es un modelo que estandariza la forma de diseñar un programa y como comunicar diferentes programas. El modelo OSI cuenta con 7 capaz aunque dadas las funcionalidades de nuestra aplicación solamente debimos implementar cuatro (e inclusive, dos de las
+  mismas están implementadas como una). Esto se debe a que nuestro programa no se comunica con otros programas, reduciendo así las capas del modelo OSI implementadas por nosotros.
+  El resto de las capas vienen implementadas por el sistema operativo.\\
 
 El modelo OSI es muy útil ya que permite realizar las diferentes partes de una aplicación por separado sin mezclar información innecesaria y de esta manera las implementaciones 
 en cada capa son independientes del resto. Por último, la separación en capaz mejora ampliamente la claridad del código.\\
 
 En nuestro caso, la capa de aplicación es la encargada de realizar el flujo y la lógica de la aplicación en sí. Las capas de presentación y sesión estan implementadas como una sola,
- la capa de Marshalling. Esta se encarga de recibir los datos que se desean transmitir a otro proceso y dejarlos en estructuras de modo tal que la capa de Marshalling de otro proceso 
- lo pueda entender. Nuestra última capa implementada es la de transporte, que es la que se encarga de utilizar los diferentes tipos de \textit{IPCs} para comunicar procesos.\\
+ la capa de Marshalling. Esta empaqueta los datos a transmitir a otro proceso en formatos determinados. 
+ Nuestra última capa implementada es la de transporte, que es la que se encarga de utilizar los diferentes tipos de \textit{IPCs} para comunicar procesos.\\
 
 Notesé que es de suma importancia la separación en capas ya que, por ejemplo, gracias a esto fue posible implementar los distintos tipos de \textit{IPCs} sin importar el resto de las implementaciones.\\
+
+En el esquema presentado a continuación se puede observar lo descripto en esta sección. \\
+
+\begin{center}
+ \includegraphics[scale=0.6]{./images/modelo-osi_nuestro.png}
+ % modelo-osi_nuestro.png: 891x495 pixel, 96dpi, 23.57x13.10 cm, bb=0 0 668 371
+\end{center}
+
 
 \newpage
 \section{Interfaz de comunicación(???)}
@@ -140,12 +163,12 @@ etapa temprana. El test no era del todo básico, pero tampoco era muy agresivo. 
 \section{Conclusiones}
 ACUERDENSE DE COMO NOS LA HIZO COMER ROMANNNNN!!!PONGAMOS ALGO COPADO ACA!!!XD
 
-Queda claro, que este trabajo podría haberse realizado sin necesidad de recurrir al procesamiento paralelo y a la comunicación entre procesos. Pero al haberlo hecho de 
-de esta forma, la experiencia adquirida y el aprendizaje resulta mucho más significativo. Por varias razones,
+Queda claro, que el este trabajo podría haberse realizado sin necesidad de recurrir al procesamiento paralelo y a la comunicación entre procesos. Pero al haberlo hecho esto de esta forma,
+la experiencia adquirida y el aprendizaje resulta mucho más significativo. Por varias razones,
 trabajar con varios procesos corriendo al mismo tiempo, al igual que varios threads.
 la comunicación entre estos procesos.
 la separación en capas, consecuencia necesaria, que agrega mucha claridad al código y conceptualmente, al diferenciar claramente las responsabilidades.
-la familiarización con los estándares \textit{POSIX} y \textit{System V}, o el simple de hecho de trabajar contra interfaces predefinidas y respetando un estándar predefinido.
+la familiarización con los estándares POSIX y System V, o el simple de hecho de trabajar contra interfaces predefinidas y respetando un estándar predefinido.
 
 
 Estaria bueno poder comparar el programa usando los diferentes tipos de ipc
