@@ -18,6 +18,9 @@ struct CityInfo {
     int score;
 };
 
+static pthread_mutex_t* exitLock;
+static int* doExit;
+
 static int endSimulation(Map* map, int turn);
 static int cityIsSatisfied(City* city);
 static void updateMap(Map* map, Plane* plane);
