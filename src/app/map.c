@@ -27,7 +27,7 @@ static int insertScore(struct CityInfo* cityInfo, int size, int elems, int score
 static int getCityScore(Vector* cityStocks, Vector* planeStocks);
 static void initPlane(struct StockMessagePart* stocks, struct PlaneMessageHeader* header, Plane* plane, Map* map);
 
-void runMap(Map* map, Vector* airlines, Vector* conns, int* exitState, pthread_mutex_t* resourceLock) {
+void runMap(Map* map, Vector* airlines, Vector* conns, int* exitState) {
 
     int i, airlinesize;
     unsigned int turn = 0;
@@ -35,12 +35,9 @@ void runMap(Map* map, Vector* airlines, Vector* conns, int* exitState, pthread_m
     Plane plane;
     int airlineId;
 
-    doExit = exitState;
-    exitLock = resourceLock;
-
     airlinesize = getVectorSize(airlines);
 
-    while (endSimulation(map, turn) == CONTINUE_SIM) {
+    while (*exitState == 0 && endSimulation(map, turn) == CONTINUE_SIM) {
 
         mprintf("Doing turn %d\n", turn++);
         comm_turn_step(conns);
@@ -88,7 +85,10 @@ void runMap(Map* map, Vector* airlines, Vector* conns, int* exitState, pthread_m
         //getchar();
         mprintf("------------------------------------------------------------------\n");
     }
-    mprintf("Done biatch.\n");
+
+    if (*exitState == 0) {
+        mprintf("Done biatch.\n");
+    }
 }
 
 void initPlane(struct StockMessagePart* stocks, struct PlaneMessageHeader* header, Plane* plane, Map* map) {

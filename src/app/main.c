@@ -34,15 +34,9 @@ static void run_airlines(Map* map, Vector* airlines);
 
 static void do_map(Map* map, Vector* conns, Vector* airlines);
 
-static void do_exit(void);
-
-static void handle_signal(int sig);
+static void handle_signal(void);
 
 static void start_map(struct MapData* data);
-
-static pthread_cond_t exitWait = PTHREAD_COND_INITIALIZER;
-
-static pthread_mutex_t exitLock = PTHREAD_MUTEX_INITIALIZER;
 
 static int doExit = 0;
 
@@ -64,10 +58,6 @@ int main(int argc, char *argv[]) {
         abort();
     }
 
-
-    pthread_mutex_lock(&exitLock);
-    register_exit_function(handle_signal);
-    register_signal_handlers();
 
     Map* map;
     Vector* airlines = createVector();
@@ -96,6 +86,9 @@ int main(int argc, char *argv[]) {
         }
     }
     closedir(config);
+
+    register_exit_function(handle_signal);
+    register_signal_handlers();
 
     run_airlines(map, airlines);
     ipc_listen(PARENT_NAME);
@@ -131,7 +124,6 @@ int main(int argc, char *argv[]) {
 
     freeMap(map);
 
-    pthread_mutex_unlock(&exitLock);
     ipc_end();
     mprintf_end();
 }
@@ -139,40 +131,29 @@ int main(int argc, char *argv[]) {
 void do_map(Map* map, Vector* conns, Vector* airlines) {
 
     pthread_t mapThread;
+    pthread_attr_t attr;
     struct MapData data = {
         .map = map,
         .airlines = airlines,
         .conns = conns,
-        .exitState = &doExit,
-        .exitLock = &exitLock
+        .exitState = &doExit
     };
 
-    pthread_create(&mapThread, NULL, start_map, &data);
+    pthread_attr_init(&attr);
+    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
-    while (doExit == 0) {
-        pthread_cond_wait(&exitWait, &exitLock);
-    }
+    pthread_create(&mapThread, &attr, start_map, &data);
+    pthread_join(mapThread, NULL);
 
-    pthread_cancel(mapThread);
+    pthread_attr_destroy(&attr);
 }
 
 void start_map(struct MapData* data) {
-
-    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
-    pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
-
-    runMap(data->map, data->airlines, data->conns, data->exitState, data->exitLock);
-
-    do_exit();
+    runMap(data->map, data->airlines, data->conns, data->exitState);
 }
 
-void handle_signal(int sig) {
-    do_exit();
-}
-
-void do_exit(void) {
+void handle_signal(void) {
     doExit = 1;
-    pthread_cond_signal(&exitWait);
 }
 
 void run_airlines(Map* map, Vector* airlines) {
