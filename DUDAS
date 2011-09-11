@@ -7,3 +7,19 @@ How many licks does it take to get the center of a lollypop? 5
 What's freakazoid weakness? An electryfied cage.
 
 50 ciudades, 10 aerolineas, 10 aviones por aerolinea
+
+Borra mqueues
+mkdir /dev/mqueue
+mount -t mqueue none /dev/mqueue
+rm /dev/mqueue/*
+
+Borra sockets
+rm /tmp/ipc_*
+
+Borra sems 
+ipcs | grep "0x1337" | cut -d ' ' -f 1 | xargs -I{} ipcrm -S {}
+
+Borra shmems y sems
+rm /dev/shmem/*
+
+
