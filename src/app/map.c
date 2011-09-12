@@ -23,20 +23,30 @@ static int* doExit;
 
 static int endSimulation(Map* map, int turn);
 static int cityIsSatisfied(City* city);
+static int hasNoStocks(Vector* stocks);
 static void updateMap(Map* map, Plane* plane);
 static int app_give_destinations(Map* map, Plane* plane, ipc_t conn);
 static int cityInfoComparator(const void* a, const void* b);
 static int insertScore(struct CityInfo* cityInfo, int size, int elems, int score);
 static int getCityScore(Vector* cityStocks, Vector* planeStocks);
 static void initPlane(struct StockMessagePart* stocks, struct PlaneMessageHeader* header, Plane* plane, Map* map);
+static int send_map_status(Map* map, int totalStockAmount, struct MessageQueue* outputMsgQueue);
+static int send_airlines_status(Vector* airlines, struct MessageQueue* outputMsgQueue);
+static int get_map_status(Map* map, int* citiesSatisfied);
 
-void runMap(Map* map, Vector* airlines, Vector* conns, int* exitState) {
+
+
+void runMap(Map* map, Vector* airlines, Vector* conns, int* exitState, struct MessageQueue* outputMsgQueue) {
 
     int i, airlinesize;
     unsigned int turn = 0;
     union PlaneMessage msg;
     Plane plane;
     int airlineId;
+    int totalStockAmount = get_map_status(map, NULL);
+
+    send_map_status(map, totalStockAmount, outputMsgQueue);
+    send_airlines_status(airlines, outputMsgQueue);
 
     airlinesize = getVectorSize(airlines);
 
@@ -68,12 +78,19 @@ void runMap(Map* map, Vector* airlines, Vector* conns, int* exitState) {
 
         mprintf("Sending continue\n");
         comm_turn_continue(conns);
+        
+        send_map_status(map, totalStockAmount, outputMsgQueue);
 
         i = 0;
         while (i != airlinesize) {
             comm_get_map_message(&msg);
             if (msg.type == MessageTypeAirlineDone) {
                 i++;
+                //int planesFlying = msg.airlineStatus.planesFlying;
+                //int totalPlanes = msg.airlineStatus.totalPlanes;
+                //int id = msg.airlineStatus.id;
+                //comm_send_airline_status(planesFlying, totalPlanes, id, outputMsgQueue);
+
             } else if (msg.type == MessageTypeCheckDestinations) {
                 airlineId = msg.stockState.header.airline;
                 initPlane(&msg.checkDestinations.stocks, &msg.checkDestinations.header, &plane, map);
@@ -139,17 +156,21 @@ int endSimulation(Map* map, int turn) {
 }
 
 int cityIsSatisfied(City* city) {
+    return hasNoStocks(city->stock);
+}
 
-    size_t i;
-    size_t stock_size = getVectorSize(city->stock);
-    for (i = 0; i < stock_size; i++) {
-        Stock* stock = getFromVector(city->stock, i);
+int hasNoStocks(Vector* stocks) {
+    size_t stock_size = getVectorSize(stocks);
+    for (size_t i = 0; i < stock_size; i++) {
+        Stock* stock = getFromVector(stocks, i);
         if (stock->amount != 0) {
             return 0;
         }
     }
     return 1;
 }
+
+
 
 
 void updateMap(Map* map, Plane* plane) {
@@ -265,8 +286,10 @@ int getCityScore(Vector* cityStocks, Vector* planeStocks) {
     int score = 0;
 
     for (size_t i = 0; i < cityStockSize; i++) {
+        
         Stock* cityStock = getFromVector(cityStocks, i);
         for (size_t j = 0; j < planeStockSize; j++) {
+            
             Stock* planeStock = getFromVector(planeStocks, j);
             if (cityStock->theShit->id ==  planeStock->theShit->id) {
                 score += (cityStock->amount > planeStock->amount)? planeStock->amount : cityStock->amount;
@@ -275,5 +298,58 @@ int getCityScore(Vector* cityStocks, Vector* planeStocks) {
         }
     }
     return score;
+}
+
+int send_map_status(Map* map, int totalStockAmount, struct MessageQueue* outputMsgQueue) {
+    
+    int citiesSatisfied;
+    double completionPercentage;
+    int totalCities = getVectorSize(map->cities);
+    int currentStockAmount = get_map_status(map, &citiesSatisfied);
+    
+    completionPercentage = (currentStockAmount / (double)totalStockAmount) * 100;
+    comm_send_map_status(completionPercentage, citiesSatisfied, totalCities, outputMsgQueue);
+    
+    return 0;
+}
+
+int get_map_status(Map* map, int* citiesSatisfied) {
+
+    int total = 0;
+    size_t cities = getVectorSize(map->cities);
+    
+    if (citiesSatisfied != NULL) {
+        *citiesSatisfied = 0;
+    }
+    
+    for (size_t i = 0; i < cities; i++) {
+        
+        City* city  = getFromVector(map->cities, i);
+        size_t stocksSize = getVectorSize(city->stock);
+        int cityStockAmount = 0;
+
+        for (size_t j = 0; j < stocksSize; j++) {
+            
+            Stock* stock = getFromVector(city->stock, j);
+            cityStockAmount += stock->amount;
+        }
+
+        if (cityStockAmount == 0 && citiesSatisfied != NULL) {
+            (*citiesSatisfied)++;
+        } 
+        total += cityStockAmount;
+    }
+    return total;
+}
+
+int send_airlines_status(Vector* airlines, struct MessageQueue* outputMsgQueue) {
+   
+    size_t airlinesSize = getVectorSize(airlines);
+    for (size_t i = 0; i < airlinesSize; i++) {
+
+        Airline* airline = getFromVector(airlines, i); 
+        comm_send_airline_status(airline->numberOfPlanes, airline->numberOfPlanes, airline->id, outputMsgQueue);
+    }
+    return 0;
 }
 

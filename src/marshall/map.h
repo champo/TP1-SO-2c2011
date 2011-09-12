@@ -4,6 +4,7 @@
 #include "global.h"
 #include "models/city.h"
 #include "communication/types.h"
+#include "communication/msgqueue.h"
 
 struct DestinationsMessage {
     enum MessageType type;
@@ -15,4 +16,9 @@ struct DestinationsMessage {
 
 struct DestinationsMessage marshall_give_destinations(int planeId, int count, int* citiesIds, int* distances);
 
+struct Message marshall_send_map_status(double completionPercentage, int citiesSatisfied, int totalCities);
+
+struct Message marshall_send_airline_status(int planesFlying, int totalPlanes, int id);
+
+struct Message marshall_end_output(); 
 #endif

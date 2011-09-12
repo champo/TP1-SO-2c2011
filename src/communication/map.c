@@ -70,3 +70,32 @@ int comm_end(Vector* conns) {
     return 0;
 }
 
+int comm_send_map_status(double completionPercentage, int citiesSatisfied, int totalCities, struct MessageQueue* outputMsgQueue) {
+
+    struct Message msg;
+    msg = marshall_send_map_status(completionPercentage, citiesSatisfied, totalCities);
+
+    message_queue_push(outputMsgQueue, msg);
+
+    return 0;
+}
+
+
+int comm_send_airline_status(int planesFlying, int totalPlanes, int id, struct MessageQueue* outputMsgQueue) {
+
+    struct Message msg;
+    msg = marshall_send_airline_status(planesFlying, totalPlanes, id);
+
+    message_queue_push(outputMsgQueue, msg);
+    return 0;
+}
+
+int comm_end_output(struct MessageQueue* outputMsgQueue) {
+
+    struct Message msg;
+    msg = marshall_end_output();
+
+    message_queue_push(outputMsgQueue, msg);
+    return 0;
+}
+
