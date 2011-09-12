@@ -1,5 +1,5 @@
 #include "utils/vector.h"
-#include "models/theShit.h"
+#include "models/product.h"
 #include "models/city.h"
 #include "models/map.h"
 
@@ -15,14 +15,14 @@ void freeMap(Map* map){
     }
     free(map->matrix);
 
-    counter = getVectorSize(map->theShit);
+    counter = getVectorSize(map->product);
 
     for ( i=0; i<counter; i++){
-        freeTheShit((TheShit*)getFromVector(map->theShit,i));
+        freeProduct((Product*)getFromVector(map->product,i));
     }
 
     destroyVector(map->cities);
-    destroyVector(map->theShit);
+    destroyVector(map->product);
     free(map);
     return;
 }

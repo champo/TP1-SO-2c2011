@@ -1,27 +1,27 @@
-#include "models/theShit.h"
+#include "models/product.h"
 #include <stdlib.h>
 #include "utils/vector.h"
 #include "models/stock.h"
 
-Stock* initStock(char* name, int amount, Vector* theShit) {
+Stock* initStock(char* name, int amount, Vector* product) {
 
     Stock* stock;
     if ((stock = malloc(sizeof(Stock))) == NULL) {
         return NULL;
     }
     stock->amount = amount;
-    stock->theShit = getTheShit(name, theShit); 
+    stock->product = getProduct(name, product);
     return stock;
 }
 
-Stock* initStockById(int theShitId, int amount, Vector* theShit) {
+Stock* initStockById(int productId, int amount, Vector* product) {
 
     Stock* stock;
     if ((stock = malloc(sizeof(Stock))) == NULL) {
         return NULL;
     }
     stock->amount = amount;
-    stock->theShit = getFromVector(theShit, theShitId);  
+    stock->product = getFromVector(product, productId);
     return stock;
 }
 
