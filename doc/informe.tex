@@ -187,8 +187,28 @@ pasa a otros procesos para poder hacer \textit{ipc\_write}. Adicionalmente, se g
 variable estática del módulo para usarla posteriormente en el \textit{ipc\_read}. Se almacena también en el estado global, un \textit{mutex}, destinado a la 
 sincronización de los accesos a ella.\\
 
-
 \subsection{Shared Memory}
+Para la implementacion de Shared Memory utilizamos las funciones POSIX de la familia \texit{mmap}.
+Tambien, es el unico lugar donde se hace uso de un \textit{Named semaphore} POSIX, para sincronizar la inicializacion de la estructura en memoria.
+
+Utilizamos el espacio de memoria compartida para crear una queue donde se almacenan los mensajes enviados.
+A diferencia de los otros mecanismos de IPC, con shared memory es necesario asegurar que las operaciones sean bloqueantes y atomicas.
+Para esto utilizamos un total de 3 semaforos:
+
+\begin{itemize}
+\item Lock con valor inicial 1
+\item Lecturas disponibles con valor inicial 0
+\item Escrituras disponibles con un valor inicial del tamaño de la queue
+\end{itemize}
+
+Al ser este un clasico problema del tipo productor-consumidor, el uso de estos semaforos es relativamente simple.
+Antes de hacer una lectura, se decrementa el semaforo de lecturas disponibles en 1, y luego se adquiere el lock.
+Una vez terminada la lectura, se libera el lock y se incrementa en un 1 el valor de escrituras disponibles.
+
+Para realizar una escritura la estructura es muy parecida.
+Primero se decrementa el semaforo de escrituras en 1.
+Luego se adquiere el lock, se realiza la escritura y una vez terminada se libera el lock.
+Finalmente, se incrementa en 1 el valor del semaforo de lecturas.
 
 \subsection{FIFO}
 Siguiendo con la interfaz propuesta para los IPCs, el objetivo era crear un FIFO por proceso y cualquiera sea el
@@ -203,7 +223,11 @@ debia contar primero con la longitud del mensaje en sí y luego con los datos qu
 que soportar este formato generando la estructura del mensaje final para poder enviar todo en una sola escritura
 asegurando así la atomicidad de la transmisión. También era necesario tener esto en cuenta en el parametro de salida 
 de las funciones de lectura para poder ser consistente con los otros tipos de IPCs.
+
 \subsection{Socket}
+Al necesitar solo una comunicacion unidireccional, optamos por utilizar sockets de dominio UNIX con un protocolo de datagramas.
+Esto se presto a una implementacion muy sencilla, donde cada proceso tiene 2 sockets.
+Uno de ellos se utiliza para hacer lecturas, y otro para las escrituras.
 
 \newpage
 \section{Comunicación}
