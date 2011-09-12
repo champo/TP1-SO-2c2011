@@ -11,8 +11,6 @@
 #define FINAL_LINE_2 3
 #define FINAL_LINE_3 4
 
-static void simple_print(struct MessageQueue* outputMsgQueue, semv_t sem);
-
 void run_output(struct MessageQueue* outputMsgQueue, semv_t sem) {
     
     //REMINDER: mvprintw(row,col,format,...)
@@ -76,32 +74,4 @@ void run_output(struct MessageQueue* outputMsgQueue, semv_t sem) {
     #endif
     endwin();    
     return;
-}
-
-void simple_print(struct MessageQueue* outputMsgQueue, semv_t sem) {
-
-    int turn = 0;
-    struct Message msg;
-
-    while ((msg = message_queue_pop(outputMsgQueue)).type != MessageTypeEndOutput) {
-
-        if (msg.type == MessageTypeMapStatus) {
-            
-            
-            //Print number of turn
-            turn++;
-            
-            //Print map status
-            #ifndef NO_WAIT
-                getchar();
-            #endif
-            ipc_sem_post(sem);
-        } else if (msg.type == MessageTypeAirlineStatus) {
-           
-            
-            //Print airline status
-            
-        }
-    }
-
 }

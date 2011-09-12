@@ -88,7 +88,8 @@ como \textit{threads}. En este debate, también fue importante no forzar la sepa
 fuera un proceso independiente no agregaba nada y generaba mucha complejidad, por lo que se optó por implementarlos como \textit{threads}).\\ 
 
 En un \textbf{primer} análisis, identificamos como potenciales procesos paralelos de nuestro programa al control del flujo principal del programa, a los parsers, 
-al mapa, al \textit{output}, a las aerolíneas y a los aviones. A continuación se puede ver un esquema de este modelo.\\
+al mapa, al \textit{output}, a las aerolíneas y a los aviones. Ya desde un comienzo nos planteamos a estos
+dos últimos como threads de un mismo proceso. A continuación se puede ver un esquema de este modelo.\\
 
 \begin{figure}[H]
 \begin{center}
