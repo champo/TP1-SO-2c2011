@@ -9,9 +9,12 @@
 #define INITIAL_COLUMN 1
 #define FINAL_LINE_1 2
 #define FINAL_LINE_2 3
+#define FINAL_LINE_3 4
+
+static void simple_print(struct MessageQueue* outputMsgQueue, semv_t sem);
 
 void run_output(struct MessageQueue* outputMsgQueue, semv_t sem) {
-
+    
     //REMINDER: mvprintw(row,col,format,...)
     initscr();
     int turn = 0;
@@ -35,8 +38,13 @@ void run_output(struct MessageQueue* outputMsgQueue, semv_t sem) {
                     msg.payload.mapStatus.completionPercentage);
             mvprintw(MAP_LINE_2, INITIAL_COLUMN, "The needs in %d out of %d total cities were already taken care of.",
                     msg.payload.mapStatus.citiesSatisfied, msg.payload.mapStatus.totalCities);
+            #ifndef NO_WAIT
+                mvprintw(maxLine + FINAL_LINE_1, INITIAL_COLUMN, "Turn ended. Press any key to continue.");
+            #endif
             refresh();
-            getchar();
+            #ifndef NO_WAIT
+                getchar();
+            #endif
             ipc_sem_post(sem);
         } else if (msg.type == MessageTypeAirlineStatus) {
            
@@ -58,12 +66,42 @@ void run_output(struct MessageQueue* outputMsgQueue, semv_t sem) {
         }
     }
     
-    mvprintw(maxLine + FINAL_LINE_1, INITIAL_COLUMN, 
-            "The simulation is over! The world is now safe from various diseases!");
     mvprintw(maxLine + FINAL_LINE_2, INITIAL_COLUMN, 
+            "The simulation is over! The world is now safe from various diseases!");
+    mvprintw(maxLine + FINAL_LINE_3, INITIAL_COLUMN, 
             "You must truly be a simulation ninja wizard :D"); 
     refresh();
-    getchar();
+    #ifndef NO_WAIT
+        getchar();
+    #endif
     endwin();    
     return;
+}
+
+void simple_print(struct MessageQueue* outputMsgQueue, semv_t sem) {
+
+    int turn = 0;
+    struct Message msg;
+
+    while ((msg = message_queue_pop(outputMsgQueue)).type != MessageTypeEndOutput) {
+
+        if (msg.type == MessageTypeMapStatus) {
+            
+            
+            //Print number of turn
+            turn++;
+            
+            //Print map status
+            #ifndef NO_WAIT
+                getchar();
+            #endif
+            ipc_sem_post(sem);
+        } else if (msg.type == MessageTypeAirlineStatus) {
+           
+            
+            //Print airline status
+            
+        }
+    }
+
 }
