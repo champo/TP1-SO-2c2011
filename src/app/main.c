@@ -45,7 +45,7 @@ static void start_map(struct MapData* data);
 
 static void start_output(struct OutputData* data); 
 
-static int start_simulation(Map* map, Vector* conns, Vector* airlines, struct MessageQueue* outputMsgQueue);
+static void start_simulation(Map* map, Vector* conns, Vector* airlines);
 
 static int doExit = 0;
 
@@ -66,9 +66,7 @@ int main(int argc, char *argv[]) {
         mprintf_end();
         abort();
     }
-
      
-
     Map* map;
     Vector* airlines = createVector();
     DIR* config = opendir(argv[1]);
@@ -110,9 +108,7 @@ int main(int argc, char *argv[]) {
         addToVector(conns, ipc_establish(path));
     }
 
-    if ( start_simulation(map, conns, airlines, outputMsgQueue) == -1) {
-        
-    }
+    start_simulation(map, conns, airlines); 
 
     mprintf("Broadcasting exit to children\n");
     comm_end(conns);
@@ -155,8 +151,9 @@ void do_map(Map* map, Vector* conns, Vector* airlines, struct MessageQueue* outp
 
     pthread_attr_init(&attr);
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
-
+    mprintf("before do maps pthread create\n");
     pthread_create(&mapThread, &attr, start_map, &data);
+    mprintf("after do maps pthread create\n");
     pthread_join(mapThread, NULL);
 
     pthread_attr_destroy(&attr);
@@ -202,7 +199,7 @@ void run_airlines(Map* map, Vector* airlines) {
 }
 
 
-static int start_simulation(Map* map, Vector* conns, Vector* airlines, struct MessageQueue* outputMsgQueue) {
+static void start_simulation(Map* map, Vector* conns, Vector* airlines) {
     
     pthread_t outputThread;    
     pthread_attr_t attr;
@@ -210,7 +207,7 @@ static int start_simulation(Map* map, Vector* conns, Vector* airlines, struct Me
     
     if ((outputMsgQueue = message_queue_create()) == NULL) {
         mprintf("Output msg queue creation failed... aborting...\n");
-        return -1;
+        return;
     }
     
     struct OutputData data = {
@@ -220,14 +217,19 @@ static int start_simulation(Map* map, Vector* conns, Vector* airlines, struct Me
     pthread_attr_init(&attr);
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
+    mprintf("asasasasasasasasas");
     pthread_create(&outputThread, &attr, start_output, &data);
     
+    mprintf("asasasasasasasasas");
     do_map(map, conns, airlines, outputMsgQueue);
 
+    mprintf("asasasasasasasasas");
     comm_end_output(outputMsgQueue);
-    message_queue_destroy(outputMsgQueue);
-
+    mprintf("asasasasasasasasas");
     pthread_join(outputThread, NULL);
+    
+    message_queue_destroy(outputMsgQueue);
+    
     pthread_attr_destroy(&attr);
 }
 

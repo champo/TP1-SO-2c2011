@@ -324,13 +324,13 @@ int get_map_status(Map* map, int* citiesSatisfied) {
     
     for (size_t i = 0; i < cities; i++) {
         
-        Vector* stocks = getFromVector(map->cities,i);
-        size_t stocksSize = getVectorSize(stocks);
+        City* city  = getFromVector(map->cities, i);
+        size_t stocksSize = getVectorSize(city->stock);
         int cityStockAmount = 0;
 
         for (size_t j = 0; j < stocksSize; j++) {
             
-            Stock* stock = getFromVector(stocks, j);
+            Stock* stock = getFromVector(city->stock, j);
             cityStockAmount += stock->amount;
         }
 
