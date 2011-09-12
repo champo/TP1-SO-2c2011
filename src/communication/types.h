@@ -11,7 +11,15 @@ enum MessageType {
     MessageTypeUnloadStock,
     MessageTypeCheckDestinations,
     MessageTypeEnd,
+    MessageTypeMapStatus,
+    MessageTypeAirlineStatus,
+    MessageTypeEndOutput,
     MessageTypeLast // Do not use and keep always in the end, it's for debugging
 };
 
+struct AirlineStatus {
+    int id;
+    int planesFlying;
+    int totalPlanes;
+};
 #endif

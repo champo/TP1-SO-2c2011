@@ -19,10 +19,10 @@ OBJS=$(filter-out $(OBJDIR)/./ipc/%.o, $(ALL_OBJS)) $(OBJDIR)/./ipc/$(IPC).o
 override CFLAGS +=-I$(SRCDIR) -pedantic -std=c99 -fstrict-aliasing -Wall -Wextra -Wshadow -Wcast-qual \
 	-Wwrite-strings -Wpointer-arith -Wcast-align -Wmissing-prototypes \
 	-Wmissing-declarations -Wredundant-decls -Wnested-externs -Winline \
-	-Wstrict-prototypes -Wunreachable-code 
+	-Wstrict-prototypes -Wunreachable-code
 
 
-override LDFLAGS += -pthread
+override LDFLAGS += -pthread -lcurses
 ifneq ($(APPLE), 1)
 override LDFLAGS += -lrt
 endif

@@ -7,7 +7,8 @@
 #include <pthread.h>
 #include "utils/vector.h"
 #include "models/map.h"
+#include "communication/msgqueue.h"
 
-void runMap(Map* map, Vector* airlines, Vector* conns, int* exitState);
+void runMap(Map* map, Vector* airlines, Vector* conns, int* exitState, struct MessageQueue* outputMessageQueue);
 
 #endif

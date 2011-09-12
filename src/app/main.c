@@ -13,11 +13,12 @@
 #include "models/airline.h"
 #include "app/signal.h"
 #include "app/airline.h"
+#include "app/map.h"
+#include "app/output.h"
 #include "utils/vector.h"
 #include "parser.h"
-#include "app/map.h"
 #include "communication/map.h"
-
+#include "communication/msgqueue.h"
 #include <pthread.h>
 
 #define PARENT_NAME "map_ipc"
@@ -27,16 +28,24 @@ struct MapData {
     Vector* airlines;
     Map* map;
     int* exitState;
-    pthread_mutex_t* exitLock;
+    struct MessageQueue* outputMsgQueue;
+};
+
+struct OutputData {
+    struct MessageQueue* outputMsgQueue;
 };
 
 static void run_airlines(Map* map, Vector* airlines);
 
-static void do_map(Map* map, Vector* conns, Vector* airlines);
+static void do_map(Map* map, Vector* conns, Vector* airlines, struct MessageQueue* outputMSgQueue);
 
 static void handle_signal(void);
 
 static void start_map(struct MapData* data);
+
+static void start_output(struct OutputData* data); 
+
+static int start_simulation(Map* map, Vector* conns, Vector* airlines, struct MessageQueue* outputMsgQueue);
 
 static int doExit = 0;
 
@@ -58,6 +67,7 @@ int main(int argc, char *argv[]) {
         abort();
     }
 
+     
 
     Map* map;
     Vector* airlines = createVector();
@@ -100,7 +110,10 @@ int main(int argc, char *argv[]) {
         addToVector(conns, ipc_establish(path));
     }
 
-    do_map(map, conns, airlines);
+    if ( start_simulation(map, conns, airlines, outputMsgQueue) == -1) {
+        
+    }
+
     mprintf("Broadcasting exit to children\n");
     comm_end(conns);
 
@@ -118,7 +131,7 @@ int main(int argc, char *argv[]) {
         freeAirline(getFromVector(airlines, i));
         ipc_close(getFromVector(conns, i));
     }
-
+    
     destroyVector(conns);
     destroyVector(airlines);
 
@@ -128,7 +141,7 @@ int main(int argc, char *argv[]) {
     mprintf_end();
 }
 
-void do_map(Map* map, Vector* conns, Vector* airlines) {
+void do_map(Map* map, Vector* conns, Vector* airlines, struct MessageQueue* outputMsgQueue) {
 
     pthread_t mapThread;
     pthread_attr_t attr;
@@ -136,7 +149,8 @@ void do_map(Map* map, Vector* conns, Vector* airlines) {
         .map = map,
         .airlines = airlines,
         .conns = conns,
-        .exitState = &doExit
+        .exitState = &doExit,
+        .outputMsgQueue = outputMsgQueue
     };
 
     pthread_attr_init(&attr);
@@ -149,7 +163,7 @@ void do_map(Map* map, Vector* conns, Vector* airlines) {
 }
 
 void start_map(struct MapData* data) {
-    runMap(data->map, data->airlines, data->conns, data->exitState);
+    runMap(data->map, data->airlines, data->conns, data->exitState, data->outputMsgQueue);
 }
 
 void handle_signal(void) {
@@ -187,3 +201,36 @@ void run_airlines(Map* map, Vector* airlines) {
     }
 }
 
+
+static int start_simulation(Map* map, Vector* conns, Vector* airlines, struct MessageQueue* outputMsgQueue) {
+    
+    pthread_t outputThread;    
+    pthread_attr_t attr;
+    struct MessageQueue* outputMsgQueue;
+    
+    if ((outputMsgQueue = message_queue_create()) == NULL) {
+        mprintf("Output msg queue creation failed... aborting...\n");
+        return -1;
+    }
+    
+    struct OutputData data = {
+        .outputMsgQueue = outputMsgQueue
+    };
+
+    pthread_attr_init(&attr);
+    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+
+    pthread_create(&outputThread, &attr, start_output, &data);
+    
+    do_map(map, conns, airlines, outputMsgQueue);
+
+    comm_end_output(outputMsgQueue);
+    message_queue_destroy(outputMsgQueue);
+
+    pthread_join(outputThread, NULL);
+    pthread_attr_destroy(&attr);
+}
+
+void start_output(struct OutputData* data) {
+    run_output(data->outputMsgQueue);
+}

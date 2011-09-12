@@ -18,6 +18,12 @@ union MessagePayload {
         size_t count;
         int delta[MAX_STOCKS];
     } stock;
+    struct {
+        double completionPercentage;
+        int citiesSatisfied;
+        int totalCities;
+    } mapStatus;
+    struct AirlineStatus airlineStatus;
 };
 
 struct Message {
