@@ -171,6 +171,21 @@ Para esto desarrollamos una \textit{Message Queue} utilizando herramientas de si
 
 \subsection{Message Queue}
 
+Esta implementación se basa en las \textit{Message Queues} del estándar POSIX, en vez de las de System V.\\
+
+Por como fue pensada la interfaz, alrededor del concepto de \textit{cola de entrada}, esta implementación fue casi directa, no tuvo grandes complicaciones.
+Una \textit{Message Queue} es simplemente una cola, donde se almacenan unidades, que fueron definidas del tipo \textit{msg\_t}.\\
+
+Cada proceso abre una misma \textit{Message Queue} de entrada, mediante \textit{ipc\_listen} y una de salida, a través de \textit{ipc\_establish}. Esto se realiza 
+con el flag \textit{O\_CREAT} pero sin el flag \textit{O\_EXCL}, para crear las \textit{Message Queues} que no hayan sido creadas con aterioridad, pero no recibir 
+un error si otro proceso ya la creó.\\
+
+El ID de la cola de salida se almacena, junto con un \textit{mutex} asociado para su correcta sincronización, en una estructura de tipo \textit{ipc\_t}, que se 
+pasa a otros procesos para poder hacer \textit{ipc\_write}. Adicionalmente, se guardan el ID y el nombre de la \textit{Message Queue} de entrada, en una 
+variable estática del módulo para usarla posteriormente en el \textit{ipc\_read}. Se almacena también en el estado global, un \textit{mutex}, destinado a la 
+sincronización de los accesos a ella.\\
+
+
 \subsection{Shared Memory}
 
 \subsection{FIFO}
