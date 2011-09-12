@@ -198,8 +198,8 @@ código no es muy elegante.\\
 \section{Output}
 
 Como ya se bien se dijo, le asignamos la responsabilidad de imprimir a pantalla a un \textit{thread} del proceso principal, el \textit{Output}. \\
-Al pensar en esta sección nos dimos cuenta que se podría utilizar tranquilamente la función \texit{printf}, por más que no fuera \texit{thread-safe},
- ya que después de todo solo un \texit{thread} iba a ejecutarla. Pronto, desechamos esa opción por la simple razón de que no queríamos tener que obligar al usuario 
+Al pensar en esta sección nos dimos cuenta que se podría utilizar tranquilamente la función \textit{printf}, por más que no fuera \textit{thread-safe},
+ ya que después de todo solo un \textit{thread} iba a ejecutarla. Pronto, desechamos esa opción por la simple razón de que no queríamos tener que obligar al usuario 
 de la aplicación a scrollear la pantalla.\\
 
 
@@ -225,6 +225,12 @@ por distintos \textit{threads} los que les da un cierto grado de independencia, 
 con la sincronizacíon. Mientras que un simple \textit{lock} de un \textit{mutex} en la mayoría de los casos era lo único que se debía hacer para sincronizar 
 \textit{threads}, para procesos se requirió el uso de técnicas más avanzadas como semáforos.
 
+Por otra parte, fue muy interesante durante el desarrollo de la aplicación los conocimientos adquiridos sobre \textit{deadlocks}.
+Si bien al comenzar, estos eran un problema que nos costaba mucho identificar. Con el tiempo y la experiencia nos vimos mas comodos
+a la hora de prevenir \textit{deadlocks} e inclusive a la hora de darnos cuenta que estabamos cayendo en uno. Por la naturaleza de este
+problema es imposible salir de un \textit{deadlocks} y por eso es que es necesario ser cuidadoso a la hora de escribir el
+código y prevenirlos lo más posible.
+
 Una vez terminado el trabajo, surgió la pregunta de cual era la implementación de IPC más rápida. Como nos dimos cuenta más tarde, esto no es tan fácil de determinar. 
 Esto se debe a que el rendimiento de cada implementación varía dependiendo de la ejecución debido al procesamiento paralelo, el cual no es determínistico. 
 Es decir, no siempre se reproduce exactamente la misma ejecución dadas las mismas condiciones iniciales. \\
@@ -245,7 +251,8 @@ Nº & Ciudades & Aerolineas & Aviones \\
 \end{center}
 \end{table}
 
-Usando estas 4 simulaciones, procedimos a tomar el tiempo de ejecución de 100 iteraciones consecutivas de cada simulación.
+Usando estas 4 simulaciones, procedimos a tomar el tiempo promedio de una ejecución al realizar 100 iteraciones consecutivas de cada simulación.
+Cabe aclarar que estas simulaciones fueron ejecutadas con un \textit{output} minimo, minimizando así sus tiempos.
 
 \begin{figure}[H]
 \begin{center}
