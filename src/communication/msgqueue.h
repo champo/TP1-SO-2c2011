@@ -19,7 +19,7 @@ union MessagePayload {
         int delta[MAX_STOCKS];
     } stock;
     struct {
-        double completionPercentage;
+        float completionPercentage;
         int citiesSatisfied;
         int totalCities;
     } mapStatus;
