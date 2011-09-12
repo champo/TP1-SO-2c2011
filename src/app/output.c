@@ -38,11 +38,11 @@ void run_output(struct MessageQueue* outputMsgQueue, semv_t sem) {
                     msg.payload.mapStatus.completionPercentage);
             mvprintw(MAP_LINE_2, INITIAL_COLUMN, "The needs in %d out of %d total cities were already taken care of.",
                     msg.payload.mapStatus.citiesSatisfied, msg.payload.mapStatus.totalCities);
-            #ifndef NO_WAIT
+            #ifdef WAIT
                 mvprintw(maxLine + FINAL_LINE_1, INITIAL_COLUMN, "Turn ended. Press any key to continue.");
             #endif
             refresh();
-            #ifndef NO_WAIT
+            #ifdef WAIT
                 getchar();
             #endif
             ipc_sem_post(sem);
@@ -71,7 +71,7 @@ void run_output(struct MessageQueue* outputMsgQueue, semv_t sem) {
     mvprintw(maxLine + FINAL_LINE_3, INITIAL_COLUMN, 
             "You must truly be a simulation ninja wizard :D"); 
     refresh();
-    #ifndef NO_WAIT
+    #ifdef WAIT
         getchar();
     #endif
     endwin();    
