@@ -51,12 +51,18 @@ static int doExit = 0;
 
 int main(int argc, char *argv[]) {
 
-    if (argc != 2) {
-        printf("Usage: %s configFolder\n", argv[0]);
+    char* logFile = NULL;
+    if (argc < 2) {
+        printf("Usage: %s configFolder [logFile]\n", argv[0]);
+        printf("Pass - as logFile to log to stdout\n");
         exit(0);
     }
 
-    if (!mprintf_init()) {
+    if (argc > 2) {
+        logFile = argv[2];
+    }
+
+    if (!mprintf_init(logFile)) {
         printf("Init failed... aborting...\n");
         abort();
     }

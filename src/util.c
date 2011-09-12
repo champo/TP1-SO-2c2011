@@ -14,6 +14,8 @@
 
 static semv_t printLock = -1;
 
+static FILE* log;
+
 #define lock { \
     perform_lock(); \
     pthread_cleanup_push(perform_unlock, NULL);
@@ -34,7 +36,18 @@ void perform_unlock(void* u) {
     ipc_sem_post(printLock);
 }
 
-int mprintf_init(void) {
+int mprintf_init(char* file) {
+
+    if (file == NULL) {
+        log = NULL;
+    } else {
+        if (strcmp(file, "-") == 0) {
+            log = stdout;
+        } else {
+            log = fopen(file, "w");
+        }
+    }
+
     printLock = ipc_sem_create(1);
     return printLock != -1;
 }
@@ -42,15 +55,16 @@ int mprintf_init(void) {
 int mprintf(const char* format, ...) {
     va_list ap;
     int res;
-#ifndef DEBUG
-    return 0;
-#endif
+
+    if (log == NULL) {
+        return 0;
+    }
 
     lock
         va_start(ap, format);
-        printf("(%d) ", getpid());
-        res = vprintf(format, ap);
-        fflush(stdout);
+        fprintf(log, "(%d) ", getpid());
+        res = vfprintf(log, format, ap);
+        fflush(log);
         va_end(ap);
     unlock
 
@@ -58,6 +72,11 @@ int mprintf(const char* format, ...) {
 }
 
 void mprintf_end(void) {
+
+    if (log != NULL && log != stdout) {
+        fclose(log);
+    }
+
     ipc_sem_destroy(printLock);
     printLock = 0;
 }
@@ -77,7 +96,7 @@ void print_trace(void) {
 
     lock
         for (i = 0; i < size; i++) {
-            printf("(%d) %s\n", getpid(), strings[i]);
+            fprintf(log, "(%d) %s\n", getpid(), strings[i]);
         }
     unlock
 
@@ -89,9 +108,9 @@ void print_error(const char* format, ...) {
 
     lock
         va_start(ap, format);
-        printf("(%d) {ERR} ", getpid());
-        vprintf(format, ap);
-        fflush(stdout);
+        fprintf(log, "(%d) {ERR} ", getpid());
+        vfprintf(log, format, ap);
+        fflush(log);
         va_end(ap);
     unlock
 }
@@ -102,8 +121,8 @@ void print_errno(const char* tag) {
         char buff[512];
         res = strerror_r(errno, buff, 511);
         buff[511] = 0;
-        printf("(%d) {ERR} %s: %s\n", getpid(), tag, buff);
-        fflush(stdout);
+        printf(log, "(%d) {ERR} %s: %s\n", getpid(), tag, buff);
+        fflush(log);
     unlock
 }
 
