@@ -1,0 +1,37 @@
+  /_\  _ __ __ ___   _____ _ __   __ _  ___ _ __ ___ 
+ //_\\| '__/ _` \ \ / / _ \ '_ \ / _` |/ _ \ '__/ __|
+/  _  \ | | (_| |\ V /  __/ | | | (_| |  __/ |  \__ \
+\_/ \_/_|  \__, | \_/ \___|_| |_|\__, |\___|_|  |___/
+              |_|                |___/               
+
+Hi folks, this is yet another quality release by the Arqvengers!
+
+Featuring a handy dandy Makefile that supports the following targets:
+ - clean: Remove all generated files
+ - debug: Create a debug build for use with gdb
+ - release: Build an optimized binary
+Also, there's several flags that can be used to modify the final binary:
+ - IPC=[fifo|mqueue|socket|shmem]: Choose what IPC method is used, defaults to socket
+ - CFLAGS: Several preprocessor flags can be used to change the way the output mechanism behaves.
+
+Preprocessor flags:
+ - NO_CURSES: Disable the ncurses output module
+ - WAIT: Wait for user input to advance a turn
+ - DEBUG: Some debug info is printed to stdout (In sensitive places that could cause deadlocks if the logging facilities are used)
+ - VERBOSE: Add a whole lotta extra debug output, and I do mean a whole lot.
+
+For example, if you wanted to build a release build without curses and using shared memory you would do:
+cd src ; make clean release IPC=shmem CFLAGS="-DNO_CURSES"
+
+We've also got command line parameters:
+./sim configFolder [logFile]
+- configFolder: The location of the configuration files folder
+- logFile: Optionally, output logs to logFile. If logFile is "-" the output is done to stdout.
+
+
+"Is this all?" you're gonna be asking by now, and the answer is no.
+We also have a benchmarking and a test script.
+These do several consecutive executions of the simulation using all available configurations.
+One times those executions, the other checks the log output for errors, handy isnt it?
+
+One final extra: fifo, shared memory & socket all work on OS X Leopard.
