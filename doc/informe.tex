@@ -188,6 +188,20 @@ Y los aviones que recién descargaron, eligen su próximo destino y parten inmed
 
 \subsection{Lógica del avión}
 
+Una parte importante de la simulación es la lógica del avión. Esto es, como el avión ``elije'' su próximo destino. Un avión que se dirige a una ciudad en donde no 
+podrá descargar nada, representa una pérdida de recursos y de tiempo de ejecución.\\
+
+Inicialmente, nuestros aviones simplemente elegían uno de los destinos posibles que le fueran útiles, es decir a donde pudiera contribuir con algo de su stock, 
+aleatoriamente. Es claro que, el avión no puede ``generar'' estos destinos posibles sino que debe recibirlos del mapa, por la restricción de que un avión no 
+conoce el estado del mapa, ni el de los demás aviones.\\
+
+Más tarde, implementamos una lógica más compleja. En ella, el avión recibía una lista de destinos en los que hubiera necesidad de las drogas que él poseía, 
+ordenados por un paŕametro clave: la \textit{distancia}. De esta forma, el avión simplemente escogía siempre el primer destino, el que se encontraba más cerca, y 
+se evitaban casos que reducían la perfomance. Por ejemplo, dos aviones con cargas similares, en ``puntas'' opuestas del mapa, cruzan ambos todo el mapa para ir a una 
+ciudad en la otra punta, cuando podrían ir cada uno a la ciudad que se encuentra en su ``punta`` del mapa.\\
+
+Es verdad que no hace falta que el avión reciba una lista de destinos, pudiendo recibir sólo el destino más cercano. Se decidió optar por la lista, pensando en futuras
+implementaciones, con algoritmos más complejos.
 
 \newpage
 \section{Archivos de Configuración}
@@ -245,16 +259,16 @@ con la sincronizacíon. Mientras que un simple \textit{lock} de un \textit{mutex
 \textit{threads}, para procesos se requirió el uso de técnicas más avanzadas como semáforos.
 
 Por otra parte, fue muy interesante durante el desarrollo de la aplicación los conocimientos adquiridos sobre \textit{deadlocks}.
-Si bien al comenzar, estos eran un problema que nos costaba mucho identificar. Con el tiempo y la experiencia nos vimos mas comodos
-a la hora de prevenir \textit{deadlocks} e inclusive a la hora de darnos cuenta que estabamos cayendo en uno. Por la naturaleza de este
-problema es imposible salir de un \textit{deadlocks} y por eso es que es necesario ser cuidadoso a la hora de escribir el
+Si bien al comenzar, estos eran un problema que nos costaba mucho identificar. Con el tiempo y la experiencia nos vimos mas cómodos
+a la hora de prevenir \textit{deadlocks} e inclusive a la hora de darnos cuenta que estábamos cayendo en uno. Por la naturaleza de este
+problema es imposible salir de un \textit{deadlock} y por eso es que es necesario ser cuidadoso a la hora de escribir el
 código y prevenirlos lo más posible.
 
 Una vez terminado el trabajo, surgió la pregunta de cual era la implementación de IPC más rápida. Como nos dimos cuenta más tarde, esto no es tan fácil de determinar. 
 Esto se debe a que el rendimiento de cada implementación varía dependiendo de la ejecución debido al procesamiento paralelo, el cual no es determínistico. 
 Es decir, no siempre se reproduce exactamente la misma ejecución dadas las mismas condiciones iniciales. \\
 
-Para observar la perfomance de la aplicacion, utilizamos 4 simulaciones distintas:
+Para observar la perfomance de la aplicación, utilizamos 4 simulaciones distintas:
 
 \begin{table}[H]
 \begin{center}
