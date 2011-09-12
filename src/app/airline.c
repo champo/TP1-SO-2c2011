@@ -107,7 +107,7 @@ void listen(Vector* threads) {
                 redirect_stock_message(threads, &msg);
                 break;
             default:
-                if (msg.type >= MessageTypeLast || msg.type < 0) {
+                if (msg.type >= MessageTypeLast) {
                     print_error("Got invalid message type on airline listen\n");
                 }
                 return;
