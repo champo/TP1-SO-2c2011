@@ -23,6 +23,8 @@ static void redirect_stock_message(Vector* threads, union MapMessage* in);
 
 static void start_phase(Vector* threads, struct Message msg);
 
+static void send_ready_message(void);
+
 static pthread_mutex_t planesLeftLock = PTHREAD_MUTEX_INITIALIZER;
 
 static int exitState = 0;
@@ -177,7 +179,7 @@ void start_phase(Vector* threads, struct Message msg) {
     mprintf("Setting planes left to %d\n", planesLeftInStage);
 
     if (planesLeftInStage == 0) {
-        comm_airline_ready(ipcConn);
+        send_ready_message();
     } else {
         broadcast(threads, msg);
     }
@@ -191,23 +193,27 @@ void app_airline_plane_ready(void) {
     planesLeftInStage--;
     mprintf("Plane ready, %d left\n", planesLeftInStage);
     if (planesLeftInStage == 0 && exitState != 1) {
-
-        if (stage == 1) {
-
-            int flying = 0;
-            for (size_t i = 0; i < me->numberOfPlanes; i++) {
-                struct PlaneThread* thread = getFromVector(planeThreads, i);
-                if (!thread->done) {
-                    flying++;
-                }
-            }
-
-            comm_airline_status(ipcConn, me->id, flying, me->numberOfPlanes);
-        } else {
-            comm_airline_ready(ipcConn);
-        }
+        send_ready_message();
     }
 
     pthread_mutex_unlock(&planesLeftLock);
+}
+
+void send_ready_message(void) {
+
+    if (stage == 1) {
+
+        int flying = 0;
+        for (size_t i = 0; i < me->numberOfPlanes; i++) {
+            struct PlaneThread* thread = getFromVector(planeThreads, i);
+            if (!thread->done) {
+                flying++;
+            }
+        }
+
+        comm_airline_status(ipcConn, me->id, flying, me->numberOfPlanes);
+    } else {
+        comm_airline_ready(ipcConn);
+    }
 }
 

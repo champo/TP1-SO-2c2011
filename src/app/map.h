@@ -6,9 +6,10 @@
 
 #include <pthread.h>
 #include "utils/vector.h"
+#include "utils/sem.h"
 #include "models/map.h"
 #include "communication/msgqueue.h"
 
-void runMap(Map* map, Vector* airlines, Vector* conns, int* exitState, struct MessageQueue* outputMessageQueue);
+void runMap(Map* map, Vector* airlines, Vector* conns, int* exitState, struct MessageQueue* outputMessageQueue, semv_t outputSem);
 
 #endif

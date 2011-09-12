@@ -16,6 +16,7 @@
 #include "app/map.h"
 #include "app/output.h"
 #include "utils/vector.h"
+#include "utils/sem.h"
 #include "parser.h"
 #include "communication/map.h"
 #include "communication/msgqueue.h"
@@ -29,15 +30,17 @@ struct MapData {
     Map* map;
     int* exitState;
     struct MessageQueue* outputMsgQueue;
+    semv_t outputSem;
 };
 
 struct OutputData {
     struct MessageQueue* outputMsgQueue;
+    semv_t sem;
 };
 
 static void run_airlines(Map* map, Vector* airlines);
 
-static void do_map(Map* map, Vector* conns, Vector* airlines, struct MessageQueue* outputMSgQueue);
+static void do_map(Map* map, Vector* conns, Vector* airlines, struct MessageQueue* outputMSgQueue, semv_t outputSem);
 
 static void handle_signal(void);
 
@@ -143,7 +146,7 @@ int main(int argc, char *argv[]) {
     mprintf_end();
 }
 
-void do_map(Map* map, Vector* conns, Vector* airlines, struct MessageQueue* outputMsgQueue) {
+void do_map(Map* map, Vector* conns, Vector* airlines, struct MessageQueue* outputMsgQueue, semv_t outputSem) {
 
     pthread_t mapThread;
     pthread_attr_t attr;
@@ -153,7 +156,8 @@ void do_map(Map* map, Vector* conns, Vector* airlines, struct MessageQueue* outp
         .airlines = airlines,
         .conns = conns,
         .exitState = &doExit,
-        .outputMsgQueue = outputMsgQueue
+        .outputMsgQueue = outputMsgQueue,
+        .outputSem = outputSem
     };
 
     pthread_attr_init(&attr);
@@ -166,7 +170,7 @@ void do_map(Map* map, Vector* conns, Vector* airlines, struct MessageQueue* outp
 }
 
 void start_map(struct MapData* data) {
-    runMap(data->map, data->airlines, data->conns, data->exitState, data->outputMsgQueue);
+    runMap(data->map, data->airlines, data->conns, data->exitState, data->outputMsgQueue, data->outputSem);
 }
 
 void handle_signal(void) {
@@ -210,14 +214,20 @@ static void start_simulation(Map* map, Vector* conns, Vector* airlines) {
     pthread_t outputThread;    
     pthread_attr_t attr;
     struct MessageQueue* outputMsgQueue;
-    
+    semv_t outputSem;    
+
     if ((outputMsgQueue = message_queue_create()) == NULL) {
         mprintf("Output msg queue creation failed... aborting...\n");
         return;
     }
+    if((outputSem = ipc_sem_create(1)) == -1) {
+        mprintf("Output semaphore creation failed... aborting...\n");
+        return;
+    }
     
     struct OutputData data = {
-        .outputMsgQueue = outputMsgQueue
+        .outputMsgQueue = outputMsgQueue,
+        .sem = outputSem
     };
 
     pthread_attr_init(&attr);
@@ -225,16 +235,16 @@ static void start_simulation(Map* map, Vector* conns, Vector* airlines) {
 
     pthread_create(&outputThread, &attr, start_output, &data);
     
-    do_map(map, conns, airlines, outputMsgQueue);
+    do_map(map, conns, airlines, outputMsgQueue, outputSem);
 
     comm_end_output(outputMsgQueue);
     pthread_join(outputThread, NULL);
     
     message_queue_destroy(outputMsgQueue);
-    
+    ipc_sem_destroy(outputSem); 
     pthread_attr_destroy(&attr);
 }
 
 void start_output(struct OutputData* data) {
-    run_output(data->outputMsgQueue);
+    run_output(data->outputMsgQueue, data->sem);
 }

@@ -90,6 +90,9 @@ void print_trace(void) {
 #ifndef VERBOSE
     return;
 #endif
+    if (log == NULL) {
+        return 0;
+    }
 
     size = backtrace(array, 10);
     strings = backtrace_symbols(array, size);
@@ -106,6 +109,9 @@ void print_trace(void) {
 void print_error(const char* format, ...) {
     va_list ap;
 
+    if (log == NULL) {
+        return 0;
+    }
     lock
         va_start(ap, format);
         fprintf(log, "(%d) {ERR} ", getpid());
@@ -121,8 +127,8 @@ void print_errno(const char* tag) {
         char buff[512];
         res = strerror_r(errno, buff, 511);
         buff[511] = 0;
-        printf(log, "(%d) {ERR} %s: %s\n", getpid(), tag, buff);
-        fflush(log);
+        printf(log ? log : stderr, "(%d) {ERR} %s: %s\n", getpid(), tag, buff);
+        fflush(log ? log : stderr);
     unlock
 }
 

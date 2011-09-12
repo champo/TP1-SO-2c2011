@@ -36,7 +36,7 @@ static int get_map_status(Map* map, int* citiesSatisfied);
 
 
 
-void runMap(Map* map, Vector* airlines, Vector* conns, int* exitState, struct MessageQueue* outputMsgQueue) {
+void runMap(Map* map, Vector* airlines, Vector* conns, int* exitState, struct MessageQueue* outputMsgQueue, semv_t outputSem) {
 
     int i, airlinesize;
     unsigned int turn = 0;
@@ -45,13 +45,14 @@ void runMap(Map* map, Vector* airlines, Vector* conns, int* exitState, struct Me
     int airlineId;
     int totalStockAmount = get_map_status(map, NULL);
 
-    send_map_status(map, totalStockAmount, outputMsgQueue);
     send_airlines_status(airlines, outputMsgQueue);
+    send_map_status(map, totalStockAmount, outputMsgQueue);
 
     airlinesize = getVectorSize(airlines);
 
     while (*exitState == 0 && endSimulation(map, turn) == CONTINUE_SIM) {
-
+        
+        ipc_sem_wait(outputSem);
         mprintf("Doing turn %d\n", turn++);
         comm_turn_step(conns);
 
@@ -79,8 +80,6 @@ void runMap(Map* map, Vector* airlines, Vector* conns, int* exitState, struct Me
         mprintf("Sending continue\n");
         comm_turn_continue(conns);
 
-        send_map_status(map, totalStockAmount, outputMsgQueue);
-
         i = 0;
         while (i != airlinesize) {
             comm_get_map_message(&msg);
@@ -104,6 +103,7 @@ void runMap(Map* map, Vector* airlines, Vector* conns, int* exitState, struct Me
         //mprintf("Turn ended.. Press a key to continue...\n");
         //getchar();
         mprintf("------------------------------------------------------------------\n");
+        send_map_status(map, totalStockAmount, outputMsgQueue);
     }
 
     if (*exitState == 0) {
@@ -307,7 +307,7 @@ int send_map_status(Map* map, int totalStockAmount, struct MessageQueue* outputM
     int totalCities = getVectorSize(map->cities);
     int currentStockAmount = get_map_status(map, &citiesSatisfied);
 
-    completionPercentage = (currentStockAmount / (double)totalStockAmount) * 100;
+    completionPercentage = ((totalStockAmount - currentStockAmount) / (double)totalStockAmount) * 100;
     comm_send_map_status(completionPercentage, citiesSatisfied, totalCities, outputMsgQueue);
 
     return 0;
