@@ -44,15 +44,19 @@ void runMap(Map* map, Vector* airlines, Vector* conns, int* exitState, struct Me
     Plane plane;
     int airlineId;
     int totalStockAmount = get_map_status(map, NULL);
-
-    send_airlines_status(airlines, outputMsgQueue);
-    send_map_status(map, totalStockAmount, outputMsgQueue);
+    
+    #ifndef NO_CURSES
+        send_airlines_status(airlines, outputMsgQueue);
+        send_map_status(map, totalStockAmount, outputMsgQueue);
+    #endif
 
     airlinesize = getVectorSize(airlines);
 
     while (*exitState == 0 && endSimulation(map, turn) == CONTINUE_SIM) {
         
-        ipc_sem_wait(outputSem);
+        #ifndef NO_CURSES
+            ipc_sem_wait(outputSem);
+        #endif
         mprintf("Doing turn %d\n", turn++);
         comm_turn_step(conns);
 
@@ -85,10 +89,12 @@ void runMap(Map* map, Vector* airlines, Vector* conns, int* exitState, struct Me
             comm_get_map_message(&msg);
             if (msg.type == MessageTypeAirlineStatus) {
                 i++;
-                int planesFlying = msg.airlineStatus.status.planesFlying;
-                int totalPlanes = msg.airlineStatus.status.totalPlanes;
-                int id = msg.airlineStatus.status.id;
-                comm_send_airline_status(planesFlying, totalPlanes, id, outputMsgQueue);
+                #ifndef NO_CURSES
+                    int planesFlying = msg.airlineStatus.status.planesFlying;
+                    int totalPlanes = msg.airlineStatus.status.totalPlanes;
+                    int id = msg.airlineStatus.status.id;
+                    comm_send_airline_status(planesFlying, totalPlanes, id, outputMsgQueue);
+                #endif
 
             } else if (msg.type == MessageTypeCheckDestinations) {
                 airlineId = msg.stockState.header.airline;
@@ -103,7 +109,9 @@ void runMap(Map* map, Vector* airlines, Vector* conns, int* exitState, struct Me
         //mprintf("Turn ended.. Press a key to continue...\n");
         //getchar();
         mprintf("------------------------------------------------------------------\n");
-        send_map_status(map, totalStockAmount, outputMsgQueue);
+        #ifndef NO_CURSES
+            send_map_status(map, totalStockAmount, outputMsgQueue);
+        #endif
     }
 
     if (*exitState == 0) {

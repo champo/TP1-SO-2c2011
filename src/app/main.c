@@ -225,24 +225,30 @@ static void start_simulation(Map* map, Vector* conns, Vector* airlines) {
         return;
     }
     
-    struct OutputData data = {
-        .outputMsgQueue = outputMsgQueue,
-        .sem = outputSem
-    };
+    #ifndef NO_CURSES
+        struct OutputData data = {
+            .outputMsgQueue = outputMsgQueue,
+            .sem = outputSem
+        };
 
-    pthread_attr_init(&attr);
-    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+        pthread_attr_init(&attr);
+        pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
-    pthread_create(&outputThread, &attr, start_output, &data);
+        pthread_create(&outputThread, &attr, start_output, &data);
+    #endif
     
     do_map(map, conns, airlines, outputMsgQueue, outputSem);
-
-    comm_end_output(outputMsgQueue);
-    pthread_join(outputThread, NULL);
+    
+    #ifndef NO_CURSES
+        comm_end_output(outputMsgQueue);
+        pthread_join(outputThread, NULL);
+    #endif
     
     message_queue_destroy(outputMsgQueue);
     ipc_sem_destroy(outputSem); 
-    pthread_attr_destroy(&attr);
+    #ifndef NO_CURSES
+        pthread_attr_destroy(&attr);
+    #endif
 }
 
 void start_output(struct OutputData* data) {
