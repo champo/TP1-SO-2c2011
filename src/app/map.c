@@ -84,12 +84,12 @@ void runMap(Map* map, Vector* airlines, Vector* conns, int* exitState, struct Me
         i = 0;
         while (i != airlinesize) {
             comm_get_map_message(&msg);
-            if (msg.type == MessageTypeAirlineDone) {
+            if (msg.type == MessageTypeAirlineStatus) {
                 i++;
-                //int planesFlying = msg.airlineStatus.planesFlying;
-                //int totalPlanes = msg.airlineStatus.totalPlanes;
-                //int id = msg.airlineStatus.id;
-                //comm_send_airline_status(planesFlying, totalPlanes, id, outputMsgQueue);
+                int planesFlying = msg.airlineStatus.planesFlying;
+                int totalPlanes = msg.airlineStatus.totalPlanes;
+                int id = msg.airlineStatus.id;
+                comm_send_airline_status(planesFlying, totalPlanes, id, outputMsgQueue);
 
             } else if (msg.type == MessageTypeCheckDestinations) {
                 airlineId = msg.stockState.header.airline;
