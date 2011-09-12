@@ -5,7 +5,7 @@
 
 int mprintf(const char* format, ...);
 
-int mprintf_init(void);
+int mprintf_init(char* file);
 
 void mprintf_end(void);
 
