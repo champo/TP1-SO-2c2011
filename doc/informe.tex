@@ -160,6 +160,29 @@ Es un diseño muy parecido al de una Message Queue.
 Cada proceso interesado en recibir mensajes, define un nombre unico con el cual indentificarse a la hora de leer mensajes.
 Otros procesos pueden escribir mensajes a cualquier otro proceso siempre y cuando sepan bajo que nombre escucha ese proceso.
 
+A la hora de probar que nuestras implementaciones funcionaran correctamente, nos encontramos con que no resulta simple construir un test para esto.
+La naturaleza azaroza de la ejecucion de un programa multiproceso hace que un test tenga que contener muchas pruebas.
+Aun mas, es necesario correr este test un gran numero de veces, ya que una sola ejecucion no necesariamente significa que no hay errores.
+
+Ademas de comunicacion entre procesos, necesitabamos una manera segura de enviar mensajes entre threads.
+Para esto desarrollamos una Message Queue utilizando herramientas de sincronizacion provistas por pthreads.
+
+\newpage
+\section{Comunicacion}
+Es importante notar que la capa de comunicacion esta diseñada para abstraer lo mas posible de quien la usa, que la comunicacion se realiza en manera asincronica.
+Esto es, cuando se envia un mensaje que debe recibir una respuesta como consecuencia, la misma funcion de comunicacion se encarga de enviarlo, y de esperar la respuesta.
+Lo que permite que al mirar la logica de un avion, no sea posible darse cuenta de que es un thread corriendo de manera independiente del mapa y la aerolinea.
+Por supuesto que esto no siempre fue posible, y en ciertos lugares de la logica de la simulacion es aparente que esta corre en diferentes procesos, con multiples threads cada uno.
+
+\newpage
+\section{Logica de la simulacion}
+Para realizar la simulacion en si, comenzamos por definir como un turno de la simulacion, el tiempo que tarda un avion en viajar una unidad de distancia.
+Ademas, como especificado, en un mismo turno un avion puede llegar a una ciudad, descargar su stock, y finalmente partir hacia otra ciudad.
+
+Sabiendo esto, optamos por dividir el turno en 2 partes.
+En la primera parte, los aviones que acaban de llegar a una ciudad, descargan su stock.
+En la segunda parte, los aviones en transito hacen su movimiento de una unidad de distancia.
+Y los aviones que recien descargaron, eligen su proximo destino y parten inmediatamente hacia el.
 
 \newpage
 \section{Problemas encontrados(???)}
@@ -170,11 +193,6 @@ implementar nuestra propia estructura, \textit{Vector}. Esto probó ser muy úti
 
 Otro problema con el formato de los archivos de configuración, fue que los límites de las ``iteraciones'' se marcaban con líneas en blanco, y al parecer hay problemas al querer leer el 
 $\backslash n$ con $fscanf$. Para lidiar con esta situación, recurrimos a la única solución que encontramos, aunque en términos de código no es muy elegante.\\
-
-Otro problema encontrado, se relaciona con el testeo. Una vez implementadas las 4 implementaciones de la interfaz de IPC, diseñamos un pequeño test inicial, para detectar fallas en una 
-etapa temprana. El test no era del todo básico, pero tampoco era muy agresivo. En ese momento, nos concentramos en que las implementaciones efectivamente funcionaran (comunicaran
- procesos). Al no haber hecho un test más exhaustivo, a la hora de testear la aplicación completa como un todo, surguieron algunos pequeños problemas relacionados con la 
- comunicación entre procesos que nuestro test inicial no había logrado detectar.\\
 
 \newpage
 \section{Conclusiones}
