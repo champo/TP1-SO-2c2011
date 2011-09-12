@@ -173,17 +173,27 @@ la respuesta. Lo que permite que al mirar la lógica de un avión, no sea posibl
  con múltiples \textit{threads} cada uno.
 
 \newpage
-\section{Logica de la simulación}
-Para realizar la simulación en si, comenzamos por definir como un turno de la simulación, el tiempo que tarda un avión en viajar una unidad de distancia.
+\section{Lógica de la simulación}
+Para realizar la simulación en sí, comenzamos por definir como un turno de la simulación, el tiempo que tarda un avión en viajar una unidad de distancia.
 Además, como se nos fue especificado, en un mismo turno un avión puede llegar a una ciudad, descargar su stock, y finalmente partir hacia otra ciudad.
 
 Sabiendo esto, optamos por dividir el turno en 2 partes.
-En la primera parte, los aviones que acaban de llegar a una ciudad, descargan su stock.
-En la segunda parte, los aviones en tránsito hacen su movimiento de una unidad de distancia.
+\begin{enumerate}
+  \item los aviones que acaban de llegar a una ciudad, descargan su stock.
+  \item los aviones en tránsito hacen su movimiento de una unidad de distancia.
+\end{enumerate}
+
 Y los aviones que recién descargaron, eligen su próximo destino y parten inmediatamente hacia él.
+
+\subsection{Lógica del avión}
+
 
 \newpage
 \section{Archivos de Configuración}
+
+Los archivos de configuración, nos ayudaron a la hora de armar las estructuras de datos en las que almacenaríamos posteriormente toda la información que la 
+aplicación requería. Una de las cosas que nos hizo ver anticipadamente, fue el hecho de que, para evitar \textit{redundancia de información}, podíamos tener 
+una colección de las drogas, y que las estructuras almacenen solamente \textit{referencias} a ellas. 
 
 Uno de los primeros problemas con los que nos topamos, fue el hecho de que los archivos de configuración de los cuales la aplicación debía levantar la información,
  tenían un formato bastante díficil para trabajar con el lenguaje C. Al no contar con una estructura que pueda ir agregando elementos a una colección y cambiando 
@@ -198,11 +208,19 @@ código no es muy elegante.\\
 \section{Output}
 
 Como ya se bien se dijo, le asignamos la responsabilidad de imprimir a pantalla a un \textit{thread} del proceso principal, el \textit{Output}. \\
+
 Al pensar en esta sección nos dimos cuenta que se podría utilizar tranquilamente la función \textit{printf}, por más que no fuera \textit{thread-safe},
  ya que después de todo solo un \textit{thread} iba a ejecutarla. Pronto, desechamos esa opción por la simple razón de que no queríamos tener que obligar al usuario 
-de la aplicación a scrollear la pantalla.\\
+de la aplicación a scrollear la pantalla. Por esta razón pensamos en tener un \\textit{layout} estático e ir actualizando la pantalla.\\
+Para lograr este objetivo, decicidimos utilizar librería \textit{ncurses}, la cual nos facilitó el trabajo a la hora de imprimir la información en un sector específico
+de la pantalla y de actualizarla.\\
 
+Para comunicar a este \textit{thread} con el mapa, utilizamos la estructura \textit{Message Queue} que implementamos, de forma similar al uso que le dimos 
+para comunicar a los \textit{avión} con la aerolínea.\\
 
+De nuevo, se presentó el problema de la sincronización, en este caso con el mapa, ya que es claro que las operaciones relacionadas con la pantalla consumen más 
+tiempo. No nos pareció correcto que haya un desfasaje entre el \textit{Output} y el mapa. Es decir, que en pantalla se muestre la información del turno 12, 
+cuando el mapa en realidad va por el turno 23. Por esta razón, utilizamos un semáforo para resolver este problema y lograr una correcta sincronización.
 
 \newpage
 \section{Conclusiones}
@@ -240,14 +258,14 @@ Para observar la perfomance de la aplicacion, utilizamos 4 simulaciones distinta
 \begin{table}[H]
 \begin{center}
 \begin{tabular}{l|l|l|l}
-Nº & Ciudades & Aerolineas & Aviones \\
+Nº & Ciudades & Aerolíneas & Aviones \\
 \hline
 1 & 5 & 2 & 8 \\
 2 & 5 & 1 & 3 \\
 3 & 10 & 10 & 40 \\
 4 & 50 & 10 & 50 \\
 \end{tabular}
-\caption{Caracteristicas de las simulacions}
+\caption{Características de las simulaciones}
 \end{center}
 \end{table}
 
@@ -267,7 +285,7 @@ Aunque, como puede observarse, para las primeras simulaciones, las menos intensi
 tener mejores tiempos. Después de analizar los datos, nuestra explicación es que, en esos casos el mayor \textit{overhead} que tienen las implementaciones como 
 \textit{socket} y \textit{shared memory}, hacen que sus tiempos de ejecución sean levemente mayores. 
 Pero, para simulaciones más intensivas, como por ejemplo la número 4, ese \textit{overhead} se torna despreciable, revelando los resultados que se observan en 
-el gráfico: esas implementaciones terminan siendo más rápidas.\\
+el gráfico: esas implementaciones terminan siendo más rápidas para problemas más complejos.\\
 
 \newpage     
 \section{Referencias}
