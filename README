@@ -31,6 +31,8 @@ We've also got command line parameters:
 - configFolder: The location of the configuration files folder
 - logFile: Optionally, output logs to logFile. If logFile is "-" the output is done to stdout.
 
+Regarding config files, we expect the config folder to have a file named "map" with the map info.
+And one file per airline calle "airline_n" where n is the number for that airline, starting at 0.
 
 "Is this all?" you're gonna be asking by now, and the answer is no.
 We also have a benchmarking and a test script.
