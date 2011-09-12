@@ -46,11 +46,13 @@ static void handle_signal(void);
 
 static void start_map(struct MapData* data);
 
-static void start_output(struct OutputData* data); 
+static void start_output(struct OutputData* data);
 
 static void start_simulation(Map* map, Vector* conns, Vector* airlines);
 
 static int doExit = 0;
+
+static pthread_t outputThread;
 
 int main(int argc, char *argv[]) {
 
@@ -75,7 +77,7 @@ int main(int argc, char *argv[]) {
         mprintf_end();
         abort();
     }
-     
+
     Map* map;
     Vector* airlines = createVector();
     DIR* config = opendir(argv[1]);
@@ -117,7 +119,7 @@ int main(int argc, char *argv[]) {
         addToVector(conns, ipc_establish(path));
     }
 
-    start_simulation(map, conns, airlines); 
+    start_simulation(map, conns, airlines);
 
     mprintf("Broadcasting exit to children\n");
     comm_end(conns);
@@ -136,7 +138,7 @@ int main(int argc, char *argv[]) {
         freeAirline(getFromVector(airlines, i));
         ipc_close(getFromVector(conns, i));
     }
-    
+
     destroyVector(conns);
     destroyVector(airlines);
 
@@ -150,7 +152,7 @@ void do_map(Map* map, Vector* conns, Vector* airlines, struct MessageQueue* outp
 
     pthread_t mapThread;
     pthread_attr_t attr;
-    
+
     struct MapData data = {
         .map = map,
         .airlines = airlines,
@@ -162,7 +164,7 @@ void do_map(Map* map, Vector* conns, Vector* airlines, struct MessageQueue* outp
 
     pthread_attr_init(&attr);
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
-    
+
     pthread_create(&mapThread, &attr, start_map, &data);
     pthread_join(mapThread, NULL);
 
@@ -174,6 +176,10 @@ void start_map(struct MapData* data) {
 }
 
 void handle_signal(void) {
+#ifdef WAIT
+    pthread_kill(outputThread, SIGUSR2);
+#endif
+
     doExit = 1;
 }
 
@@ -210,11 +216,10 @@ void run_airlines(Map* map, Vector* airlines) {
 
 
 static void start_simulation(Map* map, Vector* conns, Vector* airlines) {
-    
-    pthread_t outputThread;    
+
     pthread_attr_t attr;
     struct MessageQueue* outputMsgQueue;
-    semv_t outputSem;    
+    semv_t outputSem;
 
     if ((outputMsgQueue = message_queue_create()) == NULL) {
         mprintf("Output msg queue creation failed... aborting...\n");
@@ -224,7 +229,7 @@ static void start_simulation(Map* map, Vector* conns, Vector* airlines) {
         mprintf("Output semaphore creation failed... aborting...\n");
         return;
     }
-    
+
     #ifndef NO_CURSES
         struct OutputData data = {
             .outputMsgQueue = outputMsgQueue,
@@ -236,16 +241,16 @@ static void start_simulation(Map* map, Vector* conns, Vector* airlines) {
 
         pthread_create(&outputThread, &attr, start_output, &data);
     #endif
-    
+
     do_map(map, conns, airlines, outputMsgQueue, outputSem);
-    
+
     #ifndef NO_CURSES
         comm_end_output(outputMsgQueue);
         pthread_join(outputThread, NULL);
     #endif
-    
+
     message_queue_destroy(outputMsgQueue);
-    ipc_sem_destroy(outputSem); 
+    ipc_sem_destroy(outputSem);
     #ifndef NO_CURSES
         pthread_attr_destroy(&attr);
     #endif

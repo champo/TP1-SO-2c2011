@@ -15,10 +15,13 @@ Also, there's several flags that can be used to modify the final binary:
  - CFLAGS: Several preprocessor flags can be used to change the way the output mechanism behaves.
 
 Preprocessor flags:
- - NO_CURSES: Disable the ncurses output module
- - WAIT: Wait for user input to advance a turn
+ - NO_CURSES: Disable the ncurses output module.
+ - WAIT: Wait for user input to advance a turn (See note below).
  - DEBUG: Some debug info is printed to stdout (In sensitive places that could cause deadlocks if the logging facilities are used)
  - VERBOSE: Add a whole lotta extra debug output, and I do mean a whole lot.
+
+When using WAIT, trying to kill the app with a signal will result in rather strange behaviour.
+This is, after sending a signal like SIGINT, the app may wait for one last user input before exiting, due to the nature of getchar.
 
 For example, if you wanted to build a release build without curses and using shared memory you would do:
 cd src ; make clean release IPC=shmem CFLAGS="-DNO_CURSES"

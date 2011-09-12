@@ -29,9 +29,9 @@ for level in $(seq 1 4); do
             exit
         fi
 
-        biatch=`grep "biatch" out/sim`
+        biatch=`grep "Done bro" out/sim`
         if [[ -z $biatch ]]; then
-            echo "Didnt find a biatch signaling end..."
+            echo "Didnt find a Done bro signaling end..."
             exit
         fi
 
