@@ -138,7 +138,8 @@ Para estas 4 capas optamos por desviarnos un poco del modelo, e implementamos la
 
 \newpage
 \section{Transporte}
-Uno de los objetivos impuestos era utilizar diversos métodos de comunicación entre procesos.
+Uno de los objetivos impuestos era utilizar diversos métodos de comunicación entre procesos, \textit{Message Queues}, \textit{Sockets}, \textit{Shared Memory} y
+\textit{FIFOs}.
 La consecuencia natural fue desarrollar una capa de Transporte que soportara todas estas implementaciones.
 Para esto diseñamos una interfaz común a todos los métodos de \textit{IPC}.
 
@@ -164,6 +165,17 @@ Aún más, es necesario correr este test un gran número de veces, ya que una so
 
 Además de comunicación entre procesos, necesitabamos una manera segura de enviar mensajes entre \textit{threads}.
 Para esto desarrollamos una \textit{Message Queue} utilizando herramientas de sincronización provistas por pthreads.
+
+\newpage
+\section{IPCs}
+
+\subsection{Message Queue}
+
+\subsection{Shared Memory}
+
+\subsection{FIFO}
+
+\subsection{Socket}
 
 \newpage
 \section{Comunicación}
@@ -316,7 +328,7 @@ Cabe aclarar que estas simulaciones fueron ejecutadas con un \textit{output} min
 \end{figure}
 
 En base a estos datos, pudimos concluir que en general la de \textit{shared memory} es la implementación con mejores tiempos, seguido de la de \textit{socket}. 
-Aunque, como puede observarse, para las primeras simulaciones, las menos intensivas, las implementaciones de \textit{message queues} y \textit{fifos} parecen 
+Aunque, como puede observarse, para las primeras simulaciones, las menos intensivas, las implementaciones de \textit{message queues} y \textit{FIFOs} parecen 
 tener mejores tiempos. Después de analizar los datos, nuestra explicación es que, en esos casos el mayor \textit{overhead} que tienen las implementaciones como 
 \textit{socket} y \textit{shared memory}, hacen que sus tiempos de ejecución sean levemente mayores. 
 Pero, para simulaciones más intensivas, como por ejemplo la número 4, ese \textit{overhead} se torna despreciable, revelando los resultados que se observan en 
