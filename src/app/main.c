@@ -141,6 +141,7 @@ void do_map(Map* map, Vector* conns, Vector* airlines, struct MessageQueue* outp
 
     pthread_t mapThread;
     pthread_attr_t attr;
+    
     struct MapData data = {
         .map = map,
         .airlines = airlines,
@@ -151,9 +152,8 @@ void do_map(Map* map, Vector* conns, Vector* airlines, struct MessageQueue* outp
 
     pthread_attr_init(&attr);
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
-    mprintf("before do maps pthread create\n");
+    
     pthread_create(&mapThread, &attr, start_map, &data);
-    mprintf("after do maps pthread create\n");
     pthread_join(mapThread, NULL);
 
     pthread_attr_destroy(&attr);
@@ -217,15 +217,11 @@ static void start_simulation(Map* map, Vector* conns, Vector* airlines) {
     pthread_attr_init(&attr);
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
-    mprintf("asasasasasasasasas");
     pthread_create(&outputThread, &attr, start_output, &data);
     
-    mprintf("asasasasasasasasas");
     do_map(map, conns, airlines, outputMsgQueue);
 
-    mprintf("asasasasasasasasas");
     comm_end_output(outputMsgQueue);
-    mprintf("asasasasasasasasas");
     pthread_join(outputThread, NULL);
     
     message_queue_destroy(outputMsgQueue);
