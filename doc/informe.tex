@@ -168,13 +168,26 @@ Para esto desarrollamos una \textit{Message Queue} utilizando herramientas de si
 
 \newpage
 \section{IPCs}
-
+Como ya fue mencionado en la sección anterior las interfaces de los distintos tipos de IPCs eran iguales.
+Sin embargo, las implementaciones fueron muy diferentes, y a la hora de escribir el código cada uno trajo
+distintos tipos de problemas. El objetivo de esta sección es detallar los diferentes tipos de IPCs.
 \subsection{Message Queue}
 
 \subsection{Shared Memory}
 
 \subsection{FIFO}
+Siguiendo con la interfaz propuesta para los IPCs, el objetivo era crear un FIFO por proceso y cualquiera sea el
+mensaje que se quiera transmitir, escribirlo en el FIFO del proceso receptor. Para esto, es necesario que todos los
+procesos (los que esrcriben y el que lee) tengan coordinado un nombre que sera el codigo de este FIFO. Así,
+al establecer una conección o al registrarse a la misma era necesario crear el FIFO tomando las precauciones necesarias
+para que si el mismo ya existiese no se pise el archivo previo. Cabe destacar que los archivos FIFOS eran creado en
+la carpeta \textit{temp} ya que su naturaleza es de ser archivos temporales. \\
 
+Por otra parte, a la hora de escribir mensajes, habia que tener en cuenta que en un mismo mensaje en un FIFO, el mismo
+debia contar primero con la longitud del mensaje en sí y luego con los datos que se deseaban transportar. Así, hubo
+que soportar este formato generando la estructura del mensaje final para poder enviar todo en una sola escritura
+asegurando así la atomicidad de la transmisión. También era necesario tener esto en cuenta en el parametro de salida 
+de las funciones de lectura para poder ser consistente con los otros tipos de IPCs.
 \subsection{Socket}
 
 \newpage
