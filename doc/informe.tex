@@ -284,9 +284,9 @@ Experimentamos con varios modelos para lograr esto, muchos de los cuales no vamo
 Pero basicamente el problema que todas intentaban solucionar era como despertarse correctamente de acciones bloqueantes.
 
 Es muy comun que durante la ejecucion mas de un thread este bloqueado esperando poder hacer una lectura, o una escritura.
-En un principio, optamos por utilizar \textit{pthread_cancel} para terminar \textit{threads}, sin importar si fueron bloqueados o no.
+En un principio, optamos por utilizar \textit{pthread\_cancel} para terminar \textit{threads}, sin importar si fueron bloqueados o no.
 Pero rapidamente descubrimos que esto tenia la consecuencia de dejar ciertos \textit{locks} y \textit{semaforos} en un estado incorrecto.
-Consecuentemente, la aplicacion no siempre terminaba, y muchas veces ocurria un \textit{deadlock}.
+Consecuentemente, la aplicacion no siempre terminaba, y muchas veces ocurria un \textit{deadlock}.\\
 
 Luego de intentar muchas maneras de terminar forzamente la aplicacion, optamos por que al recibir una señal, la terminacion no fuera inmediata.
 Sino, la señal activa un flag que en ciertos puntos de la aplicacion causa que esta comienze su ciclo normal de terminacion.
