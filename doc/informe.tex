@@ -82,14 +82,13 @@ comunicación de procesos (IPC) y manejar con autoridad el \textit{filesystem} d
 \newpage
 \section{Esquema de la aplicación}
 
-A la hora de encarar el problema en cuestión, una de las primeras cosas a plantearse era el diseño de la aplicación. Dada la naturaleza y los objetivos planteados para este
- trabajo práctico, era necesario poder identificar que partes de nuestra simulación serian modeladas como procesos y cuales tenía coherencia implementarlas como \textit{threads}.
-  En este debate, también fue importante no forzar la separación de procesos cuando el problema no lo requería (por ejemplo que cada avión fuera un proceso independiente no agregaba 
-  nada y generaba mucha complejidad, por lo que se optó por implementarlos como \textit{threads}).\\ 
+A la hora de encarar el problema en cuestión, una de las primeras cosas a plantearse era el diseño de la aplicación. Dada la naturaleza y los objetivos planteados 
+para este trabajo práctico, era necesario poder identificar que partes de nuestra simulación serían modeladas como procesos y cuales tenía coherencia implementarlas 
+como \textit{threads}. En este debate, también fue importante no forzar la separación de procesos cuando el problema no lo requería (por ejemplo que cada avión 
+fuera un proceso independiente no agregaba nada y generaba mucha complejidad, por lo que se optó por implementarlos como \textit{threads}).\\ 
 
-En un primer análisis, identificamos como potenciales procesos paralelos de nuestro programa al control del flujo principal del programa, a los parsers, al mapa, al \textit{output},
- a las aerolineas y
- a los aviones. A continuación se puede ver un esquema de este modelo.\\
+En un \textbf{primer} análisis, identificamos como potenciales procesos paralelos de nuestro programa al control del flujo principal del programa, a los parsers, 
+al mapa, al \textit{output}, a las aerolíneas y a los aviones. A continuación se puede ver un esquema de este modelo.\\
 
 \begin{figure}[H]
 \begin{center}
@@ -99,17 +98,15 @@ En un primer análisis, identificamos como potenciales procesos paralelos de nue
 \end{center}
 \end{figure}
 
-
  Luego de cierto debate, vimos que la relación entre el flujo principal, los parsers, el \textit{output} y el mapa era demasiado fuerte, pues, 
- la combinación de estas tres cosas iban a 
- controlar el flujo de la simulación en sí. Inclusive, estas partes tenian una secuencia bastante marcada. Así, se decidió que estos elementos que originalmente bien podrían haber 
- sido planteado como procesos paralelos, era más intuitivo y coherente escribirlo como uno solo.
- Finalmente, el mapa y el \textit{output} fueron implementados como threads del proceso principal ya que si bien su relación es fuerte, nos resulto coherente
-  que ambos puedan estar ejecutandose paralelamente. \\
+ la combinación de estas tres cosas iban a controlar el flujo de la simulación en sí. Inclusive, estas partes tenían una secuencia bastante marcada. Así, se 
+decidió que estos elementos que originalmente bien podrían haber sido planteado como procesos paralelos, era más intuitivo y coherente escribirlo como uno solo.
+ Finalmente, el mapa y el \textit{output} fueron implementados como \textit{threads} del proceso principal ya que, si bien su relación es fuerte, nos resultó 
+coherente que ambos puedan estar ejecutándose paralelamente.\\
 
-Dado que las aerolineas son independientes entre si, ya que cada una desconoce la existencia de las demas, resulta intuitivo que cada aerolinea ejecute en un proceso dedicado.
-Como cada avion es un entidad independiente, pero a la vez es conciente de al existencia del resto de los aviones de su flota, resulta logico que sean threads dentro del proceso de su aerolinea.
-Esto nos permite compartir facilmente la informacion que sea necesaria entre aviones, y entre estos y la aerolinea.
+Dado que las aerolíneas son independientes entre sí, ya que cada una desconoce la existencia de las demás, resulta intuitivo que cada aerolínea ejecute en un 
+proceso dedicado. Como cada avión es un entidad independiente, pero a la vez es conciente de al existencia del resto de los aviones de su flota, resulta lógico 
+que sean \textit{threads} dentro del proceso de su aerolínea. Esto nos permite compartir fácilmente la información entre estos y la aerolínea.
 
 \begin{figure}[H]
 \begin{center}
@@ -123,11 +120,11 @@ Esto nos permite compartir facilmente la informacion que sea necesaria entre avi
 \section{Modelo OSI}
 
 El modelo OSI es un modelo que estandariza la forma de diseñar un programa y como comunicar diferentes programas. 
-Este modelo divide una aplicacion en 7 capas, donde cada capa se comunica solo con la capa "debajo".
-Esto permite una clara separacion de responsabilidades, llevando a un codigo limpio y facilmente entedible por cualquier familiarizado con el modelo.
+Este modelo divide una aplicación en 7 capas, donde cada capa se comunica solo con la capa "debajo".
+Esto permite una clara separación de responsabilidades, llevando a un código limpio y fácilmente entedible por cualquier familiarizado con el modelo.
 
-El sistema operativo ya provee funcionalidades compatibles con el modelo OSI, con lo cual nuestra implementacion se concierne solo con las 4 capas superiores del modelo.
-Para estas 4 capas optamos por desviarnos un poco del modelo, e implementamos las capas de sesion y presentacion en una sola, que llamamos capa de comunicacion.
+El sistema operativo ya provee funcionalidades compatibles con el modelo OSI, con lo cual a nuestra implementación le concierne sólo las 4 capas superiores del modelo.
+Para estas 4 capas optamos por desviarnos un poco del modelo, e implementamos las capas de sesión y presentación en una sola, que llamamos capa de comunicación.
 
 \begin{figure}[H]
 \begin{center}
@@ -140,59 +137,72 @@ Para estas 4 capas optamos por desviarnos un poco del modelo, e implementamos la
 
 \newpage
 \section{Transporte}
-Uno de los objetivos impuestos era utilizar diversos metodos de comunicacion entre procesos.
+Uno de los objetivos impuestos era utilizar diversos métodos de comunicación entre procesos.
 La consecuencia natural fue desarrollar una capa de Transporte que soportara todas estas implementaciones.
-Para esto diseñamos una interfaz comun a todos los metodos de \textit{IPC}.
+Para esto diseñamos una interfaz común a todos los métodos de \textit{IPC}.
 
-Durante el proceso de diseño de la interfaz, pasamos por varios diseños (e implementacion de los mismos) que resultaron deficientes y fueron descartados.
-Nuestro primer diseño se baso fuertemente en el comportamiento de la funcion \textit{pipe}, ya que parecia ser la manera mas simple.
-O sea, el canal de comunicacion entre 2 procesos se establecia antes de hacer una llamda a \textit{fork}.
-Este diseño presenta varias deficiencias, entre ellas que no permite que 2 procesos que no tengan una relacion padre-hijo se comuniquen.
-Si bien dado el diseño de nuestra aplicacion esta restriccion es aceptable, detalles de la implementacion complicaban el uso de esta interfaz.
+Durante el proceso de diseño de la interfaz, pasamos por varios diseños (e implementación de los mismos) que resultaron deficientes y fueron descartados.
+Nuestro primer diseño se basó fuertemente en el comportamiento de la función \textit{pipe}, ya que parecía ser la manera más simple.
+O sea, el canal de comunicación entre 2 procesos se establecía antes de hacer una llamda a \textit{fork}.
+Este diseño presenta varias deficiencias, entre ellas que no permite que 2 procesos que no tengan una relación padre-hijo se comuniquen.
+Si bien dado el diseño de nuestra aplicación, esta restricción es aceptable, detalles de la implementación complicaban el uso de esta interfaz.
 Consecuentemente, por estas complicaciones y limitaciones, optamos por descartar esta interfaz.
 
-Antes de tomar la decision final, evaluamos el uso de una comunicacion bidireccional, donde una conexion permite la salida y entrada de mensajes, o unidireccional.
-La comunicacion bidireccional, presentaba la complicacion de necesitar una funcion analoga a \textit{select}.
-La implementacion de esta funcion resulto no ser trivial para Shared Memory y Message Queues.
-Esto llevo a que descartemos este diseño y nos llevo a nuestro diseño final, una comunicacion unidireccional.
+Antes de tomar la decisión final, evaluamos el uso de una comunicación bidireccional, donde una conexión permite la salida y entrada de mensajes, o unidireccional.
+La comunicación bidireccional, presentaba la complicación de necesitar una función análoga a \textit{select}.
+La implementación de esta función resultó no ser trivial para \textit{Shared Memory} y \textit{Message Queues}.
+Esto llevó a que descartemos este diseño y nos llevó a nuestro diseño final, una comunicación unidireccional.
 
-Es un diseño muy parecido al de una Message Queue.
-Cada proceso interesado en recibir mensajes, define un nombre unico con el cual indentificarse a la hora de leer mensajes.
+Es un diseño muy parecido al de una \textit{Message Queue}.
+Cada proceso interesado en recibir mensajes, define un nombre único con el cual indentificarse a la hora de leer mensajes.
 Otros procesos pueden escribir mensajes a cualquier otro proceso siempre y cuando sepan bajo que nombre escucha ese proceso.
 
 A la hora de probar que nuestras implementaciones funcionaran correctamente, nos encontramos con que no resulta simple construir un test para esto.
-La naturaleza azaroza de la ejecucion de un programa multiproceso hace que un test tenga que contener muchas pruebas.
-Aun mas, es necesario correr este test un gran numero de veces, ya que una sola ejecucion no necesariamente significa que no hay errores.
+La naturaleza azaroza de la ejecución de un programa multiproceso hace que un test tenga que contener muchas pruebas.
+Aún más, es necesario correr este test un gran número de veces, ya que una sola ejecución no necesariamente significa que no hay errores.
 
-Ademas de comunicacion entre procesos, necesitabamos una manera segura de enviar mensajes entre threads.
-Para esto desarrollamos una Message Queue utilizando herramientas de sincronizacion provistas por pthreads.
-
-\newpage
-\section{Comunicacion}
-Es importante notar que la capa de comunicacion esta diseñada para abstraer lo mas posible de quien la usa, que la comunicacion se realiza en manera asincronica.
-Esto es, cuando se envia un mensaje que debe recibir una respuesta como consecuencia, la misma funcion de comunicacion se encarga de enviarlo, y de esperar la respuesta.
-Lo que permite que al mirar la logica de un avion, no sea posible darse cuenta de que es un thread corriendo de manera independiente del mapa y la aerolinea.
-Por supuesto que esto no siempre fue posible, y en ciertos lugares de la logica de la simulacion es aparente que esta corre en diferentes procesos, con multiples threads cada uno.
+Además de comunicación entre procesos, necesitabamos una manera segura de enviar mensajes entre \textit{threads}.
+Para esto desarrollamos una \textit{Message Queue} utilizando herramientas de sincronización provistas por pthreads.
 
 \newpage
-\section{Logica de la simulacion}
-Para realizar la simulacion en si, comenzamos por definir como un turno de la simulacion, el tiempo que tarda un avion en viajar una unidad de distancia.
-Ademas, como especificado, en un mismo turno un avion puede llegar a una ciudad, descargar su stock, y finalmente partir hacia otra ciudad.
+\section{Comunicación}
+Es importante notar que la capa de comunicación esta diseñada para abstraer lo más posible a quien la usa y que la comunicación se realiza en manera asincrónica.
+Esto es, cuando se envía un mensaje que debe recibir una respuesta como consecuencia, la misma función de comunicación se encarga de enviarlo, y de esperar 
+la respuesta. Lo que permite que al mirar la lógica de un avión, no sea posible darse cuenta de que es un \textit{thread} corriendo de manera independiente del mapa y
+ la aerolínea. Por supuesto que esto no siempre fue posible, y en ciertos lugares de la lógica de la simulación es aparente que esta corre en diferentes procesos,
+ con múltiples \textit{threads} cada uno.
+
+\newpage
+\section{Logica de la simulación}
+Para realizar la simulación en si, comenzamos por definir como un turno de la simulación, el tiempo que tarda un avión en viajar una unidad de distancia.
+Además, como se nos fue especificado, en un mismo turno un avión puede llegar a una ciudad, descargar su stock, y finalmente partir hacia otra ciudad.
 
 Sabiendo esto, optamos por dividir el turno en 2 partes.
 En la primera parte, los aviones que acaban de llegar a una ciudad, descargan su stock.
-En la segunda parte, los aviones en transito hacen su movimiento de una unidad de distancia.
-Y los aviones que recien descargaron, eligen su proximo destino y parten inmediatamente hacia el.
+En la segunda parte, los aviones en tránsito hacen su movimiento de una unidad de distancia.
+Y los aviones que recién descargaron, eligen su próximo destino y parten inmediatamente hacia él.
 
 \newpage
-\section{Problemas encontrados(???)}
+\section{Archivos de Configuración}
 
-Uno de los primeros problemas con los que nos topamos, fue el hecho de que los archivos de configuración de los cuales la aplicación debía levantar la información, tenían un formato
-bastante díficil para trabajar con el lenguaje C. Al no contar con una estructura que pueda ir agregando elementos a una colección y cambiando de tamaño dinámicamente, debimos 
-implementar nuestra propia estructura, \textit{Vector}. Esto probó ser muy útil más adelante ya que la utilizamos en otros sectores del programa.\\
+Uno de los primeros problemas con los que nos topamos, fue el hecho de que los archivos de configuración de los cuales la aplicación debía levantar la información,
+ tenían un formato bastante díficil para trabajar con el lenguaje C. Al no contar con una estructura que pueda ir agregando elementos a una colección y cambiando 
+de tamaño dinámicamente, debimos implementar nuestra propia estructura, \textit{Vector}. Esto probó ser muy útil más adelante, ya que la utilizamos en otros sectores 
+del programa.\\
 
-Otro problema con el formato de los archivos de configuración, fue que los límites de las ``iteraciones'' se marcaban con líneas en blanco, y al parecer hay problemas al querer leer el 
-$\backslash n$ con $fscanf$. Para lidiar con esta situación, recurrimos a la única solución que encontramos, aunque en términos de código no es muy elegante.\\
+Otro problema con el formato de los archivos de configuración, fue que los límites de las ``iteraciones'' se marcaban con líneas en blanco, y al parecer hay 
+problemas al querer leer el $\backslash n$ con $fscanf$. Para lidiar con esta situación, recurrimos a la única solución que encontramos, aunque en términos de 
+código no es muy elegante.\\
+
+\newpage
+\section{Output}
+
+Como ya se bien se dijo, le asignamos la responsabilidad de imprimir a pantalla a un \textit{thread} del proceso principal, el \textit{Output}. \\
+Al pensar en esta sección nos dimos cuenta que se podría utilizar tranquilamente la función \texit{printf}, por más que no fuera \texit{thread-safe},
+ ya que después de todo solo un \texit{thread} iba a ejecutarla. Pronto, desechamos esa opción por la simple razón de que no queríamos tener que obligar al usuario 
+de la aplicación a scrollear la pantalla.\\
+
+
 
 \newpage
 \section{Conclusiones}
@@ -209,11 +219,11 @@ hecho de de esta forma, la experiencia adquirida y el aprendizaje resulta mucho 
 \end{itemize}
 
 Con respecto al uso de \textit{threads}  y procesos, nos topamos con una fuerte diferencia entre utilizar unos y otros. Por ejemplo, el uso de variables globales 
-en un \textit{thread} debe ser llevado a cabo con mucho cuidado, ya que el estado global, o \textit{Data Segment}, es compartido por los demás \textit{threads} del mismo
-proceso. Esto no es así con los procesos, cuyo estado global es propio y solo visible a ellos mismos. Por suerte, el \textit{stack} no es compartido por distintos \textit{threads}
-los que les da un cierto grado de independencia, para que realicen distinas tareas. Otra diferencia que notamos, tiene que ver con la sincronizacíon. Mientras que un
-simple \textit{lock} de un \textit{mutex} en la mayoría de los casos era lo único que se debía hacer para sincronizar \textit{threads}, para procesos se requirió el uso
-de técnicas más avanzadas como semáforos.
+en un \textit{thread} debe ser llevado a cabo con mucho cuidado, ya que el estado global, o \textit{Data Segment}, es compartido por los demás \textit{threads} 
+del mismo proceso. Esto no es así con los procesos, cuyo estado global es propio y solo visible a ellos mismos. Por suerte, el \textit{stack} no es compartido 
+por distintos \textit{threads} los que les da un cierto grado de independencia, para que realicen distinas tareas. Otra diferencia que notamos, tiene que ver 
+con la sincronizacíon. Mientras que un simple \textit{lock} de un \textit{mutex} en la mayoría de los casos era lo único que se debía hacer para sincronizar 
+\textit{threads}, para procesos se requirió el uso de técnicas más avanzadas como semáforos.
 
 Una vez terminado el trabajo, surgió la pregunta de cual era la implementación de IPC más rápida. Como nos dimos cuenta más tarde, esto no es tan fácil de determinar. 
 Esto se debe a que el rendimiento de cada implementación varía dependiendo de la ejecución debido al procesamiento paralelo, el cual no es determínistico. 
@@ -235,7 +245,7 @@ Nº & Ciudades & Aerolineas & Aviones \\
 \end{center}
 \end{table}
 
-Usando estas 4 simulaciones, procedimos a tomar el tiempo de ejecucion de 100 iteraciones consecutivas de cada simulacion.
+Usando estas 4 simulaciones, procedimos a tomar el tiempo de ejecución de 100 iteraciones consecutivas de cada simulación.
 
 \begin{figure}[H]
 \begin{center}
@@ -245,11 +255,12 @@ Usando estas 4 simulaciones, procedimos a tomar el tiempo de ejecucion de 100 it
 \end{center}
 \end{figure}
 
-En base a estos datos, pudimos concluir que en general la de \textit{shared memory} es la implementación con mejores tiempos, seguido de la de \textit{socket}. Aunque,
-como puede observarse, para las primeras simulaciones, las menos intensivas, las implementaciones de \textit{message queues} y \textit{fifos} parecen tener mejores tiempos. 
-Después de analizar los datos, nuestra explicación es que, en esos casos el mayor \textit{overhead} que tienen las implementaciones como \textit{socket} y 
-\textit{shared memory}, hacen que sus tiempos de ejecución sean levemente mayores. 
-Pero, para simulaciones más intensivas, como por ejemplo la número 4, ese \textit{overhead} se torna despreciable, revelando los resultados que se observan en el gráfico: esas implementaciones terminan siendo más rápidas.\\
+En base a estos datos, pudimos concluir que en general la de \textit{shared memory} es la implementación con mejores tiempos, seguido de la de \textit{socket}. 
+Aunque, como puede observarse, para las primeras simulaciones, las menos intensivas, las implementaciones de \textit{message queues} y \textit{fifos} parecen 
+tener mejores tiempos. Después de analizar los datos, nuestra explicación es que, en esos casos el mayor \textit{overhead} que tienen las implementaciones como 
+\textit{socket} y \textit{shared memory}, hacen que sus tiempos de ejecución sean levemente mayores. 
+Pero, para simulaciones más intensivas, como por ejemplo la número 4, ese \textit{overhead} se torna despreciable, revelando los resultados que se observan en 
+el gráfico: esas implementaciones terminan siendo más rápidas.\\
 
 \newpage     
 \section{Referencias}
