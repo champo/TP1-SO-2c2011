@@ -52,7 +52,6 @@ void register_signal_handlers(void) {
     break;
 
 void signal_handler(int sig) {
-    printf("Dude WTF\n");
     // Things just go boom
 #ifdef DEBUG
     switch (sig) {
@@ -75,9 +74,6 @@ void signal_handler(int sig) {
             break;
         case SIGCHLD:
             printf("Caught signal SIGCHLD\n");
-            break;
-        case 7:
-            printf("Hell.\n");
             break;
         default:
             printf("Caught signal %d\n", sig);
