@@ -168,7 +168,9 @@ Para esto desarrollamos una \textit{Message Queue} utilizando herramientas de si
 
 \newpage
 \section{IPCs}
-
+Como ya fue mencionado en la sección anterior las interfaces de los distintos tipos de IPCs eran iguales.
+Sin embargo, las implementaciones fueron muy diferentes, y a la hora de escribir el código cada uno trajo
+distintos tipos de problemas. El objetivo de esta sección es detallar los diferentes tipos de IPCs.
 \subsection{Message Queue}
 
 Esta implementación se basa en las \textit{Message Queues} del estándar POSIX, en vez de las de System V.\\
@@ -189,7 +191,18 @@ sincronización de los accesos a ella.\\
 \subsection{Shared Memory}
 
 \subsection{FIFO}
+Siguiendo con la interfaz propuesta para los IPCs, el objetivo era crear un FIFO por proceso y cualquiera sea el
+mensaje que se quiera transmitir, escribirlo en el FIFO del proceso receptor. Para esto, es necesario que todos los
+procesos (los que esrcriben y el que lee) tengan coordinado un nombre que sera el codigo de este FIFO. Así,
+al establecer una conección o al registrarse a la misma era necesario crear el FIFO tomando las precauciones necesarias
+para que si el mismo ya existiese no se pise el archivo previo. Cabe destacar que los archivos FIFOS eran creado en
+la carpeta \textit{temp} ya que su naturaleza es de ser archivos temporales. \\
 
+Por otra parte, a la hora de escribir mensajes, habia que tener en cuenta que en un mismo mensaje en un FIFO, el mismo
+debia contar primero con la longitud del mensaje en sí y luego con los datos que se deseaban transportar. Así, hubo
+que soportar este formato generando la estructura del mensaje final para poder enviar todo en una sola escritura
+asegurando así la atomicidad de la transmisión. También era necesario tener esto en cuenta en el parametro de salida 
+de las funciones de lectura para poder ser consistente con los otros tipos de IPCs.
 \subsection{Socket}
 
 \newpage
@@ -263,6 +276,26 @@ para comunicar a los \textit{avión} con la aerolínea.\\
 De nuevo, se presentó el problema de la sincronización, en este caso con el mapa, ya que es claro que las operaciones relacionadas con la pantalla consumen más 
 tiempo. No nos pareció correcto que haya un desfasaje entre el \textit{Output} y el mapa. Es decir, que en pantalla se muestre la información del turno 12, 
 cuando el mapa en realidad va por el turno 23. Por esta razón, utilizamos un semáforo para resolver este problema y lograr una correcta sincronización.
+
+\newpage
+\section{Manejo de señales}
+Realizar un buen manejo de señales que permita que la aplicacion termine de manera limpia al recibir una señal de terminacion no fue tarea facil.
+Experimentamos con varios modelos para lograr esto, muchos de los cuales no vamos a mencionar.
+Pero basicamente el problema que todas intentaban solucionar era como despertarse correctamente de acciones bloqueantes.
+
+Es muy comun que durante la ejecucion mas de un thread este bloqueado esperando poder hacer una lectura, o una escritura.
+En un principio, optamos por utilizar \textit{pthread_cancel} para terminar \textit{threads}, sin importar si fueron bloqueados o no.
+Pero rapidamente descubrimos que esto tenia la consecuencia de dejar ciertos \textit{locks} y \textit{semaforos} en un estado incorrecto.
+Consecuentemente, la aplicacion no siempre terminaba, y muchas veces ocurria un \textit{deadlock}.
+
+Luego de intentar muchas maneras de terminar forzamente la aplicacion, optamos por que al recibir una señal, la terminacion no fuera inmediata.
+Sino, la señal activa un flag que en ciertos puntos de la aplicacion causa que esta comienze su ciclo normal de terminacion.
+Esto es, como si la simulacion hubiera terminado correctamente, y no fuera el producto de una señal.
+Si bien esto permitio solucionar muchos problemas, no es una solucion perfecta.
+
+El problema que continua hasta el momento, es cuando la aplicacion es compilada para esperar input del usuario entre turno y turno de la simulacion. 
+La funcion \textit{getchar} no siempre retorna al recibir una señal, causando que tal vez sea necesario apretar una ultima tecla para que la aplicacion termine.
+
 
 \newpage
 \section{Conclusiones}

@@ -1,17 +1,17 @@
 #ifndef __STOCK__
 #define __STOCK__
 
-#include "models/theShit.h"
+#include "models/product.h"
 #include "utils/vector.h"
 
 
 
 typedef struct {
     int          amount;
-    TheShit*     theShit;
+    Product*     product;
 } Stock;
 
-Stock* initStockById(int theShitId, int amount, Vector* theShit);
-Stock* initStock(char* name, int amount, Vector* theShit); 
+Stock* initStockById(int productId, int amount, Vector* product);
+Stock* initStock(char* name, int amount, Vector* product);
 void freeStocks(Vector* stocks);
 #endif

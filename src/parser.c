@@ -77,13 +77,13 @@ Map* parseMap(const char* path){
         free(ans);
         return NULL;
     }
-    
+
 
     for (i=0; i<counter; i++){
         if( (ans->matrix[i] = calloc(counter, sizeof(int))) == NULL){
             for ( j = 0; j < i; j++) {
                 free(ans->matrix[j]);
-            } 
+            }
             free(ans->matrix);
             for ( j = 0; j < counter; j++) {
             free(cities[j]);
@@ -96,10 +96,10 @@ Map* parseMap(const char* path){
         }
     }
 
-    if ( (ans->theShit = createVector()) == NULL ) {
+    if ( (ans->product = createVector()) == NULL ) {
         for ( j = 0; j < counter; j++) {
             free(ans->matrix[j]);
-        } 
+        }
         free(ans->matrix);
         for ( j = 0; j < counter; j++) {
             free(cities[j]);
@@ -125,7 +125,7 @@ Map* parseMap(const char* path){
         //Let's read the stock for the city!
         while ( ( state = fscanf(mapfile, "%s %d\n", buffer, &aux)) == 2){
             Stock* stock;
-            if ((stock = initStock(buffer, aux, ans->theShit)) == NULL ) {
+            if ((stock = initStock(buffer, aux, ans->product)) == NULL ) {
                 //TODO check if this frees everything well
                 return NULL;
             }
@@ -223,7 +223,7 @@ Airline* parseAirlines(FILE* pFile, Map* map) {
         vec = createVector();
         while ((state = fscanf(pFile, "%s %d\n", buffer, &stockAmount)) == 2) {
 
-            if ((stock = initStock(buffer, stockAmount, map->theShit)) == NULL) {
+            if ((stock = initStock(buffer, stockAmount, map->product)) == NULL) {
                 freeAirline(airline); //TODO check if this frees1 everything well
                 return NULL;
             }

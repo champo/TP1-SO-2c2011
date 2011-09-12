@@ -21,7 +21,7 @@ struct CheckDestinationsMessage marshall_check_destinations(int airline, int id,
 
     for (size_t i = 0; i < count; i++) {
         Stock* stock = (Stock*) getFromVector(stocks, i);
-        msg.stocks.stockId[i] = stock->theShit->id;
+        msg.stocks.stockId[i] = stock->product->id;
         msg.stocks.quantities[i] = stock->amount;
     }
 
@@ -36,7 +36,7 @@ struct StockStateMessage marshall_change_stock(int airline, int id, int cityId, 
 
     for (size_t i = 0; i < count; i++) {
         Stock* stock = (Stock*) getFromVector(stocks, i);
-        msg.stocks.stockId[i] = stock->theShit->id;
+        msg.stocks.stockId[i] = stock->product->id;
         msg.stocks.quantities[i] = stock->amount;
     }
 

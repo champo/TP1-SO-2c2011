@@ -6,7 +6,7 @@
 
 typedef struct {
     Vector* cities;
-    Vector* theShit;
+    Vector* product;
     int** matrix;
 } Map;
 

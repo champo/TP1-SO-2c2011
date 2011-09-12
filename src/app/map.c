@@ -3,7 +3,7 @@
 #include "models/city.h"
 #include "models/map.h"
 #include "models/airline.h"
-#include "models/theShit.h"
+#include "models/product.h"
 #include "app/map.h"
 #include "communication/map.h"
 #include "marshall/map.h"
@@ -140,9 +140,9 @@ void initPlane(struct StockMessagePart* stocks, struct PlaneMessageHeader* heade
     for (unsigned int j = 0; j < stocks->count; j++) {
 
         char name[CITY_NAME_MAX_LENGTH];
-        getTheShitName(stocks->stockId[j], map->theShit, name);
+        getProductName(stocks->stockId[j], map->product, name);
         int quant = stocks->quantities[j];
-        Stock* stock = initStock(name, quant, map->theShit);
+        Stock* stock = initStock(name, quant, map->product);
         addToVector(plane->stocks, stock);
 
         if (quant < 0 || stocks->stockId[j] < 0) {
@@ -201,7 +201,7 @@ void updateMap(Map* map, Plane* plane) {
         for(j = 0; j < city_stock_size; j++) {
 
             city_stock = getFromVector(city->stock,j);
-            if ( plane_stock->theShit->id == city_stock->theShit->id) {
+            if (plane_stock->product->id == city_stock->product->id) {
                 break;
             }
         }
@@ -304,7 +304,7 @@ int getCityScore(Vector* cityStocks, Vector* planeStocks) {
         for (size_t j = 0; j < planeStockSize; j++) {
 
             Stock* planeStock = getFromVector(planeStocks, j);
-            if (cityStock->theShit->id ==  planeStock->theShit->id) {
+            if (cityStock->product->id ==  planeStock->product->id) {
                 score += (cityStock->amount > planeStock->amount)? planeStock->amount : cityStock->amount;
                 break;
             }
