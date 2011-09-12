@@ -22,4 +22,10 @@ struct AirlineStatus {
     int planesFlying;
     int totalPlanes;
 };
+
+struct AirlineStatusMessage {
+    enum MessageType type;
+    struct AirlineStatus status;
+};
+
 #endif

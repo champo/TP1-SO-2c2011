@@ -5,6 +5,7 @@
 #include "ipc/ipc.h"
 #include "communication/types.h"
 #include "marshall/plane.h"
+#include "models/airline.h"
 
 union MapMessage {
     enum MessageType type;
@@ -15,5 +16,7 @@ union MapMessage {
 int comm_airline_recieve(union MapMessage* msg);
 
 int comm_airline_ready(ipc_t conn);
+
+int comm_airline_status(ipc_t conn, int id, int flying, int total);
 
 #endif

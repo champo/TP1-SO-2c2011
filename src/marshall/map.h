@@ -18,7 +18,8 @@ struct DestinationsMessage marshall_give_destinations(int planeId, int count, in
 
 struct Message marshall_send_map_status(double completionPercentage, int citiesSatisfied, int totalCities);
 
-struct Message marshall_send_airline_status(int planesFlying, int totalPlanes, int id);
+struct AirlineStatus marshall_send_airline_status(int planesFlying, int totalPlanes, int id);
 
-struct Message marshall_end_output(); 
+struct Message marshall_end_output(void);
+
 #endif

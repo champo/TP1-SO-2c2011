@@ -29,17 +29,25 @@ static int exitState = 0;
 
 static int planesLeftInStage;
 
+static int stage = 0;
+
 static ipc_t ipcConn;
+
+static Airline* me;
+
+static Vector* planeThreads;
 
 void run_airline(Airline* self, ipc_t conn) {
 
     mprintf("Dude\n");
     ipcConn = conn;
+    me = self;
 
     register_exit_function(NULL);
     //redirect_signals();
 
     Vector* threads = bootstrap_planes(self, conn);
+    planeThreads = threads;
 
     listen(threads);
 
@@ -93,10 +101,12 @@ void listen(Vector* threads) {
         mprintf("Got message with type %d\n", msg.type);
         switch (msg.type) {
             case MessageTypeStep:
+                stage = 0;
                 outMsg.type = MessageTypeStep;
                 start_phase(threads, outMsg);
                 break;
             case MessageTypeContinue:
+                stage = 1;
                 outMsg.type = MessageTypeContinue;
                 start_phase(threads, outMsg);
                 break;
@@ -181,7 +191,21 @@ void app_airline_plane_ready(void) {
     planesLeftInStage--;
     mprintf("Plane ready, %d left\n", planesLeftInStage);
     if (planesLeftInStage == 0 && exitState != 1) {
-        comm_airline_ready(ipcConn);
+
+        if (stage == 1) {
+
+            int flying = 0;
+            for (size_t i = 0; i < me->numberOfPlanes; i++) {
+                struct PlaneThread* thread = getFromVector(planeThreads, i);
+                if (!thread->done) {
+                    flying++;
+                }
+            }
+
+            comm_airline_status(ipcConn, me->id, flying, me->numberOfPlanes);
+        } else {
+            comm_airline_ready(ipcConn);
+        }
     }
 
     pthread_mutex_unlock(&planesLeftLock);

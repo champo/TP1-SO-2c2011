@@ -10,7 +10,7 @@ union PlaneMessage {
     enum MessageType type;
     struct CheckDestinationsMessage checkDestinations;
     struct StockStateMessage stockState;
-    struct AirlineStatus airlineStatus;
+    struct AirlineStatusMessage airlineStatus;
 };
 
 
@@ -30,5 +30,5 @@ int comm_send_map_status(double completionPercentage, int citiesSatisfied, int t
 
 int comm_send_airline_status(int planesFlying, int totalPlanes, int id, struct MessageQueue* outputMsgQueue);
 
-int comm_end_output(struct MessageQueue* outputMsgQueue); 
+int comm_end_output(struct MessageQueue* outputMsgQueue);
 #endif

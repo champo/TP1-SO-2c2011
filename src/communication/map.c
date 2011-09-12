@@ -84,7 +84,9 @@ int comm_send_map_status(double completionPercentage, int citiesSatisfied, int t
 int comm_send_airline_status(int planesFlying, int totalPlanes, int id, struct MessageQueue* outputMsgQueue) {
 
     struct Message msg;
-    msg = marshall_send_airline_status(planesFlying, totalPlanes, id);
+
+    msg.type = MessageTypeAirlineStatus;
+    msg.payload.airlineStatus = marshall_send_airline_status(planesFlying, totalPlanes, id);
 
     message_queue_push(outputMsgQueue, msg);
     return 0;
