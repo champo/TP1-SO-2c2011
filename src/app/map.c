@@ -44,7 +44,7 @@ void runMap(Map* map, Vector* airlines, Vector* conns, int* exitState, struct Me
     Plane plane;
     int airlineId;
     int totalStockAmount = get_map_status(map, NULL);
-    
+
     #ifndef NO_CURSES
         send_airlines_status(airlines, outputMsgQueue);
         send_map_status(map, totalStockAmount, outputMsgQueue);
@@ -53,9 +53,16 @@ void runMap(Map* map, Vector* airlines, Vector* conns, int* exitState, struct Me
     airlinesize = getVectorSize(airlines);
 
     while (*exitState == 0 && endSimulation(map, turn) == CONTINUE_SIM) {
-        
+
         #ifndef NO_CURSES
+            mprintf("Waiting\n");
             ipc_sem_wait(outputSem);
+            if (*exitState) {
+                mprintf("bail\n");
+                break;
+            }
+
+            mprintf("Heyah\n");
         #endif
         mprintf("Doing turn %d\n", turn++);
         comm_turn_step(conns);
@@ -106,8 +113,6 @@ void runMap(Map* map, Vector* airlines, Vector* conns, int* exitState, struct Me
             }
         }
 
-        //mprintf("Turn ended.. Press a key to continue...\n");
-        //getchar();
         mprintf("------------------------------------------------------------------\n");
         #ifndef NO_CURSES
             send_map_status(map, totalStockAmount, outputMsgQueue);
@@ -115,7 +120,7 @@ void runMap(Map* map, Vector* airlines, Vector* conns, int* exitState, struct Me
     }
 
     if (*exitState == 0) {
-        mprintf("Done biatch.\n");
+        mprintf("Done bro.\n");
     }
 }
 
