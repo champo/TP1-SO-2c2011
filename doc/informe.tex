@@ -238,6 +238,26 @@ tiempo. No nos pareció correcto que haya un desfasaje entre el \textit{Output} 
 cuando el mapa en realidad va por el turno 23. Por esta razón, utilizamos un semáforo para resolver este problema y lograr una correcta sincronización.
 
 \newpage
+\section{Manejo de señales}
+Realizar un buen manejo de señales que permita que la aplicacion termine de manera limpia al recibir una señal de terminacion no fue tarea facil.
+Experimentamos con varios modelos para lograr esto, muchos de los cuales no vamos a mencionar.
+Pero basicamente el problema que todas intentaban solucionar era como despertarse correctamente de acciones bloqueantes.
+
+Es muy comun que durante la ejecucion mas de un thread este bloqueado esperando poder hacer una lectura, o una escritura.
+En un principio, optamos por utilizar \textit{pthread_cancel} para terminar \textit{threads}, sin importar si fueron bloqueados o no.
+Pero rapidamente descubrimos que esto tenia la consecuencia de dejar ciertos \textit{locks} y \textit{semaforos} en un estado incorrecto.
+Consecuentemente, la aplicacion no siempre terminaba, y muchas veces ocurria un \textit{deadlock}.
+
+Luego de intentar muchas maneras de terminar forzamente la aplicacion, optamos por que al recibir una señal, la terminacion no fuera inmediata.
+Sino, la señal activa un flag que en ciertos puntos de la aplicacion causa que esta comienze su ciclo normal de terminacion.
+Esto es, como si la simulacion hubiera terminado correctamente, y no fuera el producto de una señal.
+Si bien esto permitio solucionar muchos problemas, no es una solucion perfecta.
+
+El problema que continua hasta el momento, es cuando la aplicacion es compilada para esperar input del usuario entre turno y turno de la simulacion. 
+La funcion \textit{getchar} no siempre retorna al recibir una señal, causando que tal vez sea necesario apretar una ultima tecla para que la aplicacion termine.
+
+
+\newpage
 \section{Conclusiones}
 
 Queda claro que este trabajo podría haberse realizado sin necesidad de recurrir al procesamiento paralelo y a la comunicación entre procesos. Pero al haberlo 
