@@ -51,7 +51,7 @@ void run_output(struct MessageQueue* outputMsgQueue, semv_t sem) {
             if ( curLine > maxLine ) {
                 maxLine = curLine;
             }
-            mvprintw(curLine, INITIAL_COLUMN, "Airline number %d still has %d of its %d with some stock left.",
+            mvprintw(curLine, INITIAL_COLUMN, "Airline number %d still has %d of its %d planes with some stock left.",
                     msg.payload.airlineStatus.id, msg.payload.airlineStatus.planesFlying, 
                     msg.payload.airlineStatus.totalPlanes);
             refresh();
