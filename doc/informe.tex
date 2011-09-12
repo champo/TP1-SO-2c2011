@@ -83,7 +83,7 @@ comunicación de procesos (IPC) y manejar con autoridad el \textit{filesystem} d
 \section{Esquema de la aplicación}
 
 A la hora de encarar el problema en cuestión, una de las primeras cosas a plantearse era el diseño de la aplicación. Dada la naturaleza y los objetivos planteados para este
- trabajo práctico, era necesario poder identificar que partes de nuestra simulación iban a ser procesos paralelos y cuales tenía coherencia implementarlas como \textit{threads}.
+ trabajo práctico, era necesario poder identificar que partes de nuestra simulación serian modeladas como procesos y cuales tenía coherencia implementarlas como \textit{threads}.
   En este debate, también fue importante no forzar la separación de procesos cuando el problema no lo requería (por ejemplo que cada avión fuera un proceso independiente no agregaba 
   nada y generaba mucha complejidad, por lo que se optó por implementarlos como \textit{threads}).\\ 
 
@@ -107,9 +107,9 @@ En un primer análisis, identificamos como potenciales procesos paralelos de nue
  Finalmente, el mapa y el \textit{output} fueron implementados como threads del proceso principal ya que si bien su relación es fuerte, nos resulto coherente
   que ambos puedan estar ejecutandose paralelamente. \\
 
-Por otra parte, la aerolínea y los aviones nos resulto intuitivo implementarlo como un proceso aparte. La siguiente decisión tomada fue que los aviones debian ser \textit{threads}
- de los procesos aerolinea. Pues nos resulto necesario implementarlo de esta manera ya que la relación entre una aerolínea y sus aviones era constante, ya que un avión es parte
-  de una aerolínea. Aquí se presente otro esquema del modelo final\\
+Dado que las aerolineas son independientes entre si, ya que cada una desconoce la existencia de las demas, resulta intuitivo que cada aerolinea ejecute en un proceso dedicado.
+Como cada avion es un entidad independiente, pero a la vez es conciente de al existencia del resto de los aviones de su flota, resulta logico que sean threads dentro del proceso de su aerolinea.
+Esto nos permite compartir facilmente la informacion que sea necesaria entre aviones, y entre estos y la aerolinea.
 
 \begin{figure}[H]
 \begin{center}
@@ -122,20 +122,12 @@ Por otra parte, la aerolínea y los aviones nos resulto intuitivo implementarlo 
 \newpage
 \section{Modelo OSI}
 
-El modelo OSI es un modelo que estandariza la forma de diseñar un programa y como comunicar diferentes programas. El modelo OSI cuenta con 7 capaz aunque dadas las funcionalidades de nuestra aplicación solamente debimos implementar cuatro (e inclusive, dos de las
-  mismas están implementadas como una). Esto se debe a que nuestro programa no se comunica con otros programas, reduciendo así las capas del modelo OSI implementadas por nosotros.
-  El resto de las capas vienen implementadas por el sistema operativo.\\
+El modelo OSI es un modelo que estandariza la forma de diseñar un programa y como comunicar diferentes programas. 
+Este modelo divide una aplicacion en 7 capas, donde cada capa se comunica solo con la capa "debajo".
+Esto permite una clara separacion de responsabilidades, llevando a un codigo limpio y facilmente entedible por cualquier familiarizado con el modelo.
 
-El modelo OSI es muy útil ya que permite realizar las diferentes partes de una aplicación por separado sin mezclar información innecesaria y de esta manera las implementaciones 
-en cada capa son independientes del resto. Por último, la separación en capaz mejora ampliamente la claridad del código.\\
-
-En nuestro caso, la capa de aplicación es la encargada de realizar el flujo y la lógica de la aplicación en sí. Las capas de presentación y sesión estan implementadas como una sola,
- la capa de Marshalling. Esta empaqueta los datos a transmitir a otro proceso en formatos determinados. 
- Nuestra última capa implementada es la de transporte, que es la que se encarga de utilizar los diferentes tipos de \textit{IPCs} para comunicar procesos.\\
-
-Notesé que es de suma importancia la separación en capas ya que, por ejemplo, gracias a esto fue posible implementar los distintos tipos de \textit{IPCs} sin importar el resto de las implementaciones.\\
-
-En el esquema presentado a continuación se puede observar lo descripto en esta sección. \\
+El sistema operativo ya provee funcionalidades compatibles con el modelo OSI, con lo cual nuestra implementacion se concierne solo con las 4 capas superiores del modelo.
+Para estas 4 capas optamos por desviarnos un poco del modelo, e implementamos las capas de sesion y presentacion en una sola, que llamamos capa de comunicacion.
 
 \begin{figure}[H]
 \begin{center}
@@ -147,11 +139,27 @@ En el esquema presentado a continuación se puede observar lo descripto en esta 
 
 
 \newpage
-\section{Interfaz de comunicación(???)}
-Presentar las distintas interfaces que tuvimos...
-Creo que fueron tres en total... 
-Criterios de elección Y de descarte...
-CHAMPO esta es TU parte, te llama a gritosss jeje.
+\section{Transporte}
+Uno de los objetivos impuestos era utilizar diversos metodos de comunicacion entre procesos.
+La consecuencia natural fue desarrollar una capa de Transporte que soportara todas estas implementaciones.
+Para esto diseñamos una interfaz comun a todos los metodos de \textit{IPC}.
+
+Durante el proceso de diseño de la interfaz, pasamos por varios diseños (e implementacion de los mismos) que resultaron deficientes y fueron descartados.
+Nuestro primer diseño se baso fuertemente en el comportamiento de la funcion \textit{pipe}, ya que parecia ser la manera mas simple.
+O sea, el canal de comunicacion entre 2 procesos se establecia antes de hacer una llamda a \textit{fork}.
+Este diseño presenta varias deficiencias, entre ellas que no permite que 2 procesos que no tengan una relacion padre-hijo se comuniquen.
+Si bien dado el diseño de nuestra aplicacion esta restriccion es aceptable, detalles de la implementacion complicaban el uso de esta interfaz.
+Consecuentemente, por estas complicaciones y limitaciones, optamos por descartar esta interfaz.
+
+Antes de tomar la decision final, evaluamos el uso de una comunicacion bidireccional, donde una conexion permite la salida y entrada de mensajes, o unidireccional.
+La comunicacion bidireccional, presentaba la complicacion de necesitar una funcion analoga a \textit{select}.
+La implementacion de esta funcion resulto no ser trivial para Shared Memory y Message Queues.
+Esto llevo a que descartemos este diseño y nos llevo a nuestro diseño final, una comunicacion unidireccional.
+
+Es un diseño muy parecido al de una Message Queue.
+Cada proceso interesado en recibir mensajes, define un nombre unico con el cual indentificarse a la hora de leer mensajes.
+Otros procesos pueden escribir mensajes a cualquier otro proceso siempre y cuando sepan bajo que nombre escucha ese proceso.
+
 
 \newpage
 \section{Problemas encontrados(???)}
@@ -190,15 +198,26 @@ simple \textit{lock} de un \textit{mutex} en la mayoría de los casos era lo ún
 de técnicas más avanzadas como semáforos.
 
 Una vez terminado el trabajo, surgió la pregunta de cual era la implementación de IPC más rápida. Como nos dimos cuenta más tarde, esto no es tan fácil de determinar. 
-Esto se debe a que el rendimiento de cada implementación varía dependiendo de la ejecución debido al procesamiento paralelo y el cual no es determínistico. Es decir, no 
-es siempre se reproduce exactamente la misma ejecución dadas las mismas condiciones iniciales. \\
-A pesar de lo dicho anteriormente, es posible, observar ciertas tendencias en los tiempos de ejecución. El siguiente gráfico muestra los distintos tiempos obtenidos por 
-cada implementación para una serie de 4 simulaciones. La simulación 1 es la que presenta los menores tiempos, con 5 ciudades, 2 aerolíneas y 8 aviones en total.
-La simulación 2, presenta una configuración similar aunque, en general, tarda más en terminar debido a una menor cantidad de aviones. Sus parámetros son
-5 ciudades, 1 aerolínea y 3 aviones. La simulación 3, cuenta con 10 ciudades, 10 aerolíneas y 40 aviones en total, por lo que el tiempo de ejecucón, como es de 
-esperar es un poco superior. Finalmente, la simulación 4 es la más intensiva, ya que tiene la configuración límite, con 50 ciudades, 10 aerolíneas, y un total de
-100 aviones. Esta es, como se puede ver, la que presenta los mayores tiempos de ejecución.\\
-Cabe aclarar, que debido a la variación que sufren de ejecución en ejecución nos pareció prudente tomar el promedio de 100 ejecuciones para cada simulación. 
+Esto se debe a que el rendimiento de cada implementación varía dependiendo de la ejecución debido al procesamiento paralelo, el cual no es determínistico. 
+Es decir, no siempre se reproduce exactamente la misma ejecución dadas las mismas condiciones iniciales. \\
+
+Para observar la perfomance de la aplicacion, utilizamos 4 simulaciones distintas:
+
+\begin{table}[H]
+\begin{center}
+\begin{tabular}{l|l|l|l}
+Nº & Ciudades & Aerolineas & Aviones \\
+\hline
+1 & 5 & 2 & 8 \\
+2 & 5 & 1 & 3 \\
+3 & 10 & 10 & 40 \\
+4 & 50 & 10 & 50 \\
+\end{tabular}
+\caption{Caracteristicas de las simulacions}
+\end{center}
+\end{table}
+
+Usando estas 4 simulaciones, procedimos a tomar el tiempo de ejecucion de 100 iteraciones consecutivas de cada simulacion.
 
 \begin{figure}[H]
 \begin{center}
@@ -209,11 +228,10 @@ Cabe aclarar, que debido a la variación que sufren de ejecución en ejecución 
 \end{figure}
 
 En base a estos datos, pudimos concluir que en general la de \textit{shared memory} es la implementación con mejores tiempos, seguido de la de \textit{socket}. Aunque,
-como puede observarse, para las primeras simulaciones, las menos intensivas, las implementaciones de \textit{message queues} y \textit{fifos} parecen tener mejores
-tiempos. Después de analizar los datos, nuestra explicación es que, en esos casos el mayor \textit{overhead} que tienen las implementaciones como \textit{socket} y 
-\textit{shared memory}, hacen que sus tiempos de ejecución sean levemente mayores. Pero, para simulaciones más intensivas, como por ejemplo la número 4, ese
- \textit{overhead} se torna despreciable, revelando los resultados que se observan en el gráfico: esas implementaciones terminan siendo más rápidas.\\
-
+como puede observarse, para las primeras simulaciones, las menos intensivas, las implementaciones de \textit{message queues} y \textit{fifos} parecen tener mejores tiempos. 
+Después de analizar los datos, nuestra explicación es que, en esos casos el mayor \textit{overhead} que tienen las implementaciones como \textit{socket} y 
+\textit{shared memory}, hacen que sus tiempos de ejecución sean levemente mayores. 
+Pero, para simulaciones más intensivas, como por ejemplo la número 4, ese \textit{overhead} se torna despreciable, revelando los resultados que se observan en el gráfico: esas implementaciones terminan siendo más rápidas.\\
 
 \newpage     
 \section{Referencias}
