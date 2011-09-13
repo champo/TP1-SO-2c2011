@@ -83,7 +83,7 @@ comunicación de procesos (IPC) y manejar con autoridad el \textit{filesystem} d
 \section{Esquema de la aplicación}
 
 A la hora de encarar el problema en cuestión, una de las primeras cosas a plantearse era el diseño de la aplicación. Dada la naturaleza y los objetivos planteados 
-para este trabajo práctico, era necesario poder identificar que partes de nuestra simulación serían modeladas como procesos y cuales tenía coherencia implementarlas 
+para este trabajo práctico, era necesario poder identificar que partes de nuestra simulación serían modeladas como procesos, y cuales tenía coherencia implementarlas 
 como \textit{threads}. En este debate, también fue importante no forzar la separación de procesos cuando el problema no lo requería (por ejemplo que cada avión 
 fuera un proceso independiente no agregaba nada y generaba mucha complejidad, por lo que se optó por implementarlos como \textit{threads}).\\ 
 
@@ -106,7 +106,7 @@ decidió que estos elementos que originalmente bien podrían haber sido plantead
 coherente que ambos puedan estar ejecutándose paralelamente.\\
 
 Dado que las aerolíneas son independientes entre sí, ya que cada una desconoce la existencia de las demás, resulta intuitivo que cada aerolínea ejecute en un 
-proceso dedicado. Como cada avión es un entidad independiente, pero a la vez es conciente de al existencia del resto de los aviones de su flota, resulta lógico 
+proceso dedicado. Como cada avión es un entidad independiente, pero a la vez es consciente de al existencia del resto de los aviones de su flota, resulta lógico 
 que sean \textit{threads} dentro del proceso de su aerolínea. Esto nos permite compartir fácilmente la información entre estos y la aerolínea.
 
 \begin{figure}[H]
@@ -121,8 +121,8 @@ que sean \textit{threads} dentro del proceso de su aerolínea. Esto nos permite 
 \section{Modelo OSI}
 
 El modelo OSI es un modelo que estandariza la forma de diseñar un programa y como comunicar diferentes programas. 
-Este modelo divide una aplicación en 7 capas, donde cada capa se comunica solo con la capa "debajo".
-Esto permite una clara separación de responsabilidades, llevando a un código limpio y fácilmente entedible por cualquier familiarizado con el modelo.
+Este modelo divide una aplicación en 7 capas, donde cada capa se comunica solo con la capa de "abajo".
+Esto permite una clara separación de responsabilidades, llevando a un código limpio y fácilmente entedible por cualquiera que esté familiarizado con el modelo.
 
 El sistema operativo ya provee funcionalidades compatibles con el modelo OSI, con lo cual a nuestra implementación le concierne sólo las 4 capas superiores del modelo.
 Para estas 4 capas optamos por desviarnos un poco del modelo, e implementamos las capas de sesión y presentación en una sola, que llamamos capa de comunicación.
@@ -145,7 +145,7 @@ Para esto diseñamos una interfaz común a todos los métodos de \textit{IPC}.
 
 Durante el proceso de diseño de la interfaz, pasamos por varios diseños (e implementación de los mismos) que resultaron deficientes y fueron descartados.
 Nuestro primer diseño se basó fuertemente en el comportamiento de la función \textit{pipe}, ya que parecía ser la manera más simple.
-O sea, el canal de comunicación entre 2 procesos se establecía antes de hacer una llamda a \textit{fork}.
+O sea, el canal de comunicación entre 2 procesos se establecía antes de hacer una llamada a \textit{fork}.
 Este diseño presenta varias deficiencias, entre ellas que no permite que 2 procesos que no tengan una relación padre-hijo se comuniquen.
 Si bien dado el diseño de nuestra aplicación, esta restricción es aceptable, detalles de la implementación complicaban el uso de esta interfaz.
 Consecuentemente, por estas complicaciones y limitaciones, optamos por descartar esta interfaz.
@@ -153,7 +153,7 @@ Consecuentemente, por estas complicaciones y limitaciones, optamos por descartar
 Antes de tomar la decisión final, evaluamos el uso de una comunicación bidireccional, donde una conexión permite la salida y entrada de mensajes, o unidireccional.
 La comunicación bidireccional, presentaba la complicación de necesitar una función análoga a \textit{select}.
 La implementación de esta función resultó no ser trivial para \textit{Shared Memory} y \textit{Message Queues}.
-Esto llevó a que descartemos este diseño y nos llevó a nuestro diseño final, una comunicación unidireccional.
+Esto llevó a que descartemos este diseño y nos llevó a nuestro diseño final, basado en una comunicación unidireccional.
 
 Es un diseño muy parecido al de una \textit{Message Queue}.
 Cada proceso interesado en recibir mensajes, define un nombre único con el cual indentificarse a la hora de leer mensajes.
@@ -164,36 +164,37 @@ La naturaleza azaroza de la ejecución de un programa multiproceso hace que un t
 Aún más, es necesario correr este test un gran número de veces, ya que una sola ejecución no necesariamente significa que no hay errores.
 
 Además de comunicación entre procesos, necesitabamos una manera segura de enviar mensajes entre \textit{threads}.
-Para esto desarrollamos una \textit{Message Queue} utilizando herramientas de sincronización provistas por pthreads.
+Para esto desarrollamos una \textit{Message Queue} utilizando las herramientas de sincronización provistas por pthreads.
 
 \newpage
 \section{IPCs}
-Como ya fue mencionado en la sección anterior las interfaces de los distintos tipos de IPCs eran iguales.
+Como ya fue mencionado en la sección anterior la interfaz para los distintos tipos de IPCs fue la misma.
 Sin embargo, las implementaciones fueron muy diferentes, y a la hora de escribir el código cada uno trajo
-distintos tipos de problemas. El objetivo de esta sección es detallar los diferentes tipos de IPCs.
+distintos tipos de problemas. El objetivo de esta sección es detallar los diferentes teipos de IPCs.
+
 \subsection{Message Queue}
 
-Esta implementación se basa en las \textit{Message Queues} del estándar POSIX, en vez de las de System V.\\
+Para esta implementación elegimos basarnos en las \textit{Message Queues} del estándar POSIX, en vez de las de System V.\\
 
-Por como fue pensada la interfaz, alrededor del concepto de \textit{cola de entrada}, esta implementación fue casi directa, no tuvo grandes complicaciones.
+Por como fue pensada la interfaz, alrededor del concepto de \textit{Message Queue} de entrada, esta implementación fue casi directa, no tuvo grandes complicaciones.
 Una \textit{Message Queue} es simplemente una cola, donde se almacenan unidades, que fueron definidas del tipo \textit{msg\_t}.\\
 
-Cada proceso abre una misma \textit{Message Queue} de entrada, mediante \textit{ipc\_listen} y una de salida, a través de \textit{ipc\_establish}. Esto se realiza 
-con el flag \textit{O\_CREAT} pero sin el flag \textit{O\_EXCL}, para crear las \textit{Message Queues} que no hayan sido creadas con aterioridad, pero no recibir 
-un error si otro proceso ya la creó.\\
+Cada proceso abre una misma \textit{Message Queue} de entrada, mediante \textit{ipc\_listen} y una de salida, a través de \textit{ipc\_establish}, que debe coincidir 
+con la \textit{Message Queue} de entrada de algún otro proceso. Esto se realiza con el flag \textit{O\_CREAT} pero sin el flag \textit{O\_EXCL}, para crear las 
+\textit{Message Queues} que no hayan sido creadas con anterioridad, pero no recibir un error si otro proceso ya las creó.\\
 
-El ID de la cola de salida se almacena, junto con un \textit{mutex} asociado para su correcta sincronización, en una estructura de tipo \textit{ipc\_t}, que se 
-pasa a otros procesos para poder hacer \textit{ipc\_write}. Adicionalmente, se guardan el ID y el nombre de la \textit{Message Queue} de entrada, en una 
-variable estática del módulo para usarla posteriormente en el \textit{ipc\_read}. Se almacena también en el estado global, un \textit{mutex}, destinado a la 
-sincronización de los accesos a ella.\\
+El ID de la \textit{Message Queue} de salida se almacena, junto con un \textit{mutex} asociado para su correcta sincronización, en una estructura de tipo 
+\textit{ipc\_t}, que se pasa a otros procesos para poder hacer \textit{ipc\_write}. Adicionalmente, se guardan el ID y el nombre de la \textit{Message Queue} 
+de entrada, en una variable estática del módulo para usarla posteriormente en el \textit{ipc\_read}. Se almacena también en el estado global, 
+un \textit{mutex}, destinado a la sincronización de los accesos a ella.\\
 
 \subsection{Shared Memory}
-Para la implementacion de Shared Memory utilizamos las funciones POSIX de la familia \textit{mmap}.
-Tambien, es el unico lugar donde se hace uso de un \textit{Named semaphore} POSIX, para sincronizar la inicializacion de la estructura en memoria.
+Para la implementación de \textit{Shared Memory} utilizamos las funciones POSIX de la familia \textit{mmap}.
+Tambien, es el único lugar donde se hace uso de un \textit{named semaphore} POSIX, para sincronizar la inicialización de la estructura en memoria.
 
 Utilizamos el espacio de memoria compartida para crear una queue donde se almacenan los mensajes enviados.
-A diferencia de los otros mecanismos de IPC, con shared memory es necesario asegurar que las operaciones sean bloqueantes y atomicas.
-Para esto utilizamos un total de 3 semaforos:
+A diferencia de los otros mecanismos de IPC, con \textit{Shared Memory} es necesario asegurar que las operaciones sean \textit{bloqueantes} y \textit{atómicas}.
+Para esto utilizamos un total de 3 semáforos:
 
 \begin{itemize}
 \item Lock con valor inicial 1
@@ -201,33 +202,33 @@ Para esto utilizamos un total de 3 semaforos:
 \item Escrituras disponibles con un valor inicial del tamaño de la queue
 \end{itemize}
 
-Al ser este un clasico problema del tipo productor-consumidor, el uso de estos semaforos es relativamente simple.
-Antes de hacer una lectura, se decrementa el semaforo de lecturas disponibles en 1, y luego se adquiere el lock.
-Una vez terminada la lectura, se libera el lock y se incrementa en un 1 el valor de escrituras disponibles.
+Al ser este un clásico problema del tipo productor-consumidor, el uso de estos semáforos es relativamente simple.
+Antes de hacer una lectura, se decrementa el semáforo de lecturas disponibles en 1, y luego se adquiere el \textit{lock}.
+Una vez terminada la lectura, se libera el \textit{lock} y se incrementa en un 1 el valor de escrituras disponibles.
 
 Para realizar una escritura la estructura es muy parecida.
-Primero se decrementa el semaforo de escrituras en 1.
-Luego se adquiere el lock, se realiza la escritura y una vez terminada se libera el lock.
-Finalmente, se incrementa en 1 el valor del semaforo de lecturas.
+Primero se decrementa el semáforo de escrituras en 1.
+Luego se adquiere el \textit{lock}, se realiza la escritura y una vez terminada se libera el \textit{lock}.
+Finalmente, se incrementa en 1 el valor del semáforo de lecturas.
 
 \subsection{FIFO}
-Siguiendo con la interfaz propuesta para los IPCs, el objetivo era crear un FIFO por proceso y cualquiera sea el
-mensaje que se quiera transmitir, escribirlo en el FIFO del proceso receptor. Para esto, es necesario que todos los
-procesos (los que esrcriben y el que lee) tengan coordinado un nombre que sera el codigo de este FIFO. Así,
-al establecer una conección o al registrarse a la misma era necesario crear el FIFO tomando las precauciones necesarias
-para que si el mismo ya existiese no se pise el archivo previo. Cabe destacar que los archivos FIFOS eran creado en
-la carpeta \textit{temp} ya que su naturaleza es de ser archivos temporales. \\
+Siguiendo con la interfaz propuesta para los IPCs, el objetivo era crear un \textit{FIFO} por proceso y cualquiera sea el
+mensaje que se quiera transmitir, escribirlo en el \textit{FIFO} del proceso receptor. Para esto, es necesario que todos los
+procesos (los que escriben y el que lee) tengan coordinado un nombre que sera el codigo de este \textit{FIFO}. Así,
+al establecer una conección o al registrarse a la misma era necesario crear el \textit{FIFO} tomando las precauciones necesarias
+para que si el mismo ya existiese no se pise el archivo previo. Cabe destacar que los archivos \textit{FIFOs} eran creado en
+la carpeta \textit{temp} ya que por su naturaleza son temporales. \\
 
-Por otra parte, a la hora de escribir mensajes, habia que tener en cuenta que en un mismo mensaje en un FIFO, el mismo
+Por otra parte, a la hora de escribir mensajes, había que tener en cuenta que en un mismo mensaje en un \textit{FIFO}, el mismo
 debia contar primero con la longitud del mensaje en sí y luego con los datos que se deseaban transportar. Así, hubo
 que soportar este formato generando la estructura del mensaje final para poder enviar todo en una sola escritura
-asegurando así la atomicidad de la transmisión. También era necesario tener esto en cuenta en el parametro de salida 
+asegurando así la atomicidad de la transmisión. También era necesario tener esto en cuenta en el parámetro de salida 
 de las funciones de lectura para poder ser consistente con los otros tipos de IPCs.
 
 \subsection{Socket}
-Al necesitar solo una comunicacion unidireccional, optamos por utilizar sockets de dominio UNIX con un protocolo de datagramas.
-Esto se presto a una implementacion muy sencilla, donde cada proceso tiene 2 sockets.
-Uno de ellos se utiliza para hacer lecturas, y otro para las escrituras.
+Al necesitar sólo una comunicación unidireccional, optamos por utilizar \textit{sockets} de dominio UNIX con un protocolo de datagramas.
+Esto se prestó a una implementación muy sencilla, donde cada proceso tiene 2 \textit{sockets}.
+Uno de ellos se utiliza para hacer lecturas, y el otro para las escrituras.
 
 \newpage
 \section{Comunicación}
@@ -245,10 +246,10 @@ Además, como se nos fue especificado, en un mismo turno un avión puede llegar 
 Sabiendo esto, optamos por dividir el turno en 2 partes.
 \begin{enumerate}
   \item los aviones que acaban de llegar a una ciudad, descargan su stock.
-  \item los aviones en tránsito hacen su movimiento de una unidad de distancia.
+  \item los aviones en tránsito hacen su movimiento de una unidad de distancia, y los aviones que recién descargaron, eligen su próximo destino y 
+	parten inmediatamente hacia él.
 \end{enumerate}
 
-Y los aviones que recién descargaron, eligen su próximo destino y parten inmediatamente hacia él.
 
 \subsection{Lógica del avión}
 
@@ -270,7 +271,7 @@ implementaciones, con algoritmos más complejos.
 \newpage
 \section{Archivos de Configuración}
 
-Los archivos de configuración, nos ayudaron a la hora de armar las estructuras de datos en las que almacenaríamos posteriormente toda la información que la 
+Los archivos de configuración, nos ayudaron a la hora de armar las estructuras de datos en las que posteriormente almacenaríamos toda la información que la 
 aplicación requería. Una de las cosas que nos hizo ver anticipadamente, fue el hecho de que, para evitar \textit{redundancia de información}, podíamos tener 
 una colección de las drogas, y que las estructuras almacenen solamente \textit{referencias} a ellas. 
 
@@ -283,15 +284,38 @@ Otro problema con el formato de los archivos de configuración, fue que los lím
 problemas al querer leer el $\backslash n$ con $fscanf$. Para lidiar con esta situación, recurrimos a la única solución que encontramos, aunque en términos de 
 código no es muy elegante.\\
 
+\subsection{Consideraciones}
+
+Muy tempranamente, al encarar el trabajo tomamos ciertos lineamientos o consideraciones, a saber:
+
+\begin{itemize}
+  \item asumimos que los archivos de configuración son válidos, no presentan errores. Además de las especificaciones definifas por la cátedra, agregamos:
+	\begin{itemize}
+	      \item los nombres de las ciudades solo pueden consistir de una palabra.
+	      \item los nombres de las ciudades deben tener un máximo de 30 carácteres.
+	      \item se espera un máximo de 50 stocks distintos por avión. El parser funciona correctamente sin esta restricción pero no la aplicación, que 
+		    pone ese número como límite máximo para la cantidad de stocks por mensaje.
+	      \item no hay redundancia de información. No se repiten nombres de ciudades, aviones, etc...
+	      \item la catedrá pone como límite de funcionamiento 50 ciudades, 10 aerolíneas y 10 aviones por cada una de ellas, aunque nuestra simulación 
+		    funciona con números un poco mayores.
+	\end{itemize}
+  \item asumimos que los stocks de los aviones alcanza para satisfacer a las ciudades, pero que si hay stock de sobra o de falta la simulación 
+	funciona correctamente. 
+  \item el mapa es conexo, todas las ciudades son alcanzables. No existe una ciudad que no esté conectada a alguna otra, o grupo de ciudades 
+	desconectado del resto.
+  \item la simulación tiene un límite superior de 70000 turnos, después del cual, termina, en el estado en que se encuentre el mapa.
+\end{itemize}
+
+
 \newpage
 \section{Output}
 
 Como ya se bien se dijo, le asignamos la responsabilidad de imprimir a pantalla a un \textit{thread} del proceso principal, el \textit{Output}. \\
 
-Al pensar en esta sección nos dimos cuenta que se podría utilizar tranquilamente la función \textit{printf}, por más que no fuera \textit{thread-safe},
- ya que después de todo solo un \textit{thread} iba a ejecutarla. Pronto, desechamos esa opción por la simple razón de que no queríamos tener que obligar al usuario 
+Al pensar en esta parte de la aplicación nos dimos cuenta que se podría utilizar tranquilamente la función \textit{printf}, por más que no fuera \textit{thread-safe},
+ ya que después de todo sólo un \textit{thread} iba a ejecutarla. Pronto, desechamos esa opción por la simple razón de que no queríamos tener que obligar al usuario 
 de la aplicación a scrollear la pantalla. Por esta razón pensamos en tener un \\textit{layout} estático e ir actualizando la pantalla.\\
-Para lograr este objetivo, decicidimos utilizar librería \textit{ncurses}, la cual nos facilitó el trabajo a la hora de imprimir la información en un sector específico
+Para lograr este objetivo, decicidimos utilizar la librería \textit{ncurses}, la cual nos facilitó el trabajo a la hora de imprimir la información en un sector específico
 de la pantalla y de actualizarla.\\
 
 Para comunicar a este \textit{thread} con el mapa, utilizamos la estructura \textit{Message Queue} que implementamos, de forma similar al uso que le dimos 
@@ -303,34 +327,35 @@ cuando el mapa en realidad va por el turno 23. Por esta razón, utilizamos un se
 
 \newpage
 \section{Manejo de señales}
-Realizar un buen manejo de señales que permita que la aplicacion termine de manera limpia al recibir una señal de terminacion no fue tarea facil.
+Realizar un buen manejo de señales que permita que la aplicación termine de manera limpia al recibir una señal de terminación no fue tarea fácil.
 Experimentamos con varios modelos para lograr esto, muchos de los cuales no vamos a mencionar.
-Pero basicamente el problema que todas intentaban solucionar era como despertarse correctamente de acciones bloqueantes.
+Pero básicamente el problema que todas intentaban solucionar era como despertarse correctamente de acciones bloqueantes.
 
-Es muy comun que durante la ejecucion mas de un thread este bloqueado esperando poder hacer una lectura, o una escritura.
+Es muy común que durante la ejecución más de un thread esté bloqueado, esperando poder hacer una lectura, o una escritura.
 En un principio, optamos por utilizar \textit{pthread\_cancel} para terminar \textit{threads}, sin importar si fueron bloqueados o no.
-Pero rapidamente descubrimos que esto tenia la consecuencia de dejar ciertos \textit{locks} y \textit{semaforos} en un estado incorrecto.
-Consecuentemente, la aplicacion no siempre terminaba, y muchas veces ocurria un \textit{deadlock}.\\
+Pero rápidamente descubrimos que esto tenía la consecuencia de dejar ciertos \textit{locks} y \textit{semáforos} en un estado incorrecto.
+Consecuentemente, la aplicación no siempre terminaba, y muchas veces ocurría un \textit{deadlock}.\\
 
-Luego de intentar muchas maneras de terminar forzamente la aplicacion, optamos por que al recibir una señal, la terminacion no fuera inmediata.
-Sino, la señal activa un flag que en ciertos puntos de la aplicacion causa que esta comienze su ciclo normal de terminacion.
-Esto es, como si la simulacion hubiera terminado correctamente, y no fuera el producto de una señal.
-Si bien esto permitio solucionar muchos problemas, no es una solucion perfecta.
+Luego de intentar muchas maneras de terminar forzadamente la aplicación, optamos por que al recibir una señal, la terminación no fuera inmediata.
+Por el contrario, la señal activa un flag que en ciertos puntos de la aplicación causa que esta comience su ciclo normal de terminación.
+Esto es, como si la simulación hubiera terminado correctamente, y no fuera el producto de una señal.
+Si bien esto permitió solucionar muchos problemas, no es una solución perfecta.\\
 
-El problema que continua hasta el momento, es cuando la aplicacion es compilada para esperar input del usuario entre turno y turno de la simulacion. 
-La funcion \textit{getchar} no siempre retorna al recibir una señal, causando que tal vez sea necesario apretar una ultima tecla para que la aplicacion termine.
+El problema que continua hasta el momento es que cuando la aplicación es compilada para esperar input del usuario entre turno y turno de la simulación, 
+la función \textit{getchar} no siempre retorna al recibir una señal. Esto causa que a veces sea necesario apretar una última tecla para que la aplicación termine.
 
 
 \newpage
 \section{Conclusiones}
 
+\subsection{Aprendizaje}
 Queda claro que este trabajo podría haberse realizado sin necesidad de recurrir al procesamiento paralelo y a la comunicación entre procesos. Pero al haberlo 
 hecho de de esta forma, la experiencia adquirida y el aprendizaje resulta mucho más significativo. Por varias razones:
 
 \begin{itemize}
 \item la experiencia adquirida al trabajar con varios procesos corriendo al mismo tiempo, al igual que varios \textit{threads}.
-\item la comunicación entre estos procesos.
-\item la separación en capas, consecuencia necesaria, que agrega mucha claridad al código y conceptualmente, al diferenciar claramente las responsabilidades.
+\item el aprendizaje adquirido sobre la comunicación entre estos procesos.
+\item la separación en capas, consecuencia necesaria, que agrega mucha claridad al código y ayuda conceptualmente, al diferenciar claramente las responsabilidades.
 \item la familiarización con los estándares \textit{POSIX} y \textit{System V}, o el simple de hecho de trabajar contra interfaces predefinidas y respetando
       un estándar predefinido.
 \end{itemize}
@@ -340,14 +365,16 @@ en un \textit{thread} debe ser llevado a cabo con mucho cuidado, ya que el estad
 del mismo proceso. Esto no es así con los procesos, cuyo estado global es propio y solo visible a ellos mismos. Por suerte, el \textit{stack} no es compartido 
 por distintos \textit{threads} los que les da un cierto grado de independencia, para que realicen distinas tareas. Otra diferencia que notamos, tiene que ver 
 con la sincronizacíon. Mientras que un simple \textit{lock} de un \textit{mutex} en la mayoría de los casos era lo único que se debía hacer para sincronizar 
-\textit{threads}, para procesos se requirió el uso de técnicas más avanzadas como semáforos.
+\textit{threads}, para procesos se requirió el uso de técnicas más avanzadas como semáforos.\\
 
 Por otra parte, fue muy interesante durante el desarrollo de la aplicación los conocimientos adquiridos sobre \textit{deadlocks}.
 Si bien al comenzar, estos eran un problema que nos costaba mucho identificar. Con el tiempo y la experiencia nos vimos mas cómodos
 a la hora de prevenir \textit{deadlocks} e inclusive a la hora de darnos cuenta que estábamos cayendo en uno. Por la naturaleza de este
 problema es imposible salir de un \textit{deadlock} y por eso es que es necesario ser cuidadoso a la hora de escribir el
-código y prevenirlos lo más posible.
+código y prevenirlos lo más posible.\\
 
+
+\subsection{Comparación entre IPCs}
 Una vez terminado el trabajo, surgió la pregunta de cual era la implementación de IPC más rápida. Como nos dimos cuenta más tarde, esto no es tan fácil de determinar. 
 Esto se debe a que el rendimiento de cada implementación varía dependiendo de la ejecución debido al procesamiento paralelo, el cual no es determínistico. 
 Es decir, no siempre se reproduce exactamente la misma ejecución dadas las mismas condiciones iniciales. \\
@@ -368,8 +395,9 @@ Nº & Ciudades & Aerolíneas & Aviones \\
 \end{center}
 \end{table}
 
-Usando estas 4 simulaciones, procedimos a tomar el tiempo promedio de una ejecución al realizar 100 iteraciones consecutivas de cada simulación.
-Cabe aclarar que estas simulaciones fueron ejecutadas con un \textit{output} minimo, minimizando así sus tiempos.
+Usando estas 4 simulaciones, procedimos a tomar el tiempo promedio de una ejecución al realizar 100 iteraciones consecutivas de cada simulación, mediante un
+sencillo \textit{script} de \textit{bash}.
+Cabe aclarar que estas simulaciones fueron ejecutadas con un \textit{output} mínimo, sin la utlización de la librería \textit{ncurses}, minimizando así sus tiempos.
 
 \begin{figure}[H]
 \begin{center}
