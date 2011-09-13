@@ -24,7 +24,7 @@ When using WAIT, trying to kill the app with a signal will result in rather stra
 This is, after sending a signal like SIGINT, the app may wait for one last user input before exiting, due to the nature of getchar.
 
 For example, if you wanted to build a release build without curses and using shared memory you would do:
-cd src ; make clean release IPC=shmem CFLAGS="-DNO_CURSES"
+cd src ; make clean release IPC=shmem CFLAGS="-DNO_CURSES". It should be noted that the ncurses library must be installed in the system in order for the simulation to work.
 
 We've also got command line parameters:
 ./sim configFolder [logFile]
