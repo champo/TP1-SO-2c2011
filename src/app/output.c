@@ -16,7 +16,9 @@
 
 static void handle_sig(int sig);
 
-static void wait(void);
+static void wait(void) {
+    getchar();
+}
 
 static int dontWait = 0;
 #else
